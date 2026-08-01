@@ -5,6 +5,10 @@ on:
   pull_request:
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -41,19 +45,7 @@ jobs:
       - name: Configure GN build
         run: |
           cd "$CHROMIUM_DIR/src"
-          mkdir -p out/Default
-          cat > out/Default/args.gn <<'EOF'
-          target_os = "android"
-          target_cpu = "arm64"
-          is_official_build = false
-          is_component_build = false
-          is_debug = false
-          symbol_level = 0
-          blink_symbol_level = 0
-          enable_nacl = false
-          cc_wrapper = "ccache"
-          EOF
-          gn gen out/Default
+          gn gen out/Default --args='target_os="android" target_cpu="arm64" is_official_build=false is_component_build=false is_debug=false symbol_level=0 blink_symbol_level=0 v8_symbol_level=0 enable_nacl=false enable_remoting=false cc_wrapper="ccache"'
 
       - name: Build Android APK
         run: |
