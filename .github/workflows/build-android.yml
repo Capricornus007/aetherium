@@ -1,0 +1,66 @@
+name: Build Android
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      DEPOT_TOOLS: ${{ github.workspace }}/depot_tools
+      CHROMIUM_DIR: ${{ github.workspace }}/chromium
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install host dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git python3 python3-distutils python3-pip curl openjdk-17-jdk
+
+      - name: Download depot_tools
+        run: |
+          git clone --depth=1 https://chromium.googlesource.com/chromium/tools/depot_tools.git "$DEPOT_TOOLS"
+          echo "$DEPOT_TOOLS" >> $GITHUB_PATH
+
+      - name: Create Chromium checkout
+        run: |
+          mkdir -p "$CHROMIUM_DIR"
+          cd "$CHROMIUM_DIR"
+          fetch --nohooks --no-history android
+
+      - name: Sync dependencies and run hooks
+        run: |
+          cd "$CHROMIUM_DIR/src"
+          gclient sync --with_branch_heads --with_tags
+          gclient runhooks
+
+      - name: Configure GN build
+        run: |
+          cd "$CHROMIUM_DIR/src"
+          mkdir -p out/Default
+          cat > out/Default/args.gn <<'EOF'
+          target_os = "android"
+          target_cpu = "arm64"
+          is_component_build = false
+          is_debug = false
+          symbol_level = 0
+          EOF
+          gn gen out/Default
+
+      - name: Build Android APK
+        run: |
+          cd "$CHROMIUM_DIR/src"
+          autoninja -C out/Default chrome_public_apk
+
+      - name: Upload APK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: "$CHROMIUM_DIR/src/out/Default/apks"

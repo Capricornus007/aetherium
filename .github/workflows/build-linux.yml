@@ -1,0 +1,70 @@
+name: Build Linux
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      DEPOT_TOOLS: ${{ github.workspace }}/depot_tools
+      CHROMIUM_DIR: ${{ github.workspace }}/chromium
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install host dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git python3 python3-distutils python3-pip curl lsb-release openjdk-17-jdk
+
+      - name: Download depot_tools
+        run: |
+          git clone --depth=1 https://chromium.googlesource.com/chromium/tools/depot_tools.git "$DEPOT_TOOLS"
+          echo "$DEPOT_TOOLS" >> $GITHUB_PATH
+
+      - name: Create Chromium checkout
+        run: |
+          mkdir -p "$CHROMIUM_DIR"
+          cd "$CHROMIUM_DIR"
+          fetch --nohooks --no-history chromium
+
+      - name: Sync dependencies and run hooks
+        run: |
+          cd "$CHROMIUM_DIR/src"
+          gclient sync --with_branch_heads --with_tags
+          gclient runhooks
+
+      - name: Install Chromium build dependencies
+        run: |
+          cd "$CHROMIUM_DIR/src"
+          ./build/install-build-deps.sh --no-prompt
+
+      - name: Configure GN build
+        run: |
+          cd "$CHROMIUM_DIR/src"
+          mkdir -p out/Default
+          cat > out/Default/args.gn <<'EOF'
+          is_debug = false
+          is_component_build = false
+          symbol_level = 0
+          use_goma = false
+          EOF
+          gn gen out/Default
+
+      - name: Build Chromium
+        run: |
+          cd "$CHROMIUM_DIR/src"
+          autoninja -C out/Default chrome
+
+      - name: Upload Chrome artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-chrome
+          path: "$CHROMIUM_DIR/src/out/Default/chrome"
