@@ -25,6 +25,20 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y git python3 python3-pip curl openjdk-17-jdk ccache
 
+      - name: Restore ccache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.cache/ccache
+          key: ccache-android-${{ github.ref_name }}-${{ github.sha }}
+          restore-keys: |
+            ccache-android-${{ github.ref_name }}-
+            ccache-android-
+
+      - name: Configure ccache
+        run: |
+          ccache -M 10G
+          ccache -z
+
       - name: Download depot_tools
         run: |
           git clone --depth=1 https://chromium.googlesource.com/chromium/tools/depot_tools.git "$DEPOT_TOOLS"
@@ -57,3 +71,10 @@ jobs:
         with:
           name: android-apk
           path: "$CHROMIUM_DIR/src/out/Default/apks"
+
+      - name: Save ccache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.cache/ccache
+          key: ccache-android-${{ github.ref_name }}-${{ github.sha }}
