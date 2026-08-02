@@ -15,6 +15,12 @@ jobs:
     env:
       DEPOT_TOOLS: ${{ github.workspace }}/depot_tools
       CHROMIUM_DIR: ${{ github.workspace }}/chromium
+      # --- ccache: explicit, stable paths so GN/ninja inherit them correctly ---
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+      CCACHE_EXEC: /usr/bin/ccache
+      CCACHE_BASEDIR: ${{ github.workspace }}
+      CCACHE_SLOPPINESS: include_file_mtime
+      CCACHE_MAXSIZE: 10G
 
     steps:
       - name: Checkout repository
@@ -28,14 +34,15 @@ jobs:
       - name: Restore ccache
         uses: actions/cache/restore@v4
         with:
-          path: ~/.cache/ccache
+          path: ${{ github.workspace }}/.ccache
           key: ccache-android-${{ github.ref_name }}-${{ github.sha }}
           restore-keys: |
             ccache-android-${{ github.ref_name }}-
             ccache-android-
 
-      - name: Configure ccache
+      - name: Prepare ccache
         run: |
+          ccache --version
           ccache -M 10G
           ccache -z
 
@@ -66,6 +73,9 @@ jobs:
           cd "$CHROMIUM_DIR/src"
           autoninja -C out/Default chrome_public_apk
 
+      - name: Show ccache stats
+        run: ccache -s
+
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -76,5 +86,5 @@ jobs:
         if: always()
         uses: actions/cache/save@v4
         with:
-          path: ~/.cache/ccache
+          path: ${{ github.workspace }}/.ccache
           key: ccache-android-${{ github.ref_name }}-${{ github.sha }}
