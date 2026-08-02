@@ -21,6 +21,7 @@ jobs:
       CCACHE_BASEDIR: ${{ github.workspace }}
       CCACHE_SLOPPINESS: include_file_mtime
       CCACHE_MAXSIZE: 10G
+      CCACHE_COMPRESS: "1"
 
     steps:
       - name: Checkout repository
@@ -57,16 +58,20 @@ jobs:
           cd "$CHROMIUM_DIR"
           fetch --nohooks --no-history android
 
-      - name: Sync dependencies and run hooks
+      - name: Sync dependencies (shallow, parallel)
         run: |
           cd "$CHROMIUM_DIR/src"
-          gclient sync --with_branch_heads --with_tags
+          gclient sync --shallow --no-history --nohooks -j16
+
+      - name: Run hooks
+        run: |
+          cd "$CHROMIUM_DIR/src"
           gclient runhooks
 
       - name: Configure GN build
         run: |
           cd "$CHROMIUM_DIR/src"
-          gn gen out/Default --args='target_os="android" target_cpu="arm64" is_official_build=false is_component_build=false is_debug=false symbol_level=0 blink_symbol_level=0 v8_symbol_level=0 enable_nacl=false enable_remoting=false cc_wrapper="ccache"'
+          gn gen out/Default --args='target_os="android" target_cpu="arm64" is_official_build=false is_component_build=false is_debug=false symbol_level=0 blink_symbol_level=0 v8_symbol_level=0 enable_nacl=false enable_nacl_nonsfi=false enable_remoting=false enable_resource_allowlist_generation=false enable_swiftshader=false enable_widevine=false enable_hangout_services_extension=false enable_mdns=false use_thin_lto=false is_java_debug=true treat_warnings_as_errors=false android_static_analysis="off" cc_wrapper="ccache"'
 
       - name: Build Android APK
         run: |
@@ -76,15 +81,15 @@ jobs:
       - name: Show ccache stats
         run: ccache -s
 
-      - name: Upload APK artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-apk
-          path: "$CHROMIUM_DIR/src/out/Default/apks"
-
       - name: Save ccache
         if: always()
         uses: actions/cache/save@v4
         with:
           path: ${{ github.workspace }}/.ccache
           key: ccache-android-${{ github.ref_name }}-${{ github.sha }}
+
+      - name: Upload APK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: "$CHROMIUM_DIR/src/out/Default/apks"
