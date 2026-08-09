@@ -76,7 +76,7 @@ jobs:
       - name: Configure GN build
         run: |
           cd "$CHROMIUM_DIR/src"
-          gn gen out/Default --args='is_official_build=false is_debug=false is_component_build=false symbol_level=0 blink_symbol_level=0 v8_symbol_level=0 enable_nacl=false enable_nacl_nonsfi=false enable_remoting=false enable_resource_allowlist_generation=false enable_swiftshader=false enable_widevine=false enable_hangout_services_extension=false enable_mdns=true use_thin_lto=false disable_fieldtrial_testing_config=true enable_iterator_debugging=false target_cpu="x64" cc_wrapper="ccache"'
+          gn gen out/Default --args='is_official_build=false is_debug=false is_component_build=false symbol_level=0 blink_symbol_level=0 v8_symbol_level=0 enable_nacl=false enable_nacl_nonsfi=false enable_remoting=false enable_resource_allowlist_generation=false enable_swiftshader=false enable_widevine=false enable_hangout_services_extension=false enable_mdns=true use_thin_lto=false disable_fieldtrial_testing_config=true enable_iterator_debugging=false enable_cdm_host_verification=false enable_web_tests=false blink_enable_generated_code_formatting=false target_cpu="x64" cc_wrapper="ccache"'
 
       - name: Build Chromium
         run: |
@@ -85,6 +85,12 @@ jobs:
 
       - name: Show ccache stats
         run: ccache -s
+
+      - name: Cleanup ccache locks
+        if: always()
+        run: |
+          find ~/.ccache -name "*.lock" -delete 2>/dev/null || true
+          find ${{ github.workspace }}/.ccache -name "*.lock" -delete 2>/dev/null || true
 
       - name: Save ccache
         if: always()
