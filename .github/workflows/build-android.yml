@@ -31,13 +31,18 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y git python3 python3-pip curl openjdk-17-jdk ccache
+      
+      - name: Get current date
+        id: date
+        run: echo "date=$(date -u +'%Y-%m-%d')" >> $GITHUB_OUTPUT
 
       - name: Restore ccache
         uses: actions/cache/restore@v4
         with:
           path: ${{ github.workspace }}/.ccache
-          key: ccache-android-${{ github.ref_name }}-${{ github.sha }}
+          key: ccache-android-${{ github.ref_name }}-${{ steps.date.outputs.date }}-${{ github.run_id }}
           restore-keys: |
+            ccache-android-${{ github.ref_name }}-${{ steps.date.outputs.date }}-
             ccache-android-${{ github.ref_name }}-
             ccache-android-
 
@@ -81,19 +86,23 @@ jobs:
       - name: Show ccache stats
         run: ccache -s
 
-      - name: Cleanup ccache locks
+      - name: Cleanup ccache locks and temps
         if: always()
         run: |
+          ccache -c 2>/dev/null || true
           find ~/.ccache -name "*.lock" -delete 2>/dev/null || true
           find ${{ github.workspace }}/.ccache -name "*.lock" -delete 2>/dev/null || true
+          find ~/.ccache -name "*.tmp*" -delete 2>/dev/null || true
+          find ${{ github.workspace }}/.ccache -name "*.tmp*" -delete 2>/dev/null || true
 
       - name: Save ccache
         if: always()
+        env:
+          TAR_OPTIONS: "--warning=no-file-changed"
         uses: actions/cache/save@v4
         with:
           path: ${{ github.workspace }}/.ccache
-          key: ccache-android-${{ github.ref_name }}-${{ github.run_id }}-${{ github.run_attempt }}
-
+          key: ccache-android-${{ github.ref_name }}-${{ steps.date.outputs.date }}-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
