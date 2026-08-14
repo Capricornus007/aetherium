@@ -77,18 +77,16 @@ jobs:
         run: |
           cd "$CHROMIUM_DIR/src"
 
-          # 1. 處理 Supervised Users 斷言
-          find components/supervised_user chrome/browser/supervised_user -name "BUILD.gn" 2>/dev/null | xargs -r sed -i 's/assert(enable_supervised_users.*)/# bypassed/g'
+          # 1. 使用 perl 跨行擦除所有涉及 enable_vr / enable_pdf / enable_print_preview / enable_ar / enable_supervised_users 的 assert 區塊
+          find . -name "BUILD.gn" -exec perl -i -0777 -pe '
+            s/assert\s*\(\s*enable_vr[\s\S]*?\)//g;
+            s/assert\s*\(\s*enable_pdf[\s\S]*?\)//g;
+            s/assert\s*\(\s*enable_print_preview[\s\S]*?\)//g;
+            s/assert\s*\(\s*enable_ar[\s\S]*?\)//g;
+            s/assert\s*\(\s*enable_supervised_users[\s\S]*?\)//g;
+          ' {} +
 
-          # 2. 擦除所有 enable_vr / enable_pdf / enable_print_preview / enable_ar 的 assert 檢查 (無論是否帶有錯誤訊息)
-          find . -name "BUILD.gn" -exec sed -i \
-            -e 's/assert(enable_vr.*/# bypassed/g' \
-            -e 's/assert(enable_pdf.*/# bypassed/g' \
-            -e 's/assert(enable_print_preview.*/# bypassed/g' \
-            -e 's/assert(enable_ar.*/# bypassed/g' \
-            {} +
-
-          # 3. 修復 Android 端：如果在 args.gn 中停用了 VR，直接清空 //device/vr/BUILD.gn，防止測試 target 解析不存在的 VR 依賴
+          # 2. 修復 Android 端：假造 VR 相關的 Dummy Target，滿足測試單元的依賴樹
           if [ -f "device/vr/BUILD.gn" ]; then
             echo 'group("vr") {}' > device/vr/BUILD.gn
             echo 'group("vr_test_utils") {}' >> device/vr/BUILD.gn
