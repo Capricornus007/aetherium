@@ -77,7 +77,7 @@ jobs:
         run: |
           cd "$CHROMIUM_DIR/src"
 
-          # 1. 使用 perl 跨行擦除所有涉及特性的 assert 區塊，解決語法阻攔
+          # 1. 使用 perl 跨行擦除所有涉及特性的 assert 區塊
           find . -name "BUILD.gn" -exec perl -i -0777 -pe '
             s/assert\s*\(\s*enable_vr[\s\S]*?\)//g;
             s/assert\s*\(\s*enable_pdf[\s\S]*?\)//g;
@@ -86,7 +86,7 @@ jobs:
             s/assert\s*\(\s*enable_supervised_users[\s\S]*?\)//g;
           ' {} +
 
-          # 2. 補全 //chrome/browser/vr 下所有被缺失的 Dummy Targets
+          # 2. 補全 //chrome/browser/vr 下的 Dummy Targets
           mkdir -p chrome/browser/vr
           cat << 'EOF' > chrome/browser/vr/BUILD.gn
             group("vr") {}
@@ -96,7 +96,7 @@ jobs:
             group("unit_tests") {}
           EOF
 
-          # 3. 補全 //device/vr 下所有被缺失的 Dummy Targets
+          # 3. 補全 //device/vr 下的 Dummy Targets
           mkdir -p device/vr
           cat << 'EOF' > device/vr/BUILD.gn
             group("vr") {}
@@ -120,21 +120,48 @@ jobs:
           # 5. 補全 //pdf 下的 Dummy Targets
           mkdir -p pdf
           if [ -f "pdf/BUILD.gn" ]; then
-            echo 'group("strict") {}' >> pdf/BUILD.gn
-            echo 'group("pdf_test_utils") {}' >> pdf/BUILD.gn
+            cat << 'EOF' >> pdf/BUILD.gn
+              group("strict") {}
+              group("pdf_test_utils") {}
+            EOF
           else
             cat << 'EOF' > pdf/BUILD.gn
               group("strict") {}
-              group("pdf_test_utils") {}
+            group("pdf_test_utils") {}
           EOF
           fi
 
-          # 6. 補全 //components/safe_browsing 與 plugins 等子項 Missing Targets
+          # 6. 補全 Missing Targets（用 cat 確保換行正確）
           mkdir -p components/safe_browsing/content/common components/safe_browsing/content/browser chrome/browser/plugins chrome/browser/safe_browsing
-          [ -f "components/safe_browsing/content/common/BUILD.gn" ] && echo 'group("file_type_policies") {}\ngroup("file_type_policies_test_support") {}' >> components/safe_browsing/content/common/BUILD.gn
-          [ -f "components/safe_browsing/content/browser/BUILD.gn" ] && echo 'group("client_side_detection") {}' >> components/safe_browsing/content/browser/BUILD.gn
-          [ -f "chrome/browser/plugins/BUILD.gn" ] && echo 'group("browser_tests") {}' >> chrome/browser/plugins/BUILD.gn
-          [ -f "chrome/browser/safe_browsing/BUILD.gn" ] && echo 'group("blocking_page_platform_test_support") {}' >> chrome/browser/safe_browsing/BUILD.gn
+          
+          if [ -f "components/safe_browsing/content/common/BUILD.gn" ]; then
+            cat << 'EOF' >> components/safe_browsing/content/common/BUILD.gn
+
+              group("file_type_policies") {}
+              group("file_type_policies_test_support") {}
+            EOF
+          fi
+
+          if [ -f "components/safe_browsing/content/browser/BUILD.gn" ]; then
+            cat << 'EOF' >> components/safe_browsing/content/browser/BUILD.gn
+
+              group("client_side_detection") {}
+            EOF
+          fi
+
+          if [ -f "chrome/browser/plugins/BUILD.gn" ]; then
+            cat << 'EOF' >> chrome/browser/plugins/BUILD.gn
+
+              group("browser_tests") {}
+            EOF
+          fi
+
+          if [ -f "chrome/browser/safe_browsing/BUILD.gn" ]; then
+            cat << 'EOF' >> chrome/browser/safe_browsing/BUILD.gn
+
+              group("blocking_page_platform_test_support") {}
+            EOF
+          fi
 
       - name: Install Chromium build dependencies
         run: |
