@@ -77,18 +77,16 @@ jobs:
         run: |
           cd "$CHROMIUM_DIR/src"
 
-          # 1. 繞過 Print Preview 斷言 (將 assert 替換為空註解或條件)
-          if [ -f "chrome/browser/ui/webui/print_preview/BUILD.gn" ]; then
-            sed -i 's/assert(enable_print_preview)/# assert(enable_print_preview)/g' chrome/browser/ui/webui/print_preview/BUILD.gn
-          fi
-
-          # 2. 繞過 WebXR / VR 斷言
-          if [ -f "components/webxr/BUILD.gn" ]; then
-            sed -i 's/assert(enable_vr)/# assert(enable_vr)/g' components/webxr/BUILD.gn
-          fi
-
-          # 3. 處理 Supervised Users 相關的 GN 斷言 (全域搜尋並註解)
+          # 1. 繞過 Supervised Users 斷言
           find components/supervised_user chrome/browser/supervised_user -name "BUILD.gn" 2>/dev/null | xargs -r sed -i 's/assert(enable_supervised_users)/# assert(enable_supervised_users)/g'
+
+          # 2. 通用繞過：自動清理 enable_vr / enable_pdf / enable_print_preview 等特性的強行斷言
+          find . -name "BUILD.gn" -exec sed -i \
+            -e 's/assert(enable_vr)/# assert(enable_vr)/g' \
+            -e 's/assert(enable_pdf)/# assert(enable_pdf)/g' \
+            -e 's/assert(enable_print_preview)/# assert(enable_print_preview)/g' \
+            -e 's/assert(enable_ar)/# assert(enable_ar)/g' \
+            {} +
 
       - name: Configure GN build
         run: |
