@@ -77,16 +77,26 @@ jobs:
         run: |
           cd "$CHROMIUM_DIR/src"
 
-          # 1. 繞過 Supervised Users 斷言
-          find components/supervised_user chrome/browser/supervised_user -name "BUILD.gn" 2>/dev/null | xargs -r sed -i 's/assert(enable_supervised_users)/# assert(enable_supervised_users)/g'
+          # 1. 處理 Supervised Users 斷言
+          find components/supervised_user chrome/browser/supervised_user -name "BUILD.gn" 2>/dev/null | xargs -r sed -i 's/assert(enable_supervised_users.*)/# bypassed/g'
 
-          # 2. 通用繞過：自動清理 enable_vr / enable_pdf / enable_print_preview 等特性的強行斷言
+          # 2. 擦除所有 enable_vr / enable_pdf / enable_print_preview / enable_ar 的 assert 檢查 (無論是否帶有錯誤訊息)
           find . -name "BUILD.gn" -exec sed -i \
-            -e 's/assert(enable_vr)/# assert(enable_vr)/g' \
-            -e 's/assert(enable_pdf)/# assert(enable_pdf)/g' \
-            -e 's/assert(enable_print_preview)/# assert(enable_print_preview)/g' \
-            -e 's/assert(enable_ar)/# assert(enable_ar)/g' \
+            -e 's/assert(enable_vr.*/# bypassed/g' \
+            -e 's/assert(enable_pdf.*/# bypassed/g' \
+            -e 's/assert(enable_print_preview.*/# bypassed/g' \
+            -e 's/assert(enable_ar.*/# bypassed/g' \
             {} +
+
+          # 3. 修復 Android 端：如果在 args.gn 中停用了 VR，直接清空 //device/vr/BUILD.gn，防止測試 target 解析不存在的 VR 依賴
+          if [ -f "device/vr/BUILD.gn" ]; then
+            echo 'group("vr") {}' > device/vr/BUILD.gn
+            echo 'group("vr_test_utils") {}' >> device/vr/BUILD.gn
+            echo 'group("openxr_data") {}' >> device/vr/BUILD.gn
+          fi
+          if [ -f "chrome/browser/vr/BUILD.gn" ]; then
+            echo 'group("vr_common") {}' > chrome/browser/vr/BUILD.gn
+          fi
 
       - name: Install Chromium build dependencies
         run: |
