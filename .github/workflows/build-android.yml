@@ -102,12 +102,12 @@ jobs:
             printf 'group("test_support") {}\n' > chrome/browser/printing/BUILD.gn
           fi
 
-          # 5. 補全 //pdf 下的 Dummy Targets
+          # 5. 補全 //pdf 下的 Dummy Stubs (strict 是 config，pdf_test_utils 是 group)
           mkdir -p pdf
           if [ -f "pdf/BUILD.gn" ]; then
-            printf 'group("strict") {}\ngroup("pdf_test_utils") {}\n' >> pdf/BUILD.gn
+            printf 'config("strict") {}\ngroup("pdf_test_utils") {}\n' >> pdf/BUILD.gn
           else
-            printf 'group("strict") {}\ngroup("pdf_test_utils") {}\n' > pdf/BUILD.gn
+            printf 'config("strict") {}\ngroup("pdf_test_utils") {}\n' > pdf/BUILD.gn
           fi
 
           # 6. 補全 Missing Targets
