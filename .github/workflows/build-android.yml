@@ -77,7 +77,7 @@ jobs:
         run: |
           cd "$CHROMIUM_DIR/src"
 
-          # 1. 使用 perl 跨行擦除所有涉及 enable_vr / enable_pdf / enable_print_preview / enable_ar / enable_supervised_users 的 assert 區塊
+          # 1. 使用 perl 跨行擦除所有涉及特性的 assert 區塊，解決語法阻攔
           find . -name "BUILD.gn" -exec perl -i -0777 -pe '
             s/assert\s*\(\s*enable_vr[\s\S]*?\)//g;
             s/assert\s*\(\s*enable_pdf[\s\S]*?\)//g;
@@ -86,15 +86,55 @@ jobs:
             s/assert\s*\(\s*enable_supervised_users[\s\S]*?\)//g;
           ' {} +
 
-          # 2. 修復 Android 端：假造 VR 相關的 Dummy Target，滿足測試單元的依賴樹
-          if [ -f "device/vr/BUILD.gn" ]; then
-            echo 'group("vr") {}' > device/vr/BUILD.gn
-            echo 'group("vr_test_utils") {}' >> device/vr/BUILD.gn
-            echo 'group("openxr_data") {}' >> device/vr/BUILD.gn
+          # 2. 補全 //chrome/browser/vr 下所有被缺失的 Dummy Targets
+          mkdir -p chrome/browser/vr
+          cat << 'EOF' > chrome/browser/vr/BUILD.gn
+            group("vr") {}
+            group("impl") {}
+            group("vr_common") {}
+            group("chrome_xr_integration_client") {}
+            group("unit_tests") {}
+          EOF
+
+          # 3. 補全 //device/vr 下所有被缺失的 Dummy Targets
+          mkdir -p device/vr
+          cat << 'EOF' > device/vr/BUILD.gn
+            group("vr") {}
+            group("vr_base") {}
+            group("vr_gl_bindings") {}
+            group("vr_test_utils") {}
+            group("openxr_data") {}
+            group("openxr_test_helper") {}
+            group("openxr_test_support_apk") {}
+            group("openxr_test_support_apk__build_config_crbug_908819") {}
+          EOF
+
+          # 4. 補全 //chrome/browser/printing 下的 Dummy Target
+          mkdir -p chrome/browser/printing
+          if [ -f "chrome/browser/printing/BUILD.gn" ]; then
+            echo 'group("test_support") {}' >> chrome/browser/printing/BUILD.gn
+          else
+            echo 'group("test_support") {}' > chrome/browser/printing/BUILD.gn
           fi
-          if [ -f "chrome/browser/vr/BUILD.gn" ]; then
-            echo 'group("vr_common") {}' > chrome/browser/vr/BUILD.gn
+
+          # 5. 補全 //pdf 下的 Dummy Targets
+          mkdir -p pdf
+          if [ -f "pdf/BUILD.gn" ]; then
+            echo 'group("strict") {}' >> pdf/BUILD.gn
+            echo 'group("pdf_test_utils") {}' >> pdf/BUILD.gn
+          else
+            cat << 'EOF' > pdf/BUILD.gn
+              group("strict") {}
+              group("pdf_test_utils") {}
+          EOF
           fi
+
+          # 6. 補全 //components/safe_browsing 與 plugins 等子項 Missing Targets
+          mkdir -p components/safe_browsing/content/common components/safe_browsing/content/browser chrome/browser/plugins chrome/browser/safe_browsing
+          [ -f "components/safe_browsing/content/common/BUILD.gn" ] && echo 'group("file_type_policies") {}\ngroup("file_type_policies_test_support") {}' >> components/safe_browsing/content/common/BUILD.gn
+          [ -f "components/safe_browsing/content/browser/BUILD.gn" ] && echo 'group("client_side_detection") {}' >> components/safe_browsing/content/browser/BUILD.gn
+          [ -f "chrome/browser/plugins/BUILD.gn" ] && echo 'group("browser_tests") {}' >> chrome/browser/plugins/BUILD.gn
+          [ -f "chrome/browser/safe_browsing/BUILD.gn" ] && echo 'group("blocking_page_platform_test_support") {}' >> chrome/browser/safe_browsing/BUILD.gn
 
       - name: Configure GN build
         run: |
