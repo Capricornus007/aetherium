@@ -40,16 +40,16 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ${{ github.workspace }}/.ccache
-          key: ccache-linux-${{ github.ref_name }}-${{ steps.date.outputs.date }}-${{ github.run_id }}
+          key: ccache-linux-${{ github.ref_name }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
-            ccache-linux-${{ github.ref_name }}-${{ steps.date.outputs.date }}-
             ccache-linux-${{ github.ref_name }}-
-            ccache-linux-
 
       - name: Prepare ccache
         run: |
           ccache --version
-          ccache -M 10G
+          ccache -M 20G
+          ccache --set-config=compression=true
+          ccache --set-config=compression_level=6
           ccache -z
 
       - name: Download depot_tools
@@ -150,10 +150,7 @@ jobs:
       - name: Cleanup ccache locks
         if: always()
         run: |
-          ccache -c 2>/dev/null || true
-          find ~/.ccache -name "*.lock" -delete 2>/dev/null || true
           find ${{ github.workspace }}/.ccache -name "*.lock" -delete 2>/dev/null || true
-          find ~/.ccache -name "*.tmp*" -delete 2>/dev/null || true
           find ${{ github.workspace }}/.ccache -name "*.tmp*" -delete 2>/dev/null || true
 
       - name: Save ccache
@@ -163,7 +160,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: ${{ github.workspace }}/.ccache
-          key: ccache-linux-${{ github.ref_name }}-${{ steps.date.outputs.date }}-${{ github.run_id }}-${{ github.run_attempt }}
+          key: ccache-linux-${{ github.ref_name }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Upload Chrome artifact
         uses: actions/upload-artifact@v4
