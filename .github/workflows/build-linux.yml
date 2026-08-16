@@ -145,7 +145,7 @@ jobs:
           autoninja -C out/Default chrome
 
       - name: Show ccache stats
-        run: ccache -s
+        run: ccache -s -v
 
       - name: Cleanup ccache locks
         if: always()

@@ -140,7 +140,7 @@ jobs:
           autoninja -C out/Default chrome_public_apk
 
       - name: Show ccache stats
-        run: ccache -s
+        run: ccache -s -v
 
       - name: Cleanup ccache locks and temps
         if: always()
