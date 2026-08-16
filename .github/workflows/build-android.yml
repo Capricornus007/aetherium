@@ -19,7 +19,7 @@ jobs:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       CCACHE_EXEC: /usr/bin/ccache
       CCACHE_BASEDIR: ${{ github.workspace }}
-      CCACHE_SLOPPINESS: include_file_mtime
+      CCACHE_SLOPPINESS: include_file_mtime,include_file_ctime,time_macros,file_macro
       CCACHE_MAXSIZE: 10G
       CCACHE_COMPRESS: "1"
 
