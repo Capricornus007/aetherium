@@ -43,13 +43,18 @@ jobs:
           key: ccache-android-${{ github.ref_name }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
             ccache-android-${{ github.ref_name }}-
+            ccache-android-
 
       - name: Prepare ccache
         run: |
+          mkdir -p "$CCACHE_DIR"
           ccache --version
           ccache -M 20G
           ccache --set-config=compression=true
           ccache --set-config=compression_level=6
+          ccache --set-config=compiler_check=content
+          ccache --set-config=sloppiness=include_file_mtime,include_file_ctime,time_macros,file_macro
+          ccache --set-config=base_dir="${{ github.workspace }}"
           ccache -z
 
       - name: Download depot_tools
@@ -132,7 +137,7 @@ jobs:
       - name: Configure GN build
         run: |
           cd "$CHROMIUM_DIR/src"
-          gn gen out/Default --args='target_os="android" target_cpu="arm64" is_official_build=false is_component_build=false is_debug=false symbol_level=0 blink_symbol_level=0 v8_symbol_level=0 enable_nacl=false enable_nacl_nonsfi=false enable_remoting=false enable_resource_allowlist_generation=false enable_swiftshader=false enable_widevine=false enable_hangout_services_extension=false enable_mdns=false use_thin_lto=false is_java_debug=true treat_warnings_as_errors=false android_static_analysis="off" disable_fieldtrial_testing_config=true enable_iterator_debugging=false enable_cdm_host_verification=false enable_web_tests=false blink_enable_generated_code_formatting=false cc_wrapper="ccache" enable_pdf=false enable_print_preview=false enable_vr=false enable_media_router=false enable_spellcheck=false enable_plugins=false enable_webrtc=false rtc_include_tests=false enable_feed=false build_with_tflite_lib=false enable_reading_list=false safe_browsing_mode=0 optimize_webui=false'
+          gn gen out/Default --args='target_os="android" target_cpu="arm64" is_official_build=false is_component_build=false is_debug=false symbol_level=0 blink_symbol_level=0 v8_symbol_level=0 enable_nacl=false enable_nacl_nonsfi=false enable_remoting=false enable_resource_allowlist_generation=false enable_swiftshader=false enable_widevine=false enable_hangout_services_extension=false enable_mdns=false use_thin_lto=false is_java_debug=true treat_warnings_as_errors=false android_static_analysis="off" disable_fieldtrial_testing_config=true enable_iterator_debugging=false enable_cdm_host_verification=false enable_web_tests=false blink_enable_generated_code_formatting=false cc_wrapper="ccache" enable_pdf=false enable_print_preview=false enable_vr=false enable_media_router=false enable_spellcheck=false enable_plugins=false enable_webrtc=false rtc_include_tests=false enable_feed=false build_with_tflite_lib=false enable_reading_list=false safe_browsing_mode=0 optimize_webui=false clang_use_chrome_plugins=false'
 
       - name: Build Android APK
         run: |
