@@ -51,6 +51,8 @@ jobs:
           ccache --version
           ccache -M 20G
           ccache --set-config=compression=true
+　　　　　　ccache --set-config=hash_dir=false
+　　　　　　ccache --set-config=absolute_paths_in_stderr=false
           ccache --set-config=compression_level=6
           ccache --set-config=compiler_check=content
           ccache --set-config=sloppiness=include_file_mtime,include_file_ctime,time_macros,file_macro
