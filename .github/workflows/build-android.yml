@@ -19,8 +19,8 @@ jobs:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       CCACHE_EXEC: /usr/bin/ccache
       CCACHE_BASEDIR: ${{ github.workspace }}
-      CCACHE_SLOPPINESS: include_file_mtime,include_file_ctime,time_macros,file_macro
-      CCACHE_MAXSIZE: 10G
+      CCACHE_SLOPPINESS: include_file_mtime,include_file_ctime,time_macros,file_macro,pch_defines
+      CCACHE_MAXSIZE: 15G
       CCACHE_COMPRESS: "1"
 
     steps:
@@ -31,7 +31,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y git python3 python3-pip curl openjdk-17-jdk ccache
-      
+
       - name: Get current date
         id: date
         run: echo "date=$(date -u +'%Y-%m-%d')" >> $GITHUB_OUTPUT
@@ -49,15 +49,15 @@ jobs:
         run: |
           mkdir -p "$CCACHE_DIR"
           ccache --version
-          ccache -M 20G
+          ccache -M 15G
           ccache --set-config=compression=true
           ccache --set-config=compression_level=6
           ccache --set-config=compiler_check=content
           ccache --set-config=hash_dir=false
           ccache --set-config=absolute_paths_in_stderr=false
-          ccache --set-config=sloppiness=include_file_mtime,include_file_ctime,time_macros,file_macro
+          ccache --set-config=sloppiness=include_file_mtime,include_file_ctime,time_macros,file_macro,pch_defines
           ccache --set-config=base_dir="${{ github.workspace }}"
-          ccache -z
+          ccache -s
 
       - name: Download depot_tools
         run: |
