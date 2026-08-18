@@ -125,7 +125,7 @@ jobs:
           fi
 
           if [ -f "components/safe_browsing/content/browser/BUILD.gn" ]; then
-            printf '\ngroup("client_side_detection") {}\n' >> components/safe_browsing/content/browser/BUILD.gn
+            printf '\ngroup("client_side_detection") {}\ngroup("safe_browsing_blocking_page") {}\n' >> components/safe_browsing/content/browser/BUILD.gn
           fi
 
           if [ -f "chrome/browser/plugins/BUILD.gn" ]; then
