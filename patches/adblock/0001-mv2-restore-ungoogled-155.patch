@@ -1,0 +1,113 @@
+########################################################################
+# aetherium 補丁 0001（adblock 類）：恢復 Manifest V2 擴充支援
+#
+# 來源：ungoogled-chromium master 分支（該分支錨定 Chromium 155.0.8059.39）
+#   原檔：patches/core/ungoogled-chromium/extensions-manifestv2.patch
+#   抓取 URL：
+#   https://github.com/ungoogled-software/ungoogled-chromium/blob/master/patches/core/ungoogled-chromium/extensions-manifestv2.patch
+#   授權：BSD-3-Clause（ungoogled-chromium 專案）
+#
+# 這檔實際改什麼（4 個檔案）：
+#   1) extensions/browser/manifest_v2_handler.cc
+#      ShouldDisableLegacyExtensions() 本來無條件 return true，改成 return false。
+#      這是整條 MV2 淘汰鏈路的唯一總開關（擋安裝、停用既有 MV2、UI 標紅都讀它）。
+#   2) chrome/browser/extensions/api/developer_private/extension_info_generator.cc
+#      拿掉 chrome://extensions 開發者頁面上的「is_affected_by_mv2_deprecation」欄位填充。
+#   3) chrome/browser/ui/webui/extensions/extensions_ui.cc
+#      把 safetyHubThreeDotDetails 釘成 false（純修飾，跟 MV2 無直接關係）。
+#   4) extensions/common/extension.cc
+#      拿掉「載入未打包的 MV2 擴充」時那條棄用警告。
+#
+# 用戶看得見的差別：
+#   MV2 擴充（例：enhanced-h264ify、舊版 uBlock Origin）不會在瀏覽器啟動時被
+#   自動關掉，也不會被擋下安裝；chrome://extensions 不會出現「不受支援」的灰色狀態。
+#
+# 157 這棵樹需不需要它 —— 需要，且有實測依據：
+#   /opt/chromium-src/src/extensions/browser/manifest_v2_handler.cc:111-118
+#     bool ShouldDisableLegacyExtensions() {
+#       if (g_allow_mv2_for_testing) { ... return false; }
+#       return true;                      <== 就是這一行在殺 MV2
+#     }
+#   /opt/chromium-src/src/extensions/browser/manifest_v2_util.cc:20-46
+#     IsExtensionAffected()：manifest_version < 3 的一般擴充一律判定「受影響」
+#   /opt/chromium-src/src/extensions/browser/manifest_v2_handler.cc:196-199
+#     OnExtensionSystemReady() → DisableAffectedExtensions()（啟動就掃一遍並停用）
+#   重要澄清：extensions/common/extension.cc:60 的 kMinimumSupportedManifestVersion = 2
+#   只代表「manifest 解析階段允許 MV2」，並不代表擴充會被啟用；真正的開關是上面的 handler。
+#
+# 套用要動到什麼：4 個 .cc，皆未動頭文件 ⇒ 只重編這 4 個編譯單位 + 重新連結 chrome。
+#   不會引發大規模重編。
+# 日後跟上游同步的痛度：中等。重點只有 manifest_v2_handler.cc 那 1 檔 1 行，
+#   其餘 3 檔是修飾性；同步後若套不上，手動把 ShouldDisableLegacyExtensions()
+#   的內容改成 return false 就能保住功能。
+# 副作用（老實講）：
+#   g_allow_mv2_for_testing 之後只被測試碼引用
+#   （extensions/browser/manifest_v2_handler.cc:345 的 MV2TestHelper 仍在），
+#   跑 extensions 的 MV2 單測/browsertest 會紅；只 build `chrome` target 不受影響。
+#   你的 args.gn 有 treat_warnings_as_errors = false，未使用變量的警告不會判死整輪構建。
+#
+# 驗證方式（唯讀，不會寫檔）：
+#   cd /opt/chromium-src/src
+#   patch -p1 --dry-run -i ~/Downloads/aetherium/patches/adblock/0001-mv2-restore-ungoogled-155.patch
+#   git apply --check -p1 --ignore-whitespace ~/Downloads/aetherium/patches/adblock/0001-mv2-restore-ungoogled-155.patch
+########################################################################
+--- a/chrome/browser/extensions/api/developer_private/extension_info_generator.cc
++++ b/chrome/browser/extensions/api/developer_private/extension_info_generator.cc
+@@ -896,16 +896,6 @@ void ExtensionInfoGenerator::FillExtensi
+         toolbar_actions_model->IsActionPinned(extension.id());
+   }
+ 
+-  // MV2 deprecation.
+-  ManifestV2Handler* mv2_handler = ManifestV2Handler::Get(profile);
+-  CHECK(mv2_handler);
+-  info.is_affected_by_mv2_deprecation =
+-      mv2_handler->IsExtensionAffected(extension);
+-  if (info.web_store_url.length() > 0) {
+-    info.recommendations_url =
+-        extension_urls::GetNewWebstoreItemRecommendationsUrl(extension.id())
+-            .spec();
+-  }
+ 
+   info.can_upload_as_account_extension =
+       AccountExtensionTracker::Get(profile)->CanUploadAsAccountExtension(
+--- a/chrome/browser/ui/webui/extensions/extensions_ui.cc
++++ b/chrome/browser/ui/webui/extensions/extensions_ui.cc
+@@ -506,7 +506,7 @@ content::WebUIDataSource* CreateAndAddEx
+           extensions_features::kExtensionsMenuAccessControlWithPermittedSites));
+   source->AddBoolean(
+       "safetyHubThreeDotDetails",
+-      base::FeatureList::IsEnabled(features::kSafetyHubThreeDotDetails));
++      false);
+   source->AddBoolean("enableGlobalScopedShortcuts", IsGlobalShortcutEnabled());
+ 
+   // MV2 deprecation.
+--- a/extensions/browser/manifest_v2_handler.cc
++++ b/extensions/browser/manifest_v2_handler.cc
+@@ -109,12 +109,7 @@ bool ManifestV2HandlerFactory::ServiceIs
+ 
+ // Returns true if legacy extensions should be disabled.
+ bool ShouldDisableLegacyExtensions() {
+-  if (g_allow_mv2_for_testing) {
+-    // We allow legacy MV2 extensions for testing purposes.
+     return false;
+-  }
+-
+-  return true;
+ }
+ 
+ }  // namespace
+--- a/extensions/common/extension.cc
++++ b/extensions/common/extension.cc
+@@ -97,12 +97,6 @@ bool IsManifestSupported(int manifest_ve
+   // Supported versions are always safe.
+   if (manifest_version >= kMinimumSupportedManifestVersion &&
+       manifest_version <= kMaximumSupportedManifestVersion) {
+-    // Emit a warning for unpacked extensions on Manifest V2 warning that
+-    // MV2 is deprecated.
+-    if (type == Manifest::Type::kExtension && manifest_version == 2 &&
+-        Manifest::IsUnpackedLocation(location)) {
+-      *warning = errors::kManifestV2IsDeprecatedWarning;
+-    }
+     return true;
+   }
+ 

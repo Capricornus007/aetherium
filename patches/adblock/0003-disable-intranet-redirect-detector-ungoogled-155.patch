@@ -1,0 +1,53 @@
+########################################################################
+# aetherium 補丁 0003（adblock 類）：關掉「內網重新導向探測器」
+#
+# 來源：ungoogled-chromium master（錨定 Chromium 155.0.8059.39）
+#   原檔：patches/extra/ungoogled-chromium/disable-intranet-redirect-detector.patch
+#   抓取 URL：
+#   https://github.com/ungoogled-software/ungoogled-chromium/blob/master/patches/extra/ungoogled-chromium/disable-intranet-redirect-detector.patch
+#   授權：BSD-3-Clause
+#
+# 這檔實際改什麼（1 個檔案）：
+#   chrome/browser/intranet_redirect_detector.cc 的 FinishSleep()，原本只有在那
+#   --disable-background-networking 時才 return，補丁改成無條件 return。
+#   效果：啟動後 7 秒那次「探測公司內網網域名稱」的 DNS 查詢與後續 2 個
+#   http 探測請求完全不發出去。
+#
+# 用戶看得見的差別：沒有可见差別，只有副作用消失——啟動時不再對
+#   «不存在的內網網域» 發 DNS/HTTP 請求（這在他 sing-box + AdGuardHome 的
+#   環境裡會變成多餘的查詢日誌與一條多出來的連線）。
+#
+# 157 需不需要：需要，且這個功能在 157 是活的（不是死代碼）：
+#   /opt/chromium-src/src/chrome/browser/browser_process_impl.cc:1198
+#     intranet_redirect_detector_ = std::make_unique<IntranetRedirectDetector>();
+#   /opt/chromium-src/src/chrome/browser/chrome_browser_main.cc:2026 附近註解說明
+#     「normal mode 會建立全域 IntranetRedirectDetector，睡 7 秒後起來做事」
+#   /opt/chromium-src/src/chrome/browser/intranet_redirect_detector.h:31 有桌面平台限定斷言
+#     ⇒ 桌面 Linux 一律編進去並執行。
+#
+# 套用要動到什麼：1 個 .cc ⇒ 重編 1 個編譯單位 + 連結。
+# 同步痛度：極低（單檔單行 return）。
+# 注意：上游保留了 --disable-background-networking 這條退路；我們是把它焊死。
+#   代價是「以后想靠改 flag 恢復也做不到」，但這功能本來就沒有人需要。
+#
+# 驗證方式（唯讀）：
+#   cd /opt/chromium-src/src
+#   patch -p1 --dry-run -i ~/Downloads/aetherium/patches/adblock/0003-disable-intranet-redirect-detector-ungoogled-155.patch
+#   git apply --check -p1 --ignore-whitespace 同一路徑
+########################################################################
+# Disables the intranet redirect detector. It generates extra DNS requests and the functionality using this is disabled
+# See this page for more information: https://mikewest.org/2012/02/chrome-connects-to-three-random-domains-at-startup
+
+--- a/chrome/browser/intranet_redirect_detector.cc
++++ b/chrome/browser/intranet_redirect_detector.cc
+@@ -117,9 +117,7 @@ void IntranetRedirectDetector::FinishSle
+   simple_loaders_.clear();
+   resulting_origins_.clear();
+ 
+-  const base::CommandLine* cmd_line = base::CommandLine::ForCurrentProcess();
+-  if (cmd_line->HasSwitch(switches::kDisableBackgroundNetworking))
+-    return;
++  return;
+ 
+   DCHECK(simple_loaders_.empty() && resulting_origins_.empty());
+ 

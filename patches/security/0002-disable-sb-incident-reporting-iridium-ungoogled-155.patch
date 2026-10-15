@@ -1,0 +1,124 @@
+########################################################################
+# aetherium 補丁 0002（security 類）：Safe Browsing「事件回報」上傳完全停用
+#
+# 來源：Iridium Browser（作者 Jan Engelhardt，2015-07-07），经 ungoogled-chromium 收錄
+#   原檔：patches/core/iridium-browser/safe_browsing-disable-incident-reporting.patch
+#   抓取 URL：
+#   https://github.com/ungoogled-software/ungoogled-chromium/blob/master/patches/core/iridium-browser/safe_browsing-disable-incident-reporting.patch
+#
+# 這檔實際改什麼（5 個檔案）：
+#   chrome/browser/safe_browsing/chrome_safe_browsing_blocking_page_factory.cc
+#     → is_extended_reporting_opt_in_allowed 釘成 false（不再出現「讓 Google 收到更多細節」的選項）
+#   chrome/browser/safe_browsing/incident_reporting/incident_report_uploader_impl.cc
+#     → kSbIncidentReportUrl 加上 trk:268: 前綴（ungoogled 自用記號，实际请求会被挡掉）
+#   chrome/browser/safe_browsing/incident_reporting/incident_reporting_service.cc
+#     → IsEnabledForProfile() 直接 return false，整條事件蒐集（外掛、驱动、
+#        已載入模組清單等機器資訊）不再生成、不再上傳
+#   chrome/browser/safe_browsing/safe_browsing_service.cc
+#   components/security_interstitials/core/safe_browsing_loud_error_ui.cc
+#
+# 用戶看得見的差別：在「危險網站」警告頁上按下「匯報／送件」之類的動作時，
+#   不會再把他的-url、外掛清單、機器資訊打包傳给 Google。其他瀏覽行為不變。
+#
+# 157 需不需要：需要，而且與他既有的 0001 補丁不重複（重要）：
+#   他現行的 ~/Downloads/chromium-patches/0001-...patch 只改了
+#   components/safe_browsing/core/browser/db/sb_protocol_manager_util.cc 的
+#   kSbV4UrlPrefix / kSbV5UrlPrefix（黑名單資料庫查詢）。
+#   事件回報走的是另一台主機，在本樹裡寫死：
+#   /opt/chromium-src/src/chrome/browser/safe_browsing/incident_reporting/
+#   incident_report_uploader_impl.cc:31  https://sb-ssl.google.com/safebrowsing/clientreport/incident
+#   ⇒ 那條路徑他現有補丁完全蓋不到，必須靠這一條。
+#
+# 套用要動到什麼：5 個檔案（全部 .cc，未動頭文件）⇒ 重編 5 個編譯單位 + 連結。
+# 同步痛度：中。safe_browsing 是上游改動最頻繁的目錄之一，每輪同步這條幾乎一定衝突，
+#   但真正的功能核心只有 incident_reporting_service.cc 的 IsEnabledForProfile() 一行
+#   （return false）；衝突時優先保住那 1 行即可。
+#
+# 驗證方式（唯讀）：
+#   cd /opt/chromium-src/src
+#   patch -p1 --dry-run -i ~/Downloads/aetherium/patches/security/0002-disable-sb-incident-reporting-iridium-ungoogled-155.patch
+#   git apply --check -p1 --ignore-whitespace 同一路徑
+########################################################################
+From 4dfa8ed0814040317cb82d8545502186daa0a204 Mon Sep 17 00:00:00 2001
+From: Jan Engelhardt <jengelh@inai.de>
+Date: Tue, 7 Jul 2015 17:02:09 +0200
+Subject: [PATCH 62/76] safe_browsing: disable incident reporting
+
+Disables the safebrowsing incident reporting where you could upload
+information about a blocked URL to Google (also added a trk prefix to
+the URL so we get notified if this happens again in the future).
+---
+ .../incident_reporting/incident_report_uploader_impl.cc        | 2 +-
+ .../incident_reporting/incident_reporting_service.cc           | 3 +++
+ chrome/browser/safe_browsing/safe_browsing_blocking_page.cc    | 3 +--
+ chrome/browser/safe_browsing/safe_browsing_service.cc          | 2 +-
+ .../security_interstitials/core/safe_browsing_loud_error_ui.cc | 1 +
+ 5 files changed, 7 insertions(+), 4 deletions(-)
+
+--- a/chrome/browser/safe_browsing/chrome_safe_browsing_blocking_page_factory.cc
++++ b/chrome/browser/safe_browsing/chrome_safe_browsing_blocking_page_factory.cc
+@@ -63,8 +63,7 @@ ChromeSafeBrowsingBlockingPageFactory::C
+       Profile::FromBrowserContext(web_contents->GetBrowserContext());
+   // Create appropriate display options for this blocking page.
+   PrefService* prefs = profile->GetPrefs();
+-  bool is_extended_reporting_opt_in_allowed =
+-      IsExtendedReportingOptInAllowed(*prefs);
++  bool is_extended_reporting_opt_in_allowed = false;
+   bool is_proceed_anyway_disabled = IsSafeBrowsingProceedAnywayDisabled(*prefs);
+ 
+   // Determine if any prefs need to be updated prior to showing the security
+--- a/chrome/browser/safe_browsing/incident_reporting/incident_report_uploader_impl.cc
++++ b/chrome/browser/safe_browsing/incident_reporting/incident_report_uploader_impl.cc
+@@ -29,7 +29,7 @@ namespace safe_browsing {
+ namespace {
+ 
+ const char kSbIncidentReportUrl[] =
+-    "https://sb-ssl.google.com/safebrowsing/clientreport/incident";
++    "trk:268:https://sb-ssl.google.com/safebrowsing/clientreport/incident";
+ 
+ constexpr net::NetworkTrafficAnnotationTag
+     kSafeBrowsingIncidentTrafficAnnotation =
+--- a/chrome/browser/safe_browsing/incident_reporting/incident_reporting_service.cc
++++ b/chrome/browser/safe_browsing/incident_reporting/incident_reporting_service.cc
+@@ -302,11 +302,14 @@ IncidentReportingService::UploadContext:
+ 
+ // static
+ bool IncidentReportingService::IsEnabledForProfile(Profile* profile) {
++  return false;
++#if 0
+   if (profile->IsOffTheRecord())
+     return false;
+   if (!IsSafeBrowsingEnabled(*profile->GetPrefs()))
+     return false;
+   return IsExtendedReportingEnabled(*profile->GetPrefs());
++#endif
+ }
+ 
+ IncidentReportingService::IncidentReportingService(
+--- a/chrome/browser/safe_browsing/safe_browsing_service.cc
++++ b/chrome/browser/safe_browsing/safe_browsing_service.cc
+@@ -501,7 +501,7 @@ SafeBrowsingUIManager* SafeBrowsingServi
+ }
+ 
+ void SafeBrowsingServiceImpl::RegisterAllDelayedAnalysis() {
+-#if BUILDFLAG(FULL_SAFE_BROWSING)
++#if 0
+   RegisterBinaryIntegrityAnalysis();
+ #endif
+ }
+--- a/components/security_interstitials/core/safe_browsing_loud_error_ui.cc
++++ b/components/security_interstitials/core/safe_browsing_loud_error_ui.cc
+@@ -27,11 +27,11 @@ namespace {
+ // For malware interstitial pages, we link the problematic URL to Google's
+ // diagnostic page.
+ const char kSbDiagnosticUrl[] =
+-    "https://transparencyreport.google.com/safe-browsing/search?url=%s";
++    "trk:227:https://transparencyreport.google.com/safe-browsing/search?url=%s";
+ 
+ // Constants for the V4 phishing string upgrades.
+ const char kReportPhishingErrorUrl[] =
+-    "https://safebrowsing.google.com/safebrowsing/report_error/?url=%s";
++    "trk:228:https://safebrowsing.google.com/safebrowsing/report_error/?url=%s";
+ 
+ void RecordExtendedReportingPrefChanged(bool report) {
+   UMA_HISTOGRAM_BOOLEAN("SafeBrowsing.Pref.Extended.SecurityInterstitial",

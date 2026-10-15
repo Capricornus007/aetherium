@@ -1,0 +1,164 @@
+########################################################################
+# aetherium 補丁 0003（security 類）：停掉「客戶端釣魚偵測」把頁面內容送給 Google
+#
+# 來源：Iridium Browser（作者 Jan Engelhardt，2015-07-07），经 ungoogled-chromium 收錄
+#   原檔：patches/core/iridium-browser/safe_browsing-disable-reporting-of-safebrowsing-over.patch
+#   抓取 URL：
+#   https://github.com/ungoogled-software/ungoogled-chromium/blob/master/patches/core/iridium-browser/safe_browsing-disable-reporting-of-safebrowsing-over.patch
+#
+# 這檔實際改什麼（1 個檔案）：
+#   components/safe_browsing/core/browser/client_side_detection_service_base.cc 的
+#   SendClientReportPhishingRequest()：本來會在本地機器學習模型判定「這頁像钓鱼頁」
+#   時，把頁面 URL、DOM 特徵、ACCESS_TOKEN、WEB_CONTENT 打包 POST 給 Google 要最終判决；
+#   補丁把整段拿掉，只保留「直接回一個非釣魚的 verdict」這條不發網路請求的路徑。
+#
+# 用戶看得見的差別：瀏覽器不再在「你打開了一個像钓鱼頁的網站」時，把那個頁面的
+#   網址與內容摘要送到 Google。他還是會照樣被 Safe Browsing 黑名單保護嗎？——
+#   不會再多這層「雲端二次確認」，但黑名單比對（他已經用 0001 補丁導到 127.0.0.1）
+#   本來就已經關掉，實際防護交給 AdGuardHome + uBlock，跟他現行做法一致。
+#
+# 157 需不需要：需要，且他現行補丁蓋不到（實測依據）：
+#   /opt/chromium-src/src/components/safe_browsing/core/browser/
+#   client_side_detection_service_base.cc:42
+#     kClientReportPhishingUrl[] = "https://sb-ssl.google.com/safebrowsing/clientreport/phishing"
+#   同檔 :459 GetClientReportUrl() 只是把這個常數包成 GURL（不會讀他改過的
+#   kSbV4UrlPrefix/kSbV5UrlPrefix）⇒ 這是獨立的一條外連，必須單獨處理。
+#
+# 套用要動到什麼：1 個 .cc（大段刪除，但函式介面沒變、頭文件不動）
+#   ⇒ 重編 1 個編譯單位 + 連結。
+# 同步痛度：中。刪的是 100 行左右的整塊函式體，上游只要動這個函式就會衝突；
+#   偷懶做法：只把開頭的 `if (!IsEnabled()) {` 改成 `if (true) {`，
+#   效果一樣（走早退路徑、不發請求），同步幾乎不會衝突。
+#   註：這條刪完後同檔裡一些常數（kNegativeCacheIntervalDays 等）與後段函式會變成未使用，
+#   clang 有Wunused 警告；treat_warnings_as_errors=false 所以不會判死。
+#
+# 驗證方式（唯讀）：
+#   cd /opt/chromium-src/src
+#   patch -p1 --dry-run -i ~/Downloads/aetherium/patches/security/0003-disable-sb-client-side-phishing-report-iridium-ungoogled-155.patch
+#   git apply --check -p1 --ignore-whitespace 同一路徑
+########################################################################
+From c89ce946e5328ca8a7df923d421e904bb6bfe9b6 Mon Sep 17 00:00:00 2001
+From: Jan Engelhardt <jengelh@inai.de>
+Date: Tue, 7 Jul 2015 18:28:46 +0200
+Subject: [PATCH 63/76] safe_browsing: disable reporting of safebrowsing
+ override
+
+Disables reporting of the safebrowsing override, i.e. the report sent
+if a user decides to visit a page that was flagged as "insecure".
+This prevents trk:148 (phishing) and trk:149 (malware).
+--- a/components/safe_browsing/core/browser/client_side_detection_service_base.cc
++++ b/components/safe_browsing/core/browser/client_side_detection_service_base.cc
+@@ -475,113 +475,11 @@ void ClientSideDetectionServiceBase::Sen
+     ClientReportPhishingRequestCallback callback,
+     const std::string& access_token) {
+   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+-  if (!IsEnabled()) {
+     if (!callback.is_null()) {
+       base::SequencedTaskRunner::GetCurrentDefault()->PostTask(
+           FROM_HERE, base::BindOnce(std::move(callback), GURL(verdict->url()),
+                                     false, std::nullopt, std::nullopt));
+     }
+-    return;
+-  }
+-
+-  // If the report was not requested by the user, record that we made a request.
+-  // Logged before the request is made to ensure it gets recorded. If this
+-  // returns false due to being at ping cap or prefs are null, abandon the
+-  // request.
+-  if (verdict->client_side_detection_type() !=
+-          ClientSideDetectionType::USER_REPORT &&
+-      !AddPhishingReport(base::Time::Now())) {
+-    if (!callback.is_null()) {
+-      base::SequencedTaskRunner::GetCurrentDefault()->PostTask(
+-          FROM_HERE, base::BindOnce(std::move(callback), GURL(verdict->url()),
+-                                    false, std::nullopt, std::nullopt));
+-    }
+-    return;
+-  }
+-
+-  std::string request_data;
+-  verdict->SerializeToString(&request_data);
+-
+-  net::NetworkTrafficAnnotationTag traffic_annotation =
+-      net::DefineNetworkTrafficAnnotation(
+-          "safe_browsing_client_side_phishing_detector", R"(
+-          semantics {
+-            sender: "Safe Browsing Client-Side Phishing Detector"
+-            description:
+-              "If the client-side phishing detector determines that the "
+-              "current page contents are similar to phishing pages, it will "
+-              "send a request to Safe Browsing to ask for a final verdict. If "
+-              "Safe Browsing agrees the page is dangerous, Chrome will show a "
+-              "full-page interstitial warning."
+-            trigger:
+-              "Whenever the client-side detector machine learning model "
+-              "computes a phishy-ness score above a threshold, after page-load."
+-            internal {
+-              contacts {
+-                email: "chrome-counter-abuse-alerts@google.com"
+-              }
+-            }
+-            user_data {
+-              type: ACCESS_TOKEN
+-              type: SENSITIVE_URL
+-              type: WEB_CONTENT
+-            }
+-            data:
+-              "Top-level page URL without CGI parameters, boolean and double "
+-              "features extracted from DOM, such as the number of resources "
+-              "loaded in the page, if certain likely phishing and social "
+-              "engineering terms found on the page, etc."
+-            destination: GOOGLE_OWNED_SERVICE
+-            last_reviewed: "2026-06-17"
+-          }
+-          policy {
+-            cookies_allowed: YES
+-            cookies_store: "Safe browsing cookie store"
+-            setting:
+-              "Users can enable or disable this feature by toggling 'Protect "
+-              "you and your device from dangerous sites' in Chrome settings "
+-              "under Privacy. This feature is enabled by default."
+-            chrome_policy {
+-              SafeBrowsingProtectionLevel {
+-                policy_options {mode: MANDATORY}
+-                SafeBrowsingProtectionLevel: 0
+-              }
+-            }
+-            chrome_policy {
+-              SafeBrowsingEnabled {
+-                policy_options {mode: MANDATORY}
+-                SafeBrowsingEnabled: false
+-              }
+-            }
+-            deprecated_policies: "SafeBrowsingEnabled"
+-          })");
+-
+-  auto resource_request = std::make_unique<network::ResourceRequest>();
+-  if (!access_token.empty()) {
+-    SetAccessToken(resource_request.get(), access_token);
+-  }
+-
+-  resource_request->url = GetClientReportUrl(kClientReportPhishingUrl);
+-  resource_request->method = "POST";
+-  resource_request->load_flags = net::LOAD_DISABLE_CACHE;
+-
+-  auto loader = network::SimpleURLLoader::Create(std::move(resource_request),
+-                                                 traffic_annotation);
+-  loader->AttachStringForUpload(request_data, "application/octet-stream");
+-  loader->DownloadToStringOfUnboundedSizeUntilCrashAndDie(
+-      url_loader_factory_.get(),
+-      base::BindOnce(&ClientSideDetectionServiceBase::OnURLLoaderComplete,
+-                     base::Unretained(this), loader.get(), base::Time::Now()));
+-
+-  // Remember which callback and URL correspond to the current fetcher object.
+-  auto info = std::make_unique<ClientPhishingReportInfo>();
+-  auto* loader_ptr = loader.get();
+-  info->loader = std::move(loader);
+-  info->callback = std::move(callback);
+-  info->phishing_url = GURL(verdict->url());
+-  client_phishing_reports_[loader_ptr] = std::move(info);
+-
+-  DidSendClientReportPhishingRequest(std::move(verdict), access_token);
+ }
+ 
+ CSDModelType ClientSideDetectionServiceBase::GetModelType() const {

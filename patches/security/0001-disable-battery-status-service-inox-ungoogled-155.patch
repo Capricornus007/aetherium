@@ -1,0 +1,145 @@
+########################################################################
+# aetherium 補丁 0001（security 類）：把網頁的 Battery Status API 變成永遠回空值
+#
+# 來源：inox-patchset 0019，经 ungoogled-chromium 收錄（注意：inox-patchset 原本的
+#   GitHub 倉庫現已 404 消失，唯一可取得的副本就是 ungoogled 裡這份）
+#   原檔：patches/extra/inox-patchset/0019-disable-battery-status-service.patch
+#   抓取 URL：
+#   https://github.com/ungoogled-software/ungoogled-chromium/blob/master/patches/extra/inox-patchset/0019-disable-battery-status-service.patch
+#
+# 這檔實際改什麼（2 個檔案：.cc + .h）：
+#   services/device/battery/battery_status_service.cc：AddCallback() 不再建立
+#   BatteryStatusManager、不再監聽 UPSower/D-Bus 的電量變化，直接 callback 一個
+#   預設（空）的 mojom::BatteryStatus()；ConsumersChanged()、NotifyConsumersOnMainThread()
+#   等整塊移除，.h 對應刪掉成员宣告。
+#
+# 用戶看得見的差別：網站呼叫 navigator.getBattery() 拿到的永远是
+#   charging=true、level=1.0、dingtime 為 0 的假值（網頁看不到他筆電真實電量、
+#   看不到他何時插拔電源）。這是一條公認的指紋特徵（電量 + 是否插電 + 剩餘時間
+#   可以當作次要識別碼）。瀏覽器自己的省電／電池顯示走的是
+#   base::PowerMonitor 那條路，不受這個補丁影響，所以「電量顯示」「節電模式」
+#   照常工作。
+#
+# 157 需不需要：需要，而且沒有旗標可替代：
+#   /opt/chromium-src/src/services/device/battery/ 仍存在（10 個檔案），
+#   /opt/chromium-src/src/third_party/blink/renderer/modules/battery/ 仍存在
+#   （battery_manager.cc、battery_manager.idl 都在）⇒ API 在 157 是開著的。
+#   查證過沒有對應的 runtime feature 可關（在 chrome/common/chrome_features.cc 與
+#   blink 的 feature 表裡找不到 BatteryManager 的 BASE_DECLARE_FEATURE），
+#   所以只能靠補丁或靠網站自己不被允許（無效）。
+#
+# 套用要動到什麼：2 個檔案，動到 .h ⇒ 需要重編引用這個頭文件的檔案。實測引用面很小：
+#   只有 3 個非測試檔引用（services/device/device_service.cc、
+#   services/device/battery/battery_monitor_impl.h、services/device/battery/battery_status_manager.h）
+#   ⇒ 重編範圍仍然只有 device service 這一小塊 + 連結，不會引發全量重編。
+# 同步痛度：中低。這個模組上游變動頻率低，但補丁是「大段刪除」型，每輪同步要重新
+#   對一次上下文；真要偷懶，也可以自己縮成只在 AddCallback() 裡直接
+#   callback.Run(mojom::BatteryStatus()); return ...;（1 行改法，效果相同、同步最省力）。
+#
+# 驗證方式（唯讀）：
+#   cd /opt/chromium-src/src
+#   patch -p1 --dry-run -i ~/Downloads/aetherium/patches/security/0001-disable-battery-status-service-inox-ungoogled-155.patch
+#   git apply --check -p1 --ignore-whitespace 同一路徑
+########################################################################
+--- a/services/device/battery/battery_status_service.cc
++++ b/services/device/battery/battery_status_service.cc
+@@ -22,10 +22,7 @@ BatteryStatusService::BatteryStatusServi
+       update_callback_(
+           base::BindRepeating(&BatteryStatusService::NotifyConsumers,
+                               base::Unretained(this))),
+-      status_updated_(false),
+       is_shutdown_(false) {
+-  callback_list_.set_removal_callback(base::BindRepeating(
+-      &BatteryStatusService::ConsumersChanged, base::Unretained(this)));
+ }
+ 
+ BatteryStatusService::~BatteryStatusService() = default;
+@@ -40,58 +37,16 @@ base::CallbackListSubscription BatterySt
+   DCHECK(main_thread_task_runner_->BelongsToCurrentThread());
+   DCHECK(!is_shutdown_);
+ 
+-  if (!battery_fetcher_)
+-    battery_fetcher_ = BatteryStatusManager::Create(update_callback_);
+-
+-  if (callback_list_.empty()) {
+-    bool success = battery_fetcher_->StartListeningBatteryChange();
+-    // On failure pass the default values back.
+-    if (!success)
+-      callback.Run(mojom::BatteryStatus());
+-  }
+-
+-  if (status_updated_) {
+-    // Send recent status to the new callback if already available.
+-    callback.Run(status_);
+-  }
++  // Always pass the default values.
++  callback.Run(mojom::BatteryStatus());
+ 
+   return callback_list_.Add(callback);
+ }
+ 
+-void BatteryStatusService::ConsumersChanged() {
+-  if (is_shutdown_)
+-    return;
+-
+-  if (callback_list_.empty()) {
+-    battery_fetcher_->StopListeningBatteryChange();
+-    status_updated_ = false;
+-  }
+-}
+-
+ void BatteryStatusService::NotifyConsumers(const mojom::BatteryStatus& status) {
+-  DCHECK(!is_shutdown_);
+-
+-  main_thread_task_runner_->PostTask(
+-      FROM_HERE,
+-      base::BindOnce(&BatteryStatusService::NotifyConsumersOnMainThread,
+-                     base::Unretained(this), status));
+-}
+-
+-void BatteryStatusService::NotifyConsumersOnMainThread(
+-    const mojom::BatteryStatus& status) {
+-  DCHECK(main_thread_task_runner_->BelongsToCurrentThread());
+-  if (callback_list_.empty())
+-    return;
+-
+-  status_ = status;
+-  status_updated_ = true;
+-  callback_list_.Notify(status_);
+ }
+ 
+ void BatteryStatusService::Shutdown() {
+-  if (!callback_list_.empty())
+-    battery_fetcher_->StopListeningBatteryChange();
+-  battery_fetcher_.reset();
+   is_shutdown_ = true;
+ }
+ 
+@@ -102,9 +57,6 @@ BatteryStatusService::GetUpdateCallbackF
+ 
+ void BatteryStatusService::SetBatteryManagerForTesting(
+     std::unique_ptr<BatteryStatusManager> test_battery_manager) {
+-  battery_fetcher_ = std::move(test_battery_manager);
+-  status_ = mojom::BatteryStatus();
+-  status_updated_ = false;
+   is_shutdown_ = false;
+   main_thread_task_runner_ = base::SingleThreadTaskRunner::GetCurrentDefault();
+ }
+--- a/services/device/battery/battery_status_service.h
++++ b/services/device/battery/battery_status_service.h
+@@ -59,15 +59,10 @@ class BatteryStatusService {
+   // Updates current battery status and sends new status to interested
+   // render processes. Can be called on any thread via a callback.
+   void NotifyConsumers(const mojom::BatteryStatus& status);
+-  void NotifyConsumersOnMainThread(const mojom::BatteryStatus& status);
+-  void ConsumersChanged();
+ 
+   scoped_refptr<base::SingleThreadTaskRunner> main_thread_task_runner_;
+-  std::unique_ptr<BatteryStatusManager> battery_fetcher_;
+   BatteryUpdateCallbackList callback_list_;
+   BatteryUpdateCallback update_callback_;
+-  mojom::BatteryStatus status_;
+-  bool status_updated_;
+   bool is_shutdown_;
+ };
+ 

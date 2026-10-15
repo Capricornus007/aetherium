@@ -1,0 +1,58 @@
+########################################################################
+# aetherium 補丁 0002（adblock 類）：拿掉位址列搜尋時附加的來源追蹤參數
+#
+# 來源：ungoogled-chromium master（錨定 Chromium 155.0.8059.39）
+#   原檔：patches/core/ungoogled-chromium/remove-navigation-source-param.patch
+#   抓取 URL：
+#   https://github.com/ungoogled-software/ungoogled-chromium/blob/master/patches/core/ungoogled-chromium/remove-navigation-source-param.patch
+#   授權：BSD-3-Clause
+#
+# 這檔實際改什麼（1 個檔案）：
+#   components/search_engines/template_url.cc 裡 GOOGLE_SEARCH_SOURCE 這個 case，
+#   原本會依頁面種類把 ?source=chrome.ob 或 ?source=chrome.rb 塞進搜尋 URL。
+#   補丁把這段整個刪除，只留 break。
+#
+# 用戶看得見的差別：從位址列／realbox 搜尋 Google 時，網址列與複製出來的連結
+#   不会再有 source=chrome.ob / source=chrome.rb 這個追蹤參數。
+#
+# 157 需不需要：需要。dry-run 直接通過代表這段程式碼在 157 依然存在且相同
+#   （patch 以 components/search_engines/template_url.cc:1413 的
+#    case GOOGLE_SEARCH_SOURCE 為上下文，能对上就是還活著）。
+#   這不是 uBlock 能擋的東西——它是瀏覽器自己拼進 URL 的。
+#
+# 套用要動到什麼：1 個 .cc，未動頭文件 ⇒ 重編 1 個編譯單位 + 連結。
+# 同步痛度：低。單一 case 區塊刪除，上游若改動這個函式會明確衝突，手動重刪一次即可。
+#
+# 驗證方式（唯讀）：
+#   cd /opt/chromium-src/src
+#   patch -p1 --dry-run -i ~/Downloads/aetherium/patches/adblock/0002-remove-navigation-source-param-ungoogled-155.patch
+#   git apply --check -p1 --ignore-whitespace 同一路徑
+########################################################################
+# This removes a tracking parameter that is injected into the URL
+# when navigating from the onmibox/realbox
+--- a/components/search_engines/template_url.cc
++++ b/components/search_engines/template_url.cc
+@@ -1413,23 +1413,6 @@ std::string TemplateURLRef::HandleReplac
+         break;
+ 
+       case GOOGLE_SEARCH_SOURCE: {
+-        DCHECK(!replacement.is_post_param);
+-        using OEP = ::metrics::OmniboxEventProto;
+-        std::string source_param;
+-        const auto pc = search_terms_args.page_classification;
+-        if (pc == OEP::NTP ||
+-            pc == OEP::INSTANT_NTP_WITH_OMNIBOX_AS_STARTING_FOCUS ||
+-            pc == OEP::SEARCH_RESULT_PAGE_NO_SEARCH_TERM_REPLACEMENT ||
+-            pc == OEP::SEARCH_RESULT_PAGE_DOING_SEARCH_TERM_REPLACEMENT ||
+-            pc == OEP::SEARCH_RESULT_PAGE_ON_CCT ||
+-            pc == OEP::SRP_ZPS_PREFETCH || pc == OEP::OTHER) {
+-          source_param = "chrome.ob";
+-        } else if (pc == OEP::NTP_REALBOX) {
+-          source_param = "chrome.rb";
+-        }
+-        if (!source_param.empty()) {
+-          HandleReplacement("source", source_param, replacement, &url);
+-        }
+         break;
+       }
+ 

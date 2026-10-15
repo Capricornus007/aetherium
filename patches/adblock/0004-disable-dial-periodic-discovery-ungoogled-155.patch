@@ -1,0 +1,65 @@
+########################################################################
+# aetherium 補丁 0004（adblock 類）：停掉 DIAL 裝置探索的週期性 SSDP 廣播
+#
+# 來源：ungoogled-chromium master（錨定 Chromium 155.0.8059.39）
+#   原檔：patches/extra/ungoogled-chromium/disable-dial-repeating-discovery.patch
+#   抓取 URL：
+#   https://github.com/ungoogled-software/ungoogled-chromium/blob/master/patches/extra/ungoogled-chromium/disable-dial-repeating-discovery.patch
+#   授權：BSD-3-Clause
+#
+# 這檔實際改什麼（1 個檔案）：
+#   chrome/browser/media/router/discovery/dial/dial_registry.cc 的
+#   StartPeriodicDiscovery() 拿掉 DoDiscovery() 與 repeating_timer_，
+#   StopPeriodicDiscovery() 對應刪掉 timer 停止動作。
+#   ⇒ 不再每隔一段時間對區網發 DIAL/SSDP 廣播（「家庭網路裡有沒有 Chromecast」）。
+#
+# 用戶看得見的差別：區網不再被這台機器週期性廣播打擾（Wireshark/tcpdump 會看到
+#   SSDP 封包變少）；瀏覽器 UI 完全沒變。
+#
+# 157 需不需要：功能還在，但價值中等——它只在「投放/Cast 裝置探索被啟動」時才跑，
+#   不是開機就無腦廣播。他不用 Chromecast，所以這條是「潔癖型」補丁：
+#   1 個檔案、零風險、有 LAN 安靜的收益。
+#   佐證：/opt/chromium-src/src/chrome/browser/media/router/discovery/dial/
+#   dial_registry.cc 仍存在且 StartPeriodicDiscovery() 的 timer 程式碼與補丁上下文
+#   完全對上（dry-run 通過）；呼叫端是
+#   chrome/browser/media/router/discovery/dial/dial_media_sink_service_impl.cc。
+#   另外查證結果：本樹（chrome/、components/、services/、content/、build/ 的 .gni）
+#   都找不到 enable_media_router 這個 GN 參數的宣告 ⇒ 想靠 args.gn 關掉投放這條路
+#   在 157 已不存在（這也代表 CI workflow 裡寫的 enable_media_router=false 是無效參數，
+#   gn gen 會以 Unrecognized argument 失敗）。要用補丁或 --disable-features 走。
+#
+# 套用要動到什麼：1 個 .cc ⇒ 重編 1 個編譯單位 + 連結。
+#   注意：刪掉 repeating_timer_ 的使用後，dial_registry.h 裡的成員宣告變成未使用，
+#   clang 會噴 unused 警告；他的 args.gn 有 treat_warnings_as_errors = false，不會判死。
+# 同步痛度：極低。
+#
+# 驗證方式（唯讀）：
+#   cd /opt/chromium-src/src
+#   patch -p1 --dry-run -i ~/Downloads/aetherium/patches/adblock/0004-disable-dial-periodic-discovery-ungoogled-155.patch
+#   git apply --check -p1 --ignore-whitespace 同一路徑
+########################################################################
+# Disables the dial registry's repeating discovery timer
+# This caused unnecessary SSDP network spam
+
+--- a/chrome/browser/media/router/discovery/dial/dial_registry.cc
++++ b/chrome/browser/media/router/discovery/dial/dial_registry.cc
+@@ -160,10 +160,6 @@ void DialRegistry::StartPeriodicDiscover
+   }
+ 
+   dial_ = CreateDialService();
+-  DoDiscovery();
+-  repeating_timer_ = std::make_unique<base::RepeatingTimer>();
+-  repeating_timer_->Start(FROM_HERE, refresh_interval_delta_, this,
+-                          &DialRegistry::DoDiscovery);
+   // Always send the current device list with the next discovery request.  This
+   // may not be necessary, but is done to match previous behavior.
+   ++registry_generation_;
+@@ -181,8 +177,6 @@ void DialRegistry::StopPeriodicDiscovery
+     return;
+   }
+ 
+-  repeating_timer_->Stop();
+-  repeating_timer_.reset();
+   ClearDialService();
+ }
+ 

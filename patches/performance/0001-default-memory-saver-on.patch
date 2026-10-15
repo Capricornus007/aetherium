@@ -1,0 +1,50 @@
+########################################################################
+# aetherium 補丁 0001（performance 類）：出廠就把「記憶體節省模式」預設打開
+#
+# 來源：本輪自己寫的（不來任何其他瀏覽器分支），依據 157 上游既有實作改預設值。
+#   這是本目錄唯一一條「自己寫」的補丁，其餘都是別家現成檔的收錄。
+#
+# 這檔實際改什麼（1 個檔案 1 行）：
+#   components/performance_manager/user_tuning/prefs.cc:35
+#     RegisterLocalStatePrefs() 裡 kMemorySaverModeState 的預設值
+#     MemorySaverModeState::kDisabled  →  kEnabled
+#   偏好字串是 performance_tuning.high_efficiency_mode.state
+#   （components/performance_manager/public/user_tuning/prefs.h:35-36）
+#   狀態枚舉同檔 :27-33：kDisabled=0、kDeprecated=1、kEnabled=2。
+#   打擾度檔持不變：kMemorySaverModeAggressiveness 仍是 kMedium（同檔 :38-39、
+#   枚舉 :43-48），也就是「後台分頁閒置一段時間後掛起」的標準力道，不額外调猛。
+#
+# 用戶看得見的差別：13GB 記憶體的機器上，長時間不看的後台分頁會被自動掛起釋放
+#   記憶體，整體比較不容易卡；代價是那個分頁重新點開時會重新載入一次（表單未送出的
+#   內容可能不見）。這一條是要他拍板的取捨，見 README 的驗收步驟 6。
+#   白名單：chrome://settings/performance 裡的「始终不悬挂以下站点」清單照舊可用，
+#   建議把 floccus 同步用的網頁、Bitwarden 網頁版之类的分頁加進去。
+#
+# 157 需不需要：需要（上游預設關著）。實測依據：
+#   /opt/chromium-src/src/components/performance_manager/user_tuning/prefs.cc:28-35
+#     registry->RegisterIntegerPref(kMemorySaverModeState,
+#         static_cast<int>(MemorySaverModeState::kDisabled));
+#   另外 kMemorySaverModeEnabled（舊的布林開關）在同檔 :29 預設 false。
+#
+# 套用要動到什麼：1 個 .cc 的 1 行、未動頭文件 ⇒ 重編 1 個編譯單位 + 連結。
+# 同步痛度：極低（1 行預設值）。
+# 反悔方式：不想重新編譯也能改回來——把偏好值寫進 Local State，或直接在
+#   chrome://settings/performance 把開關關掉（那個開關寫的就是同一個 pref）。
+#
+# 驗證方式（唯讀）：
+#   cd /opt/chromium-src/src
+#   patch -p1 --dry-run -i ~/Downloads/aetherium/patches/performance/0001-default-memory-saver-on.patch
+#   git apply --check -p1 --ignore-whitespace 同一路徑
+########################################################################
+diff --git a/components/performance_manager/user_tuning/prefs.cc b/components/performance_manager/user_tuning/prefs.cc
+--- a/components/performance_manager/user_tuning/prefs.cc
++++ b/components/performance_manager/user_tuning/prefs.cc
+@@ -32,7 +32,7 @@ void RegisterLocalStatePrefs(PrefRegistrySimple* registry) {
+       kMemorySaverModeTimeBeforeDiscardInMinutes,
+       kDefaultMemorySaverModeTimeBeforeDiscardInMinutes);
+   registry->RegisterIntegerPref(
+-      kMemorySaverModeState, static_cast<int>(MemorySaverModeState::kDisabled));
++      kMemorySaverModeState, static_cast<int>(MemorySaverModeState::kEnabled));  // [aetherium 本地補丁] 13GB 機器：預設開啟記憶體節省
+   registry->RegisterIntegerPref(
+       kMemorySaverModeAggressiveness,
+       static_cast<int>(MemorySaverModeAggressiveness::kMedium));
