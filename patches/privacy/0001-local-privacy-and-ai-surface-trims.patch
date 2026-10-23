@@ -1,0 +1,371 @@
+diff --git a/chrome/browser/component_updater/registration.cc b/chrome/browser/component_updater/registration.cc
+index e94bd56109fd4..db260a7d956d1 100644
+--- a/chrome/browser/component_updater/registration.cc
++++ b/chrome/browser/component_updater/registration.cc
+@@ -171,7 +171,7 @@ void RegisterComponentsForUpdate() {
+   RegisterIndigoComponent(cus);
+ 
+ #if BUILDFLAG(SAFE_BROWSING_AVAILABLE)
+-  RegisterFileTypePoliciesComponent(cus);
++  // [本地補丁] 用戶 2026-10-09 不要這顆元件：RegisterFileTypePoliciesComponent(cus);
+ #endif
+ 
+ #if !BUILDFLAG(IS_CHROMEOS)
+@@ -187,7 +187,7 @@ void RegisterComponentsForUpdate() {
+   MaybeRegisterPKIMetadataComponent(cus);
+ 
+   RegisterSafetyTipsComponent(cus);
+-  RegisterCrowdDenyComponent(cus);
++  // [本地補丁] 用戶 2026-10-09 不要這顆元件：RegisterCrowdDenyComponent(cus);
+ 
+ #if BUILDFLAG(IS_CHROMEOS)
+   RegisterSmartDimComponent(cus);
+@@ -199,9 +199,9 @@ void RegisterComponentsForUpdate() {
+ #endif
+ 
+ #if !BUILDFLAG(IS_ANDROID)
+-  RegisterDictationConnectorComponent(cus);
++  // [本地補丁] 用戶 2026-10-09 不要這顆元件：RegisterDictationConnectorComponent(cus);
+   RegisterIwaKeyDistributionComponent(cus);
+-  RegisterZxcvbnDataComponent(cus);
++  // [本地補丁] 用戶 2026-10-09 不要這顆元件：RegisterZxcvbnDataComponent(cus);
+ #endif  // !BUILDFLAG(IS_ANDROID)
+ 
+ #if BUILDFLAG(IS_ANDROID)
+@@ -209,7 +209,7 @@ void RegisterComponentsForUpdate() {
+ #endif  // BUIDLFLAG(IS_ANDROID)
+ 
+ #if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_CHROMEOS)
+-  ManageScreenAIComponentRegistration(cus, g_browser_process->local_state());
++  // [本地補丁] 用戶 2026-10-09 不要端側 AI：ManageScreenAIComponentRegistration(cus, g_browser_process->local_state());
+ #endif  // !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_CHROMEOS)
+ 
+   RegisterCommerceHeuristicsComponent(cus);
+@@ -233,7 +233,7 @@ void RegisterComponentsForUpdate() {
+         // BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_ANDROID)
+ 
+ #if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
+-  RegisterWasmTtsEngineComponent(cus, g_browser_process->local_state());
++  // [本地補丁] 用戶 2026-10-09 不要這顆元件：RegisterWasmTtsEngineComponent(cus, g_browser_process->local_state());
+ #endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
+ 
+   RegisterCaptchaProviderComponent(cus);
+diff --git a/chrome/browser/history/top_sites_factory.cc b/chrome/browser/history/top_sites_factory.cc
+index 92e0b8eab20c8..20ee9cbb3f918 100644
+--- a/chrome/browser/history/top_sites_factory.cc
++++ b/chrome/browser/history/top_sites_factory.cc
+@@ -58,14 +58,11 @@ struct RawPrepopulatedPage {
+ // Prepopulated pages are a Desktop concept. On Android they are only available
+ // where the extensions platform is built in, i.e. on Desktop Android.
+ #if !BUILDFLAG(IS_ANDROID) || BUILDFLAG(ENABLE_EXTENSIONS_CORE)
+-constexpr auto kRawPrepopulatedPages = std::to_array<RawPrepopulatedPage>({
+-    {
+-        IDS_WEBSTORE_URL,
+-        IDS_EXTENSION_WEB_STORE_TITLE_SHORT,
+-        IDR_WEBSTORE_ICON_32,
+-        SkColorSetRGB(63, 132, 197),
+-    },
+-});
++// aetherium: 不預置任何捷徑磁貼（「最常瀏覽網站」與用戶自己加的捷徑不受影響，
++// 這裡拿掉的只是出廠就塞一顆 Chrome Web Store 的那份預置表）。
++// 注意：std::to_array 沒有「空的 braced-init-list」重載，空表要直接宣告
++// std::array<T, 0>，否則編譯不過。
++constexpr std::array<RawPrepopulatedPage, 0> kRawPrepopulatedPages{};
+ 
+ bool ShouldUsePrepopulatedPages(Profile* profile) {
+ #if BUILDFLAG(IS_ANDROID)
+diff --git a/chrome/browser/resources/new_tab_page/app.ts b/chrome/browser/resources/new_tab_page/app.ts
+index 70e29918b6a40..56905c3acd8fb 100644
+--- a/chrome/browser/resources/new_tab_page/app.ts
++++ b/chrome/browser/resources/new_tab_page/app.ts
+@@ -924,10 +924,8 @@ export class AppElement extends AppElementBase {
+   }
+ 
+   private computeShowCustomizeChromeText_(): boolean {
+-    if (this.showWallpaperSearchButton_) {
+-      return false;
+-    }
+-    return !this.showBackgroundImage_;
++    // aetherium: 膠囊一律收成鉛筆圖示，不顯示文字
++    return false;
+   }
+ 
+   private computeBackgroundImageAttribution1_(): string {
+diff --git a/chrome/browser/resources/settings/settings_menu/settings_menu.css b/chrome/browser/resources/settings/settings_menu/settings_menu.css
+index 6e6a63e1ef51a..619cf4be7f981 100644
+--- a/chrome/browser/resources/settings/settings_menu/settings_menu.css
++++ b/chrome/browser/resources/settings/settings_menu/settings_menu.css
+@@ -43,6 +43,13 @@
+   outline: none;
+ }
+ 
++.menu-product-logo {
++  height: var(--cr-icon-size);
++  width: var(--cr-icon-size);
++  margin-inline-end: 16px;
++  flex-shrink: 0;
++}
++
+ :host-context([settings-refresh-2026]) .cr-nav-menu-item cr-icon {
+   height: var(--cr-nav-menu-item-content-height);
+   width: var(--cr-nav-menu-item-content-height);
+diff --git a/chrome/browser/resources/settings/settings_menu/settings_menu.html b/chrome/browser/resources/settings/settings_menu/settings_menu.html
+index c35c985ddf344..562ff68ca81ac 100644
+--- a/chrome/browser/resources/settings/settings_menu/settings_menu.html
++++ b/chrome/browser/resources/settings/settings_menu/settings_menu.html
+@@ -2,27 +2,6 @@
+       <cr-menu-selector id="menu" selectable="a:not(#extensionsLink)"
+           attr-for-selected="href" @iron-activate="${this.onIronActivate_}"
+           @click="${this.onLinkClick_}" selected-attribute="selected">
+-        <a role="menuitem"
+-            id="people" href="/people"
+-            ?hidden="${this.shouldHideMenuItem_(this.pageVisibility_?.people)}"
+-            class="cr-nav-menu-item">
+-<if expr="not _google_chrome">
+-          <cr-icon icon="settings:person"></cr-icon>
+-</if>
+-<if expr="_google_chrome">
+-          <cr-icon icon="settings-internal:google-g"></cr-icon>
+-</if>
+-          <span class="menu-label">$i18n{peoplePageTitle}</span>
+-          <cr-ripple></cr-ripple>
+-        </a>
+-        <a role="menuitem" id="autofill" href="/autofill"
+-            @click="${this.onAutofillClick_}"
+-            class="cr-nav-menu-item"
+-            ?hidden="${this.shouldHideMenuItem_(this.pageVisibility_?.yourSavedInfo)}">
+-          <cr-icon icon="settings:password-manager"></cr-icon>
+-          <span class="menu-label">$i18n{autofillPageTitle}</span>
+-          <cr-ripple></cr-ripple>
+-        </a>
+         <a role="menuitem" id="privacy" href="/privacy"
+             ?hidden="${this.shouldHideMenuItem_(this.pageVisibility_?.privacy)}"
+             class="cr-nav-menu-item">
+@@ -123,7 +102,8 @@
+         </a>
+         <a role="menuitem" id="about-menu" href="/help"
+             class="cr-nav-menu-item">
+-          <cr-icon icon="cr:chrome-product"></cr-icon>
++          <img class="menu-product-logo" src="chrome://theme/current-channel-logo"
++              alt="">
+           <span class="menu-label">$i18n{aboutPageTitle}</span>
+           <cr-ripple></cr-ripple>
+         </a>
+diff --git a/chrome/browser/resources/settings/settings_menu/settings_menu.ts b/chrome/browser/resources/settings/settings_menu/settings_menu.ts
+index 931eefe24e393..96123dc868e11 100644
+--- a/chrome/browser/resources/settings/settings_menu/settings_menu.ts
++++ b/chrome/browser/resources/settings/settings_menu/settings_menu.ts
+@@ -33,9 +33,9 @@ import {getHtml} from './settings_menu.html.js';
+ 
+ export interface SettingsMenuElement {
+   $: {
+-    autofill: HTMLLinkElement,
++    // aetherium: 「你與 Google」與「自動填入和密碼」兩個選單項已移除，
++    // 對應的 id 宣告一併拿掉（eslint 的 lit-element-invalid-id 會擋模板外的 id）。
+     menu: CrMenuSelectorElement,
+-    people: HTMLLinkElement,
+   };
+ }
+ 
+diff --git a/chrome/browser/spellchecker/spellcheck_factory.cc b/chrome/browser/spellchecker/spellcheck_factory.cc
+index 4ac5a96d0d9c2..6b2917ad36b8b 100644
+--- a/chrome/browser/spellchecker/spellcheck_factory.cc
++++ b/chrome/browser/spellchecker/spellcheck_factory.cc
+@@ -72,7 +72,8 @@ void SpellcheckServiceFactory::RegisterProfilePrefs(
+ #else
+   uint32_t flags = user_prefs::PrefRegistrySyncable::SYNCABLE_PREF;
+ #endif
+-  user_prefs->RegisterBooleanPref(spellcheck::prefs::kSpellCheckEnable, true,
++  // [本地補丁] 用戶 2026-10-10：拼字檢查預設停用（開關仍在設定頁，只是不再預設打開）。
++  user_prefs->RegisterBooleanPref(spellcheck::prefs::kSpellCheckEnable, false,
+                                   flags);
+ }
+ 
+diff --git a/chrome/browser/ui/startup/infobar_utils.cc b/chrome/browser/ui/startup/infobar_utils.cc
+index e8f2df7fba871..a20d4d3e78920 100644
+--- a/chrome/browser/ui/startup/infobar_utils.cc
++++ b/chrome/browser/ui/startup/infobar_utils.cc
+@@ -253,7 +253,8 @@ void AddInfoBarsIfNecessary(BrowserWindowInterface* browser,
+   infobars::ContentInfoBarManager* infobar_manager =
+       infobars::ContentInfoBarManager::FromWebContents(web_contents);
+ 
+-  if (!google_apis::HasAPIKeyConfigured()) {
++  // aetherium: 本產品沒有 Google API 金鑰，這條橫幅對用戶無意義
++  if (false && !google_apis::HasAPIKeyConfigured()) {
+     if (infobars::IsInfoBarMigrated(
+             infobars::InfoBarDelegate::GOOGLE_API_KEYS_INFOBAR_DELEGATE)) {
+       if (auto* manager =
+@@ -311,7 +312,8 @@ void AddInfoBarsIfNecessary(BrowserWindowInterface* browser,
+   }
+ 
+ #if BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN) || BUILDFLAG(IS_LINUX)
+-  if (base::FeatureList::IsEnabled(features::kSessionRestoreInfobar)) {
++  // aetherium: 促銷橫幅拿掉；session.restore_on_startup 偏好本身不受影響
++  if (false && base::FeatureList::IsEnabled(features::kSessionRestoreInfobar)) {
+     auto* session_restore_infobar_controller =
+         session_restore_infobar::SessionRestoreInfobarController::From(browser);
+     session_restore_infobar_controller->MaybeShowInfoBar(*profile,
+diff --git a/chrome/browser/ui/webui/new_tab_page/action_chips/action_chips_generator.cc b/chrome/browser/ui/webui/new_tab_page/action_chips/action_chips_generator.cc
+index ac70265d5d8c5..03eeef430e334 100644
+--- a/chrome/browser/ui/webui/new_tab_page/action_chips/action_chips_generator.cc
++++ b/chrome/browser/ui/webui/new_tab_page/action_chips/action_chips_generator.cc
+@@ -508,6 +508,12 @@ std::vector<ActionChipPtr> CreateChipsForSteadyState(
+       &CreateImageCreationChipIfEligible,
+   };
+ 
++  // [本地補丁] 用戶 2026-10-10：NTP 那整排 AI 磁貼（運用 AI 模式／生成圖片／深度搜尋／
++  // 畫布／腦力激盪／學習／寫作／加圖）全部不要。
++  //
++  // 為什麼不是關某個 feature 就好：下面那段選單是三選一——scaled / new / old。實測把
++  // kNtpStarterChip 關掉反而會掉進 kOldGenerators，而那兩項正是「深度搜尋＋生成圖片」，
++  // 等於把一張磁貼換成另一張。所以要在「選完之後」把清單清空，三條路徑一次蓋掉。
+   base::span<const GeneratorFn> generators;
+   if (IsScaledChipsEnabled()) {
+     generators = kScaledGenerators;
+@@ -517,6 +523,9 @@ std::vector<ActionChipPtr> CreateChipsForSteadyState(
+   } else {
+     generators = kOldGenerators;
+   }
++  // [本地補丁] 必須放在三選一之後：上面那條 if / else if / else 一定會挑一個清單填進來，
++  // 在選之前清空會被覆蓋掉（我第一版就是這樣寫錯的）。
++  generators = {};  // [本地補丁] NTP 整排 AI 磁貼不要
+ 
+   const size_t max_num_chips = GetMaxNumChips();
+   for (const GeneratorFn generator : generators) {
+diff --git a/chrome/browser/ui/webui/new_tab_page/composebox/variations/composebox_fieldtrial.cc b/chrome/browser/ui/webui/new_tab_page/composebox/variations/composebox_fieldtrial.cc
+index 9840c5de914ec..177734e1eb863 100644
+--- a/chrome/browser/ui/webui/new_tab_page/composebox/variations/composebox_fieldtrial.cc
++++ b/chrome/browser/ui/webui/new_tab_page/composebox/variations/composebox_fieldtrial.cc
+@@ -165,7 +165,8 @@ CreateQueryControllerConfigParams() {
+   return config_params;
+ }
+ 
+-BASE_FEATURE(kNtpComposebox, base::FEATURE_ENABLED_BY_DEFAULT);
++// [本地補丁] 用戶 2026-10-10：NTP 的「問問 Google」compose 框（含框內 AI 模式按鈕）預設關。
++BASE_FEATURE(kNtpComposebox, base::FEATURE_DISABLED_BY_DEFAULT);
+ 
+ const base::FeatureParam<std::string> kConfigParam(&kNtpComposebox,
+                                                    "NtpComposeboxConfigParam",
+diff --git a/chrome/browser/ui/webui/new_tab_page/new_tab_page_ui.cc b/chrome/browser/ui/webui/new_tab_page/new_tab_page_ui.cc
+index 07c54e7be0622..38456cf381c99 100644
+--- a/chrome/browser/ui/webui/new_tab_page/new_tab_page_ui.cc
++++ b/chrome/browser/ui/webui/new_tab_page/new_tab_page_ui.cc
+@@ -1514,8 +1514,8 @@ std::string_view NewTabPageUI::GetNtpPromoType() {
+ 
+   switch (user_education::features::GetNtpBrowserPromoType()) {
+     case user_education::features::NtpBrowserPromoType::kSimple:
+-      return controller->HasShowablePromo(context) ? kSimpleBrowserPromo
+-                                                   : kEmptyBrowserPromo;
++      // aetherium: 不推促銷氣泡
++      return kDisabledBrowserPromo;
+     case user_education::features::NtpBrowserPromoType::kNone:
+       return kDisabledBrowserPromo;
+   }
+diff --git a/chrome/browser/ui/webui/settings/settings_ui.cc b/chrome/browser/ui/webui/settings/settings_ui.cc
+index 391fc0dc42b8a..12b464116adbf 100644
+--- a/chrome/browser/ui/webui/settings/settings_ui.cc
++++ b/chrome/browser/ui/webui/settings/settings_ui.cc
+@@ -667,9 +667,9 @@ SettingsUI::SettingsUI(content::WebUI* web_ui)
+   // Within the AI subpage are separate sections for Glic, for GEIC, and for all
+   // other AI features. The visibility of these is separately controlled, but
+   // we want to show the subpage if any of them are enabled.
+-  html_source->AddBoolean("showAiPage",
+-                          show_glic_section || show_ai_features_section ||
+-                              enable_ai_mode_search || show_geic_section);
++  // [本地補丁] 用戶 2026-10-10：設定頁「AI 創新功能」整頁不要。原本這顆布林是
++  // glic／ai features／ai mode search／geic 四個條件的 OR，任一開就露出側欄項目。
++  html_source->AddBoolean("showAiPage", false);  // [本地補丁]
+   html_source->AddBoolean("showAiPageAiFeatureSection",
+                           show_ai_features_section);
+ 
+@@ -936,7 +936,8 @@ void SettingsUI::UpdateShowGlicState() {
+   update.Set("showGlicSettings", show_glic);
+   update.Set("glicDisallowedByAdmin", enablement.DisallowedByAdmin());
+   if (show_glic) {
+-    update.Set("showAiPage", true);
++    // [本地補丁] 這行會在 Glic 狀態訂閱時把側欄項目又開回來，跟著封死。
++    update.Set("showAiPage", false);  // [本地補丁]
+   }
+ 
+   content::WebUIDataSource::Update(
+diff --git a/components/autofill/core/common/autofill_prefs.cc b/components/autofill/core/common/autofill_prefs.cc
+index 65f5face93a71..8085f25d2f392 100644
+--- a/components/autofill/core/common/autofill_prefs.cc
++++ b/components/autofill/core/common/autofill_prefs.cc
+@@ -42,13 +42,13 @@ constexpr char kAutofillAiSyncedOptInStatusDeprecated[] =
+ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
+   // Synced prefs. Used for cross-device choices, e.g., credit card Autofill.
+   registry->RegisterBooleanPref(
+-      kAutofillProfileEnabled, true,
++      kAutofillProfileEnabled, false,  // [本地補丁]
+       user_prefs::PrefRegistrySyncable::SYNCABLE_PREF);
+   registry->RegisterIntegerPref(
+       kAutofillLastVersionDeduped, 0,
+       user_prefs::PrefRegistrySyncable::SYNCABLE_PREF);
+   registry->RegisterBooleanPref(
+-      kAutofillAiIdentityEntitiesEnabled, true,
++      kAutofillAiIdentityEntitiesEnabled, false,  // [本地補丁]
+       user_prefs::PrefRegistrySyncable::SYNCABLE_PREF);
+   registry->RegisterBooleanPref(
+       kAutofillAiShoppingEntitiesEnabled, true,
+@@ -73,7 +73,7 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
+       kAutofillHasSeenIban, false,
+       user_prefs::PrefRegistrySyncable::SYNCABLE_PREF);
+   registry->RegisterBooleanPref(
+-      kAutofillCreditCardEnabled, true,
++      kAutofillCreditCardEnabled, false,  // [本地補丁]
+       user_prefs::PrefRegistrySyncable::SYNCABLE_PREF);
+   registry->RegisterBooleanPref(
+       kAutofillPaymentCvcStorage, true,
+diff --git a/components/omnibox/browser/omnibox_prefs.cc b/components/omnibox/browser/omnibox_prefs.cc
+index 4f601dc39f513..3bdbfbdb9bf3d 100644
+--- a/components/omnibox/browser/omnibox_prefs.cc
++++ b/components/omnibox/browser/omnibox_prefs.cc
+@@ -27,7 +27,7 @@ void RegisterProfilePrefs(PrefRegistrySimple* registry) {
+       kShowGoogleLensShortcut, true,
+       user_prefs::PrefRegistrySyncable::SYNCABLE_PREF);
+   registry->RegisterBooleanPref(
+-      kShowAiModeOmniboxButton, true,
++      kShowAiModeOmniboxButton, false,  // [本地補丁] 用戶 2026-10-10：網址列「AI 模式」按鈕預設關
+       user_prefs::PrefRegistrySyncable::SYNCABLE_PREF);
+   registry->RegisterBooleanPref(
+       kShowSearchTools, true, user_prefs::PrefRegistrySyncable::SYNCABLE_PREF);
+diff --git a/components/safe_browsing/core/browser/db/sb_protocol_manager_util.cc b/components/safe_browsing/core/browser/db/sb_protocol_manager_util.cc
+index 6e1846095e591..8259267ba796e 100644
+--- a/components/safe_browsing/core/browser/db/sb_protocol_manager_util.cc
++++ b/components/safe_browsing/core/browser/db/sb_protocol_manager_util.cc
+@@ -40,8 +40,8 @@ namespace safe_browsing {
+ const char* g_sbv4_url_prefix_for_testing = nullptr;
+ const char* g_sbv5_url_prefix_for_testing = nullptr;
+ 
+-const char kSbV4UrlPrefix[] = "https://safebrowsing.googleapis.com/v4";
+-const char kSbV5UrlPrefix[] = "https://safebrowsing.googleapis.com/v5";
++const char kSbV4UrlPrefix[] = "https://127.0.0.1/safebrowsing-disabled/v4";  // [本地补丁] 用户 2026-10-09：不把浏览记录交给 Google；防护交给 AGH+uBlock
++const char kSbV5UrlPrefix[] = "https://127.0.0.1/safebrowsing-disabled/v5";  // [本地补丁] 同上
+ 
+ const base::FilePath::CharType kStoreSuffix[] = FILE_PATH_LITERAL(".store");
+ 
+diff --git a/ui/webui/resources/cr_components/most_visited/most_visited.ts b/ui/webui/resources/cr_components/most_visited/most_visited.ts
+index 4f168a799199d..c3c9bacfbcb45 100644
+--- a/ui/webui/resources/cr_components/most_visited/most_visited.ts
++++ b/ui/webui/resources/cr_components/most_visited/most_visited.ts
+@@ -71,6 +71,8 @@ export interface AutoRemovedEventDetail {
+   undo: () => void;
+ }
+ 
++const AETHERIUM_HIDE_ADD_SHORTCUT = true;
++
+ const MostVisitedElementBase = I18nMixinLit(CrLitElement);
+ 
+ export interface MostVisitedElement {
+@@ -487,6 +489,10 @@ export class MostVisitedElement extends MostVisitedElementBase {
+   }
+ 
+   private computeShowAdd_(): boolean {
++    // aetherium: 不提供「新增捷徑」磁貼（用常數短路，避免 TS unreachable 報錯）
++    if (AETHERIUM_HIDE_ADD_SHORTCUT) {
++      return false;
++    }
+     if (this.nonEditable || this.showShowMore_) {
+       return false;
+     }

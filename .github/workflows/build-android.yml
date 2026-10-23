@@ -4,24 +4,46 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+    inputs:
+      full_build:
+        description: '也要跑完整 APK 編譯（autoninja chrome_public_apk，免費 runner 跑不完）'
+        type: boolean
+        default: false
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# 2026-10-23 重寫。本輪之前的狀態：這個 job 從 2026-08 起就沒綠過，死在
+# 「Configure GN build」——它的 --args 裡有一串 157/158 已不存在的 arg 名
+# （enable_vr／enable_plugins／enable_nacl／enable_media_router／enable_feed／
+# safe_browsing_mode…），而且完全沒套 `patches/`（跟本倉庫的補丁系列互不相認），
+# 還在用 perl 大範圍擦 BUILD.gn 裡 `assert(enable_vr…)` 那種舊時代的做法。
+#
+# 現在 push 只做一件一定有意義的事：抓最新 upstream → 確認 `patches/` 14 支
+# 還套得乾淨（套不上就紅，並列出是哪一支、哪些沒套到）。Android 的 `gn gen`
+# 需要 android SDK／NDK（install-build-deps --android 要抓幾 GB），加上完整
+# APK 在 2 核 7GB 的免費 runner 上不可能在 6 小時上限內編完，所以那些一律
+# 只在手動 workflow_dispatch 勾 full_build 時才跑。
+#
+# ⚠️ 注意：本倉庫的補丁系列是「Linux 桌面」取向（trim/ 與 config/args.gn 都是）。
+#     Android 那條線目前只驗證「補丁能乾淨套上 upstream」，不保證 Android 的
+#     gn gen／編譯可用；要真的做 Android 版，得另外出一份 Android 用的 args。
 jobs:
-  build:
+  android:
+    name: Android 補丁適用性檢查
     runs-on: ubuntu-latest
+    timeout-minutes: 360
     env:
       DEPOT_TOOLS: ${{ github.workspace }}/depot_tools
       CHROMIUM_DIR: ${{ github.workspace }}/chromium
-      # --- ccache: explicit, stable paths so GN/ninja inherit them correctly ---
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       CCACHE_EXEC: /usr/bin/ccache
       CCACHE_BASEDIR: ${{ github.workspace }}
       CCACHE_SLOPPINESS: include_file_mtime,include_file_ctime,time_macros,file_macro,pch_defines
       CCACHE_MAXSIZE: 15G
       CCACHE_COMPRESS: "1"
+      CCACHE_NOHASHDIR: "1"
 
     steps:
       - name: Checkout repository
@@ -30,34 +52,7 @@ jobs:
       - name: Install host dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y git python3 python3-pip curl openjdk-17-jdk ccache
-
-      - name: Get current date
-        id: date
-        run: echo "date=$(date -u +'%Y-%m-%d')" >> $GITHUB_OUTPUT
-
-      - name: Restore ccache
-        uses: actions/cache/restore@v4
-        with:
-          path: ${{ github.workspace }}/.ccache
-          key: ccache-android-${{ github.ref_name }}-${{ github.run_id }}-${{ github.run_attempt }}
-          restore-keys: |
-            ccache-android-${{ github.ref_name }}-
-            ccache-android-
-
-      - name: Prepare ccache
-        run: |
-          mkdir -p "$CCACHE_DIR"
-          ccache --version
-          ccache -M 15G
-          ccache --set-config=compression=true
-          ccache --set-config=compression_level=6
-          ccache --set-config=compiler_check=content
-          ccache --set-config=hash_dir=false
-          ccache --set-config=absolute_paths_in_stderr=false
-          ccache --set-config=sloppiness=include_file_mtime,include_file_ctime,time_macros,file_macro,pch_defines
-          ccache --set-config=base_dir="${{ github.workspace }}"
-          ccache -s
+          sudo apt-get install -y git python3 python3-pip curl lsb-release openjdk-17-jdk ccache
 
       - name: Download depot_tools
         run: |
@@ -68,7 +63,7 @@ jobs:
         run: |
           mkdir -p "$CHROMIUM_DIR"
           cd "$CHROMIUM_DIR"
-          fetch --nohooks --no-history android
+          fetch --nohooks --no-history chromium
 
       - name: Sync dependencies (shallow, parallel)
         run: |
@@ -80,75 +75,42 @@ jobs:
           cd "$CHROMIUM_DIR/src"
           gclient runhooks
 
-      - name: Patch GN files for disabled features
+      - name: Apply aetherium patch series
         run: |
           cd "$CHROMIUM_DIR/src"
+          "$GITHUB_WORKSPACE/scripts/apply-patches.sh" | tee "$RUNNER_TEMP/apply.log"
+          {
+            echo '### 補丁套用結果（upstream HEAD 對patches/ 的相容性）'
+            echo "- upstream HEAD：`git rev-parse HEAD`"
+            echo "- chrome/VERSION：`cat chrome/VERSION | tr '\n' ' '`"
+            echo "- 改動檔案數：`git status --porcelain | wc -l`"
+            grep -E '^(總結|全部補丁)' "$RUNNER_TEMP/apply.log" || true
+          } >> "$GITHUB_STEP_SUMMARY"
 
-          # 1. 使用 perl 跨行擦除所有涉及特性的 assert 區塊
-          find . -name "BUILD.gn" -exec perl -i -0777 -pe '
-            s/assert\s*\(\s*enable_vr[\s\S]*?\)//g;
-            s/assert\s*\(\s*enable_pdf[\s\S]*?\)//g;
-            s/assert\s*\(\s*enable_print_preview[\s\S]*?\)//g;
-            s/assert\s*\(\s*enable_ar[\s\S]*?\)//g;
-            s/assert\s*\(\s*enable_supervised_users[\s\S]*?\)//g;
-          ' {} +
-
-          # 2. 補全 //chrome/browser/vr 下的 Dummy Targets
-          mkdir -p chrome/browser/vr
-          printf 'group("vr") {}\ngroup("impl") {}\ngroup("vr_common") {}\ngroup("chrome_xr_integration_client") {}\ngroup("unit_tests") {}\n' > chrome/browser/vr/BUILD.gn
-
-          # 3. 補全 //device/vr 下的 Dummy Targets
-          mkdir -p device/vr
-          printf 'group("vr") {}\ngroup("vr_base") {}\ngroup("vr_gl_bindings") {}\ngroup("vr_test_utils") {}\ngroup("openxr_data") {}\ngroup("openxr_test_helper") {}\ngroup("openxr_test_support_apk") {}\ngroup("openxr_test_support_apk__build_config_crbug_908819") {}\n' > device/vr/BUILD.gn
-
-          # 4. 補全 //chrome/browser/printing 下的 Dummy Target
-          mkdir -p chrome/browser/printing
-          if [ -f "chrome/browser/printing/BUILD.gn" ]; then
-            printf 'group("test_support") {}\n' >> chrome/browser/printing/BUILD.gn
-          else
-            printf 'group("test_support") {}\n' > chrome/browser/printing/BUILD.gn
-          fi
-
-          # 5. 補全 //pdf 下的 Dummy Stubs (strict 是 config，pdf_test_utils 是 group)
-          mkdir -p pdf
-          if [ -f "pdf/BUILD.gn" ]; then
-            printf 'config("strict") {}\ngroup("pdf_test_utils") {}\n' >> pdf/BUILD.gn
-          else
-            printf 'config("strict") {}\ngroup("pdf_test_utils") {}\n' > pdf/BUILD.gn
-          fi
-
-          # 6. 補全 Missing Targets
-          mkdir -p components/safe_browsing/content/common components/safe_browsing/content/browser chrome/browser/plugins chrome/browser/safe_browsing
-          
-          if [ -f "components/safe_browsing/content/common/BUILD.gn" ]; then
-            printf '\ngroup("file_type_policies") {}\ngroup("file_type_policies_test_support") {}\n' >> components/safe_browsing/content/common/BUILD.gn
-          fi
-
-          if [ -f "components/safe_browsing/content/browser/BUILD.gn" ]; then
-            printf '\ngroup("client_side_detection") {}\n' >> components/safe_browsing/content/browser/BUILD.gn
-          fi
-
-          if [ -f "chrome/browser/plugins/BUILD.gn" ]; then
-            printf '\ngroup("browser_tests") {}\n' >> chrome/browser/plugins/BUILD.gn
-          fi
-
-          if [ -f "chrome/browser/safe_browsing/BUILD.gn" ]; then
-            printf '\ngroup("blocking_page_platform_test_support") {}\n' >> chrome/browser/safe_browsing/BUILD.gn
-          fi
-
-      - name: Configure GN build
-        env:
-          CCACHE_NOHASHDIR: "1"
+      - name: Install Android build dependencies
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.full_build }}
         run: |
           cd "$CHROMIUM_DIR/src"
-          gn gen out/Default --args='target_os="android" target_cpu="arm64" is_official_build=false is_component_build=false is_debug=false no_build_time=true symbol_level=0 blink_symbol_level=0 v8_symbol_level=0 enable_nacl=false enable_nacl_nonsfi=false enable_remoting=false enable_resource_allowlist_generation=false enable_swiftshader=false enable_widevine=false enable_hangout_services_extension=false enable_mdns=false use_thin_lto=false is_java_debug=true treat_warnings_as_errors=false android_static_analysis="off" disable_fieldtrial_testing_config=true enable_iterator_debugging=false enable_cdm_host_verification=false enable_web_tests=false blink_enable_generated_code_formatting=false cc_wrapper="ccache" enable_pdf=false enable_print_preview=false enable_vr=false enable_media_router=false enable_spellcheck=false enable_plugins=false enable_webrtc=false rtc_include_tests=false enable_feed=false build_with_tflite_lib=false enable_reading_list=false safe_browsing_mode=0 optimize_webui=false clang_use_chrome_plugins=false'
+          ./build/install-build-deps.sh --android --no-prompt
+
+      - name: Configure GN build (Android)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.full_build }}
+        run: |
+          cd "$CHROMIUM_DIR/src"
+          # 只留 158 實際存在的 arg（`gn args --list` 核對）；舊清單裡的
+          # enable_vr／enable_plugins／enable_nacl／enable_media_router／enable_feed／
+          # enable_reading_list／build_with_tflite_lib／safe_browsing_mode=0 已移除或改名，
+          # 留著只會讓 gn gen 報「Invalid configuration value」。
+          gn gen out/Default --args='target_os="android" target_cpu="arm64" is_official_build=false is_component_build=false is_debug=false symbol_level=0 blink_symbol_level=0 v8_symbol_level=0 enable_remoting=false enable_widevine=false enable_hangout_services_extension=false enable_mdns=false use_thin_lto=false is_java_debug=true treat_warnings_as_errors=false android_static_analysis="off" disable_fieldtrial_testing_config=true enable_cdm_host_verification=false enable_web_tests=false blink_enable_generated_code_formatting=false cc_wrapper="ccache" optimize_webui=false clang_use_chrome_plugins=false enable_pdf=false enable_print_preview=false enable_spellcheck=false enable_webrtc=false rtc_include_tests=false'
 
       - name: Build Android APK
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.full_build }}
         run: |
           cd "$CHROMIUM_DIR/src"
           autoninja -C out/Default chrome_public_apk
 
       - name: Show ccache stats
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.full_build }}
         run: ccache -s -v
 
       - name: Cleanup ccache locks and temps
@@ -158,7 +120,7 @@ jobs:
           find ${{ github.workspace }}/.ccache -name "*.tmp*" -delete 2>/dev/null || true
 
       - name: Save ccache
-        if: always()
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.full_build && always() }}
         env:
           TAR_OPTIONS: "--warning=no-file-changed"
         uses: actions/cache/save@v4
@@ -167,7 +129,9 @@ jobs:
           key: ccache-android-${{ github.ref_name }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Upload APK artifacts
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.full_build }}
         uses: actions/upload-artifact@v4
         with:
           name: android-apk
-          path: "$CHROMIUM_DIR/src/out/Default/apks"
+          path: "$CHROMIUM_DIR/src/out/Default/apks/ChromePublic.apk"
+          if-no-files-found: warn

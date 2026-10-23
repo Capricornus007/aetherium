@@ -1,0 +1,169 @@
+diff --git a/chrome/browser/accessibility/live_caption/live_translate_controller_factory.cc b/chrome/browser/accessibility/live_caption/live_translate_controller_factory.cc
+index 993f491a572fe..852169b8bfc7d 100644
+--- a/chrome/browser/accessibility/live_caption/live_translate_controller_factory.cc
++++ b/chrome/browser/accessibility/live_caption/live_translate_controller_factory.cc
+@@ -6,17 +6,22 @@
+ 
+ #include "base/feature_list.h"
+ #include "base/no_destructor.h"
+-#include "chrome/browser/on_device_translation/service_controller_manager_factory.h"
+ #include "chrome/browser/profiles/profile.h"
+ #include "components/live_caption/features.h"
+ #include "components/live_caption/google_api_translation_dispatcher.h"
+ #include "components/live_caption/live_translate_controller.h"
+-#include "components/live_caption/translation_dispatcher_on_device.h"
+ #include "components/on_device_translation/buildflags/buildflags.h"
++
++#if BUILDFLAG(ENABLE_ON_DEVICE_TRANSLATION)
++// aetherium trim: 這批標頭對應的實作在 enable_on_device_translation=false 時
++// 根本不會進依賴圖（見同目錄 BUILD.gn），所以要連同下面那段一起保護。
++#include "chrome/browser/on_device_translation/service_controller_manager_factory.h"
++#include "components/live_caption/translation_dispatcher_on_device.h"
+ #include "components/on_device_translation/installer.h"
+ #include "components/on_device_translation/service/service_launcher.h"
+ #include "components/on_device_translation/service_controller.h"
+ #include "components/on_device_translation/service_controller_manager.h"
++#endif  // BUILDFLAG(ENABLE_ON_DEVICE_TRANSLATION)
+ #include "google_apis/google_api_keys.h"
+ 
+ namespace captions {
+@@ -62,6 +67,7 @@ LiveTranslateControllerFactory::BuildServiceInstanceForBrowserContext(
+   std::unique_ptr<TranslationDispatcher> on_device_dispatcher;
+   std::unique_ptr<TranslationDispatcher> google_api_dispatcher;
+ 
++#if BUILDFLAG(ENABLE_ON_DEVICE_TRANSLATION)
+   // Only set on_device_dispatcher if feature flag is set and installer is
+   // available.
+   if (base::FeatureList::IsEnabled(
+@@ -75,6 +81,11 @@ LiveTranslateControllerFactory::BuildServiceInstanceForBrowserContext(
+             on_device_translation::OnDeviceTranslationInstaller::
+                 GetInstance()));
+   }
++#else
++  // aetherium trim: 沒有裝置端翻譯引擎，on_device_dispatcher 維持空值，
++  // 即時字幕翻譯只用 Google API 派傳器（本來也沒有 Google 金鑰，
++  // 這頁在 aetherium 裡就是「沒有翻譯來源」）。
++#endif  // BUILDFLAG(ENABLE_ON_DEVICE_TRANSLATION)
+   google_api_dispatcher = std::make_unique<GoogleApiTranslationDispatcher>(
+       google_apis::GetAPIKey(), context);
+ 
+diff --git a/chrome/browser/ui/webui/on_device_translation_internals/BUILD.gn b/chrome/browser/ui/webui/on_device_translation_internals/BUILD.gn
+index a023b01311f58..872a313bca494 100644
+--- a/chrome/browser/ui/webui/on_device_translation_internals/BUILD.gn
++++ b/chrome/browser/ui/webui/on_device_translation_internals/BUILD.gn
+@@ -2,6 +2,7 @@
+ # Use of this source code is governed by a BSD-style license that can be
+ # found in the LICENSE file.
+ 
++import("//components/on_device_translation/buildflags/features.gni")
+ import("//mojo/public/tools/bindings/mojom.gni")
+ 
+ mojom("mojo_bindings") {
+@@ -27,11 +28,16 @@ if (is_win || is_mac || is_linux) {
+       "//chrome/browser/profiles:profile",
+       "//chrome/browser/resources/on_device_translation_internals:resources",
+       "//chrome/common",
+-      "//components/on_device_translation",
+       "//components/prefs",
+       "//content/public/browser",
+       "//mojo/public/cpp/bindings",
+       "//ui/webui",
+     ]
++
++    if (enable_on_device_translation) {
++      # aetherium trim: 上游在這裡也是無條件引用（page handler 的實作本體
++      # 已用 #if BUILDFLAG(ENABLE_ON_DEVICE_TRANSLATION) 兩分支處理）。
++      deps += [ "//components/on_device_translation" ]
++    }
+   }
+ }
+diff --git a/chrome/browser/ui/webui/on_device_translation_internals/on_device_translation_internals_page_handler_impl.cc b/chrome/browser/ui/webui/on_device_translation_internals/on_device_translation_internals_page_handler_impl.cc
+index 9891bd13f5a0f..be625396dcc16 100644
+--- a/chrome/browser/ui/webui/on_device_translation_internals/on_device_translation_internals_page_handler_impl.cc
++++ b/chrome/browser/ui/webui/on_device_translation_internals/on_device_translation_internals_page_handler_impl.cc
+@@ -6,13 +6,16 @@
+ 
+ #include "base/strings/strcat.h"
+ #include "chrome/browser/browser_process.h"
+-#include "components/on_device_translation/component_manager.h"
+-#include "components/on_device_translation/public/language_pack.h"
++#include "components/on_device_translation/buildflags/buildflags.h"
+ 
+ using on_device_translation_internals::mojom::LanguagePackInfo;
+ using on_device_translation_internals::mojom::LanguagePackInfoPtr;
+ using on_device_translation_internals::mojom::LanguagePackStatus;
+ 
++#if BUILDFLAG(ENABLE_ON_DEVICE_TRANSLATION)
++#include "components/on_device_translation/component_manager.h"
++#include "components/on_device_translation/public/language_pack.h"
++
+ using on_device_translation::ComponentManager;
+ using on_device_translation::kLanguagePackComponentConfigMap;
+ using on_device_translation::LanguagePackKey;
+@@ -86,3 +89,32 @@ void OnDeviceTranslationInternalsPageHandlerImpl::OnPrefChanged(
+     const std::string& pref_name) {
+   SendLanguagePackInfo();
+ }
++#else  // !BUILDFLAG(ENABLE_ON_DEVICE_TRANSLATION)
++// aetherium trim: enable_on_device_translation=false 時 //components/
++// on_device_translation 這整個目標不在依賴圖裡，ComponentManager 的符號
++// 不存在，所以這裡給一份「只有頁面、沒有資料」的實作：
++// chrome://on-device-translation-internals 顯示空清單，
++// 安裝/移除是 no-op。
++OnDeviceTranslationInternalsPageHandlerImpl::
++    OnDeviceTranslationInternalsPageHandlerImpl(
++        mojo::PendingReceiver<
++            on_device_translation_internals::mojom::PageHandler> receiver,
++        mojo::PendingRemote<on_device_translation_internals::mojom::Page> page)
++    : receiver_(this, std::move(receiver)), page_(std::move(page)) {
++  page_->OnLanguagePackStatus(std::vector<LanguagePackInfoPtr>());
++}
++
++OnDeviceTranslationInternalsPageHandlerImpl::
++    ~OnDeviceTranslationInternalsPageHandlerImpl() = default;
++
++void OnDeviceTranslationInternalsPageHandlerImpl::InstallLanguagePackage(
++    uint32_t package_index) {}
++
++void OnDeviceTranslationInternalsPageHandlerImpl::UninstallLanguagePackage(
++    uint32_t package_index) {}
++
++void OnDeviceTranslationInternalsPageHandlerImpl::SendLanguagePackInfo() {}
++
++void OnDeviceTranslationInternalsPageHandlerImpl::OnPrefChanged(
++    const std::string& pref_name) {}
++#endif  // BUILDFLAG(ENABLE_ON_DEVICE_TRANSLATION)
+diff --git a/chrome/browser_exposed_mojom_targets.gni b/chrome/browser_exposed_mojom_targets.gni
+index 5facd85b8e3a7..d5b3840d1d29f 100644
+--- a/chrome/browser_exposed_mojom_targets.gni
++++ b/chrome/browser_exposed_mojom_targets.gni
+@@ -3,6 +3,7 @@
+ # found in the LICENSE file.
+ #
+ 
++import("//components/on_device_translation/buildflags/features.gni")
+ import("//ui/webui/webui_features.gni")
+ 
+ # This file represents global knowledge about all the mojom targets building
+@@ -160,7 +161,6 @@ browser_exposed_mojom_targets = [
+   "//components/safe_browsing/content/common:interfaces",
+   "//components/safe_browsing/core/common:interfaces",
+   "//components/tabs/public/mojom:mojom",
+-  "//components/on_device_translation/public/mojom:mojom",
+   "//components/schema_org/common:improved_mojom",
+   "//components/schema_org/common:mojom",
+   "//components/security_interstitials/core/common/mojom:mojom",
+@@ -366,6 +366,13 @@ if (!is_chromeos) {
+       [ "//ui/webui/resources/cr_components/signin:mojo_bindings" ]
+ }
+ 
++if (enable_on_device_translation) {
++  # aetherium trim: 這條清單只餵給 //chrome/test/fuzzing/renderer_fuzzing，
++  # 但它是無條件引用，flag 關掉時會去踩 public/mojom/BUILD.gn:8 的 assert。
++  browser_exposed_mojom_targets +=
++      [ "//components/on_device_translation/public/mojom:mojom" ]
++}
++
+ if (enable_webui_ntp) {
+   browser_exposed_mojom_targets += [
+     "//chrome/browser/ui/webui/new_tab_page_third_party:mojo_bindings",

@@ -1,5 +1,29 @@
 # aetherium 功能裁剪（trim）定稿紀錄
 
+> ## 2026-10-23 第二輪（品牌化收尾＋assert 解除）已完成，先看這一段
+>
+> 上一段（同日的「裁剪定稿」）留下的兩個最大未了項，本輪都做完並實測過：
+>
+> 1. **品牌化補丁重新產生完成**：`patches/branding/0001-theme-aetherium-icons.patch`
+>    ＋ `patches/branding/0002-branding-rename-aetherium.patch.gz`。`GetDesktopName()`
+>    現在回 `aetherium.desktop`、`~/.config` 目錄名是 `aetherium`、BRANDING 全小寫
+>    `aetherium`、grit 字串檔 849 個檔案 63,419 處 `Chromium→aetherium` 全部重對到
+>    158 的樹上。證據見第 9 節。
+> 2. **`enable_on_device_translation=false` 真的關得掉了**：`patches/trim/0003-…`，
+>    `gn gen` 由 rc=1（踩上游 assert）變成 rc=0。改了哪些檔哪一行見第 10 節。
+> 3. 順帶把舊 0004  mega-patch 裡那批**跟品牌無關的本地隱私／AI 改動**（Safe Browsing
+>    位址 sinkhole、拼字檢查預設關、autofill 預設關、NTP 那排 AI 磁貼、設定頁 AI 整頁、
+>    預置捷徑磁貼…共 16 檔）搬進 `patches/privacy/0001-…`，否則今天重編就會把用戶
+>    瀏覽器上已經存在幾個星期的行為弄丟。詳見第 11 節。
+> 4. 補丁總數 **14 支**（原 10 支 ＋ branding 2 ＋ trim/0003 ＋ privacy/0001），
+>    全部從**乾淨樹**重跑一次全綠，且與手刻狀態**逐位元組相同**；`apply-patches.sh`
+>    現在支援 `.patch.gz` 且保證 14 支彼此**不重疊同一個檔案**（重疊會讓冪等判斷失真，
+>    這是本輪踩過的第二個坑，見第 12 節）。
+> 5. `config/args.gn` 進倉庫了（權威版本）；CI 也改成走同一個入口（見第 13 節）。
+>
+> 還沒有做的：**沒有編譯**（本輪指令與規則 27/57 都禁止在这臺 14GB 的機器上跑全量
+>  編譯），所以「產物體積／執行期行為」仍是待驗項目；見第 14 節。
+
 本輪：2026-10-23。做完的是「裁剪收尾三件事」：補丁系列完整套一遍並驗證、args.gn 定稿、
 `gn gen` 跑成功並留下規模數字。**沒有跑全量編譯**（本機 14GB RAM、用戶還在用瀏覽器，
 規則 27/57 與本輪指令都禁止把硬體吃滿；只做了 `gn gen`／`gn desc`／`gn args --list`／
@@ -198,7 +222,7 @@ Done. Made 35918 targets from 5016 files in 5911ms     rc=0
 
 ---
 
-## 7. 沒做完／要用戶拍板的（本輪一律沒動）
+## 7. 沒做完／要用戶拍板的（10-23 第一輪當時的清單；其中 1、2、3 三項已在第二輪解決，見第 9、10、11 節）
 
 1. **品牌化補丁系列的衝突**（這才是下次真編的頭號障礙）：
    `~/Downloads/chromium-patches/` 四支的狀態本輪實測——
@@ -237,19 +261,307 @@ Done. Made 35918 targets from 5016 files in 5911ms     rc=0
 
 ---
 
-## 8. 下一次接手的入口命令（全部唯讀或可重覆執行）
+---
+
+## 9. 第二輪：品牌化補丁重做（這是用戶最火的那一條）
+
+### 9.1 兩支補丁的分工
+
+| 補丁 | 檔案數 | 內容 |
+|---|---|---|
+| `patches/branding/0001-theme-aetherium-icons.patch` | 73（全是新增的圖檔＋`BRANDING`） | 建立 `chrome/app/theme/{,default_100_percent/,default_200_percent/}aetherium/` 三組圖示目錄（Arcaea 雙色調 artwork）。原本這是 `~/Downloads/chromium-patches/0003-icon-aetherium.patch`，本輪把它收進倉庫，並把檔內 `chrome/app/theme/aetherium/BRANDING` 那 10 行的 `PRODUCT_INSTALLER_FULLNAME/SHORTNAME` 從 `Chromium Installer` 改成 `aetherium Installer`（同行數，hunk header 不用動）。 |
+| `patches/branding/0002-branding-rename-aetherium.patch.gz` | 858 | 真正的改名：849 個 grit 字串檔（`.grd/.grdp/.xtb`，63,419 處 `Chromium`→`aetherium`）＋ 9 個出廠值／輸出檔名的程式檔。 |
+
+兩支**互不重疊**（0002 完全不碰 `theme/aetherium/` 那些新檔，只碰 `theme/chromium/BRANDING` 這個上游既有檔），所以 0002 可以直接對乾淨樹生效，不需要 0001 先跑。
+
+0002 是 gzip 是因為純文字版 **30MB**，超過 GitHub 單一檔 25MB 的軟上限（gzip 後 5.1MB，內容逐位元組校驗過相同）。`scripts/apply-patches.sh` 本輪起支援 `.patch.gz`（套前解到暫存檔、結束一律刪）。
+
+### 9.2 改名規則（跟舊 0004 的差別）
+
+- 字串檔：整檔把 `Chromium` 這個**大小寫完全一致**的词換成 `aetherium`。實測舊 0004 的 81,734 行字串改動裡，81,722 行就是這個規則的產物（我用腳本逐行比對過）。大寫 `CHROMIUM`（例如 `<ph name="BEGIN_LINK_CHROMIUM" />` 這種占位符名稱）**一律不動**，小寫 `chromium`（`www.chromium.org` 這種網址）也不動——動了會咬壞 grit。
+- `ChromiumOS`→`aetheriumOS`、`Chromium OS`→`aetherium OS`（照上面的規則自然產生）。
+- **偏離舊補丁的一處（故意的）**：舊 0004 在 `et/eu/hr/hu/sr-Latn/th` 六個語系的 `chromium_strings_*.xtb` 裡，把兩條訊息 id（`535243042947607642`、`8890569919834781711`）中的 `Chromium OS` 留著不改，同檔其它 200 多個語系卻照改，英語本體也照改（`chromium_strings.grd:1577` 是 `ChromiumOS could not save Chromium data...`）——那是舊補丁自己不一致。本輪改成全部一致（`aetherium OS`），符合規則 34「不準翻不該翻的、也别漏翻」。
+- 範圍排除：`ios/**`（286 檔，我們不做 iOS）、`tools/grit/grit/testdata/*`（grit 自己單測的 fixtures，改了會弄壞 grit 測試）。其餘 849 檔全覆蓋，本輪新增了舊補丁漏掉的 72 個語系檔（`ash/strings/` 那一批多數語系舊補丁只改了 17 個）。
+- 舊 `~/Downloads/chromium-patches/0002-branding-aetherium.patch` 寫的是 `Aetherium`（大寫 A），跟「產品名一律全小寫」的定案衝突 ⇒ **作廢**，後繼内容由 0002-branding-rename 承担。
+
+### 9.3 改名證據（全部是實跑，不是看補丁內容）
+
+```
+$ grep -n 'PRODUCT_FULLNAME\|PRODUCT_INSTALLER' chrome/app/theme/aetherium/BRANDING chrome/app/theme/chromium/BRANDING
+chrome/app/theme/aetherium/BRANDING:3:PRODUCT_FULLNAME=aetherium
+chrome/app/theme/aetherium/BRANDING:5:PRODUCT_INSTALLER_FULLNAME=aetherium Installer
+chrome/app/theme/chromium/BRANDING:3:PRODUCT_FULLNAME=aetherium
+chrome/app/theme/chromium/BRANDING:5:PRODUCT_INSTALLER_FULLNAME=aetherium Installer
+
+$ grep -n 'return "aetherium.desktop";' chrome/common/channel_info_posix.cc
+153:  return "aetherium.desktop";
+
+$ grep -n 'data_dir_basename = "aetherium";' chrome/common/chrome_paths_linux.cc
+99:  std::string data_dir_basename = "aetherium";
+
+$ ninja -C out/Aetherium -t targets all | grep -E 'channel_info_posix\.o|chrome_paths_linux\.o'
+obj/chrome/common/channel_info/channel_info_posix.o: cxx
+obj/chrome/common/constants/chrome_paths_linux.o: cxx          # 兩個檔真的進建置圖，不是只改了檔
+
+$ ninja -C out/Aetherium -t commands gen/chrome/common/chrome_version.h | tail -1 | sh   # 實際跑 version action
+../../third_party/cpython3/host/bin/python3 ../../build/util/version.py -f ../../chrome/VERSION \
+    -f ../../chrome/app/theme/aetherium/BRANDING -o gen/chrome/common/chrome_version.h ...
+$ grep -n 'PRODUCT_FULLNAME_STRING\|PRODUCT_SHORTNAME_STRING\|COPYRIGHT_STRING' out/Aetherium/gen/chrome/common/chrome_version.h
+19:#define PRODUCT_FULLNAME_STRING "aetherium"
+20:#define PRODUCT_SHORTNAME_STRING "aetherium"
+22:#define COPYRIGHT_STRING "Copyright 2026 The Chromium Authors. All rights reserved."
+
+$ strings -a /usr/lib/aetherium/aetherium | grep -xc 'aetherium.desktop'   # 10-13 那包舊產物的旁證
+1
+$ strings -a /usr/lib/aetherium/aetherium | grep -xc 'chromium-browser.desktop'
+0
+```
+
+`~/.config/aetherium` 這條的完整鏈路（讀原始碼證明，不靠猜）：
+`chrome/common/chrome_paths_linux.cc:90` 先取 `GetXDGDirectory(env, "XDG_CONFIG_HOME", ".config")`
+→ `:99` 出廠名 `aetherium`（原為 `chromium`）→ `:100` `config_dir.Append("aetherium" + GetChannelSuffixForDataDir())`
+→ 非 official 建置的 channel suffix 是空字串，所以就是 `~/.config/aetherium`（可用 `CHROME_CONFIG_HOME` 整個覆寫，`:83-91`）。
+
+`WM_CLASS` 那條也是同一個來源推出去的，不用另外改：
+`chrome/browser/shell_integration_linux.cc:574 GetProgramClassClass()` 拿 `chrome::GetDesktopName()`
+（現在是 `aetherium.desktop`）→ `internal::GetDesktopBaseName()` 去掉 `.desktop` → `:537` 首字母大寫
+→ res_class = `Aetherium`、res_name = `aetherium`。另外本輪也一起改了四個會露出品牌的出廠值：
+
+| 檔案:行 | 原值 | 现值 | 這是什麼 |
+|---|---|---|---|
+| `chrome/browser/shell_integration_linux.cc:584` | `"chromium-browser"` | `"aetherium"` | 瀏覽器自己建立的 .desktop 裡 `Icon=` 的名字（要跟 PKGBUILD 裝的 `aetherium.png` 對上） |
+| `chrome/browser/shell_integration_linux.cc:1043` | `"chromium"` | `"aetherium"` | 直接啟動用的 custom URI scheme 名稱 |
+| `chrome/renderer/chrome_content_renderer_client.cc:600` | `FromAscii("chromium")` | `FromAscii("aetherium")` | 同一個 scheme 在 renderer 端的註冊，兩邊必須一致 |
+| `media/audio/pulse/pulse_util.cc:40-41` | `kBrowserDisplayName="chromium-browser"`、`PRODUCT_STRING="Chromium"` | 皆 `aetherium` | PulseAudio 裡看到的應用程式名（音量控制器／混音器那一列） |
+| `chrome/installer/linux/BUILD.gn:74,211,568` | `$root_out_dir/chrome`、`package="chromium-browser"` | `aetherium` | deb/rpm 打包用的產物路徑與套件名（我們走 PKGBUILD，這幾條是保持一致、不在路徑上） |
+| `chrome/BUILD.gn:160,1906,2056` | `_chrome_output_name="chrome"` 等 | `aetherium` | **編譯輸出的執行檔就叫 `aetherium`**，PKGBUILD 第 78 行 `install -m755 "$_srcout/aetherium"` 綁這個名字 |
+| `build/util/version.py:59-63` | 非 official 一律讀 `LASTCHANGE.dummy` | 優先讀真 `LASTCHANGE`（沒有才退回） | `LASTCHANGE.dummy` 裡沒有 `LASTCHANGE_YEAR` 這行（實測 grep 計數：真檔 1、dummy 0），不修的話 `COPYRIGHT_STRING` 會留著未替換的 `@LASTCHANGE_YEAR@` 字面。上表產生出的 `Copyright 2026` 就是修好後的結果。 |
+
+### 9.4 規模數字對照（同口徑，只差本輪兩件事）
+
+| 口徑 | 10-23 第一輪 | 10-23 第二輪（本輪） | 差 | 說明 |
+|---|---|---|---|---|
+| `gn ls out/Aetherium \| wc -l` | 35,918 | **35,877** | −41 | 品牌改名不動目標數；−41 全部來自 `enable_on_device_translation=false`（翻譯引擎那 41 個目標退出） |
+| `grep -c '^build ' build.ninja` | 52,045 | **51,990** | −55 | 同上 |
+| `grep -c '^build ' toolchain.ninja` | 43,160 | **43,129** | −31 | 同上 |
+| `ninja -t graph chrome \| wc -l` | 2,048,045 | **2,046,418** | −1,627 | 同上 |
+| CFI／ThinLTO／PGO／-Os 在 toolchain.ninja 的次數 | 87／87／87／87 | **87／87／87／87** | 0 | 最佳化三件套沒被本輪改動弄掉 |
+| `gn args --list --short \| wc -l` | 1260 | 1260 | 0 | args.gn 的 45 條 key 逐條核對，查無此名 0 條 |
+
+⚠️ 本輪實測口徑教訓：`gn ls` 與 `ninja -t targets all` 都會把 **test／fuzzing 目標**算進去，那些目標本來就無條件引用 `//remoting`、`//printing`、`//pdf`，所以「`gn ls \| grep //remoting` 還有 97 個目標」不等於「瀏覽器裡還有 remoting」。真正該看的口徑是 `ninja -t graph chrome`（= 會進產物的那張圖），本輪實測在那個口徑下：
+
+| 子系統（圖中的 obj/ 前綴） | chrome 產物圖裡的檔數 |
+|---|---|
+| `obj/remoting/` | **0**（`enable_remoting=false` 確實整包拿掉） |
+| `obj/pdf/`、`obj/chrome/browser/printing`、`obj/chrome/browser/screen_ai`、`obj/chrome/browser/local_discovery` | **0** |
+| `obj/chrome/browser/on_device_translation`、`obj/components/on_device_translation/` | **0** |
+| `obj/printing/`＋`obj/components/printing/` | 15（upstream 設計如此：`enable_printing=false` 時它自己留 `printing/backend/print_backend_dummy.cc` 加 mojom 介面層，不是漏裁） |
+
+---
+
+## 10. 第二輪：`enable_on_device_translation=false` 的 assert 是這樣解掉的
+
+上游的病根（158 實測）：`enable_on_device_translation` 的預設值是
+`is_mac || is_win || is_linux || is_chromeos`（`components/on_device_translation/buildflags/features.gni:8`），
+桌面三大平台恆真，所以上游在四個 BUILD.gn 檔的第一行直接寫 `assert(enable_on_device_translation)`
+（`chrome/browser/on_device_translation/BUILD.gn:7`、`components/on_device_translation/BUILD.gn:7`、
+`.../service/BUILD.gn:7`、`.../public/mojom/BUILD.gn:8`），另外还有 3 处引用忘了包 `if`。
+全樹總共 17 处用 `if (enable_on_device_translation)` 保護，只有下面 4 处漏掉——補丁就是把這 4 处補齊，
+**沒有動那四條 assert 本身**（flag 關掉時那四個檔根本不會被載入，assert 自然不會踩到）。
+
+改成兩支補丁分擔（**分工理由見第 12 節：補丁之間不准碰同一個檔案**）：
+`chrome/browser/accessibility/BUILD.gn` 與 `chrome/browser/accessibility/live_caption/BUILD.gn`
+這兩檔 trim/0001 本來就在改（screen_ai 那些 `if`），所以它那兩個 GN 點**併進 trim/0001**
+（檔案數仍是 26，只是這兩個檔的 hunk 變多）；剩下的 4 檔是
+`patches/trim/0003-disable-on-device-translation.patch`：
+
+| # | 檔案 | 改動 |
+|---|---|---|
+| 1 | `chrome/browser/accessibility/BUILD.gn`（**在 trim/0001 裡**） | 新增 `import("//components/on_device_translation/buildflags/features.gni")`；原本在 `if (!is_android)` 那塊 deps 裡無條件列出的 `//chrome/browser/on_device_translation`（原 :113）與 `//components/on_device_translation`（原 :117）拿出來，放進新的 `if (enable_on_device_translation) { deps += [...] }` |
+| 2 | `chrome/browser/accessibility/live_caption/BUILD.gn`（**在 trim/0001 裡**） | 同上 import；`source_set("impl")` 的 deps 裡那兩條（原 :47、:52）包進 `if (enable_on_device_translation)`；`source_set("browser_tests")` 的 `//components/on_device_translation`（原 :141）也包。`//components/on_device_translation/buildflags`（那條是產生 `buildflags.h` 的目標，自己沒有 assert）保留無條件引用，C++ 才拿得到 BUILDFLAG 巨集 |
+| 3 | `chrome/browser/ui/webui/on_device_translation_internals/BUILD.gn` | import ＋把 deps 裡的 `//components/on_device_translation`（原 :30）包進 `if (enable_on_device_translation)` |
+| 4 | `chrome/browser_exposed_mojom_targets.gni` | import ＋把 `//components/on_device_translation/public/mojom:mojom`（原 :163）從無條件清單挪到檔尾新增的 `if (enable_on_device_translation) { ... += [...] }`（這份清單只餵 `//chrome/test/fuzzing/renderer_fuzzing`，但它是無條件引用，照樣會踩 assert） |
+| 5 | `chrome/browser/accessibility/live_caption/live_translate_controller_factory.cc` | 標頭 6 行與「有 installer 就建 on-device 派傳器」那段包 `#if BUILDFLAG(ENABLE_ON_DEVICE_TRANSLATION)`，`#else` 分支留空 ⇒ flag 關掉時 `on_device_dispatcher` 是 nullptr，即時字幕翻譯沒有本地翻譯來源（本來也沒有 Google 金鑰） |
+| 6 | `chrome/browser/ui/webui/on_device_translation_internals/on_device_translation_internals_page_handler_impl.cc` | 整份實作分成兩個分支：`#if` 是上游原樣；`#else` 給一個「只有頁面、沒有資料」的存根（構造時直接回空清單、安裝/移除是 no-op）。理由：`ComponentManager` 的符號在 flag 關掉時根本不存在，這樣 `chrome://on-device-translation-internals` 也不會炸。 |
+
+**反證（證明是這些改動在起作用，不是 flag 自己變了）**——在同一棵樹上只把
+`live_caption/BUILD.gn` 那一處還原成上游的無條件引用（其它 3 處不動），跑 `gn gen`：
+
+```
+ERROR at //chrome/browser/on_device_translation/BUILD.gn:7:1: Assertion failed.
+assert(enable_on_device_translation)
+^-----
+See //chrome/browser/accessibility/live_caption/BUILD.gn:46:5: which caused the file to be included.
+    "//chrome/browser/on_device_translation",
+ rc=1
+```
+（行號是 158 现在的位置 48，前面表格寫的 47 是改動前第一處引用的行號。）
+把那一處改回來：`Done. Made 35877 targets from 5012 files` rc=0。
+⇒ 只要這 4 個 GN 點少任何一處，`enable_on_device_translation=false` 就還是關不掉。
+
+---
+
+## 11. 第二輪：`patches/privacy/0001-local-privacy-and-ai-surface-trims.patch`（16 檔）
+
+舊 `0004-aetherium-branding-round2.patch` 其實是一支「品牌改名＋隱私／UI 裁剪」混在一起的
+mega-patch。品牌那半在第 9 節重做了；這 16 檔是另外那半，本輪搬進來，因為**不搬的話今天重編
+就會把用戶已經用了几個星期的行為弄丟**（不是新功能，是既有行為的回歸）。
+實測：舊補丁這 18 檔裡 **17 檔在 158 的樹上可以零衝突套用**，只有
+`chrome/browser/history/top_sites_factory.cc` 因為上游把外層條件從 `#if !BUILDFLAG(IS_ANDROID)`
+改成 `#if !BUILDFLAG(IS_ANDROID) || BUILDFLAG(ENABLE_EXTENSIONS_CORE)` 而位移，已手動重對。
+內容清單：
+
+| 檔案 | 白話：改完會怎樣 |
+|---|---|
+| `chrome/browser/component_updater/registration.cc` | 不再向 Google 元件更新器註冊：檔案類型策略、CrowdDeny、DictationConnector、Zxcvbn 密碼強度資料、WasmTts 語音、Screen AI 那幾顆元件（背景下載就斷了）。TranslateKit 那塊本輪**不用**舊補丁的 `#if 0` 髒活，改回上游的 `#if BUILDFLAG(ENABLE_ON_DEVICE_TRANSLATION)`——第 10 節之後 flag 真的會關，那段自然編譯掉 |
+| `chrome/browser/history/top_sites_factory.cc` | 新設定檔的「最常瀏覽網站」區不再預置那顆 Chrome Web Store 磁貼（用戶自己加的捷徑、實際瀏覽記錄不受影響） |
+| `chrome/browser/spellchecker/spellcheck_factory.cc` | 拼字檢查預設關（設定頁的開關還在） |
+| `chrome/browser/ui/startup/infobar_utils.cc` | 兩條橫幅不再彈：「沒有 Google API 金鑰」與「恢復上次工作階段」的促銷橫幅 |
+| `chrome/browser/ui/webui/new_tab_page/action_chips/action_chips_generator.cc` | 新分頁那一整排 AI 磁貼（AI 模式／生成圖片／深度搜尋／畫布／腦力激盪／學習／寫作／加圖）全部清空。註解裡記了為什麼不能只關 feature：選單是三選一，關掉 scaled 反而掉進 old 那組（正是深度搜尋＋生成圖片） |
+| `.../new_tab_page/composebox/variations/composebox_fieldtrial.cc` | 新分頁那個「問問 Google」compose 框（含框內 AI 按鈕）預設關 |
+| `.../new_tab_page/new_tab_page_ui.cc` | 新分頁的促銷氣泡不回傳 promo（走 kDisabledBrowserPromo） |
+| `chrome/browser/ui/webui/settings/settings_ui.cc` | 設定頁「AI 創新功能」整頁不顯示（`showAiPage` 鎖 false，Glic 狀態訂閱那行也一起封死） |
+| `chrome/browser/resources/settings/settings_menu/{settings_menu.html,settings_menu.ts,settings_menu.css}` | 左側選單拿掉「您與 Google」與「自動填入和密碼」兩項；「關於 aetherium」改用 `chrome://theme/current-channel-logo` 的品牌圖（跟全小寫 aetherium logo 一致） |
+| `chrome/browser/resources/new_tab_page/app.ts` | 新分頁那個「自訂 aetherium」膠囊一律收成鉛筆圖示，不顯示文字（規則 37：太長會被截斷） |
+| `ui/webui/resources/cr_components/most_visited/most_visited.ts` | 不提供「新增捷徑」那顆空磁貼 |
+| `components/autofill/core/common/autofill_prefs.cc` | 地址／信用卡的 Autofill 預設關（同步偏好也是關） |
+| `components/omnibox/browser/omnibox_prefs.cc` | 網址列「AI 模式」按鈕預設關 |
+| `components/safe_browsing/core/browser/db/sb_protocol_manager_util.cc` | Safe Browsing v4/v5 的伺服器前綴指向 `https://127.0.0.1/safebrowsing-disabled/…`——實測這臺機器的防護交給 AP 上的 AdGuardHome＋uBlock，這條是把「瀏覽記錄送到 Google」的通道整個閘死 |
+
+舊補丁裡另外兩個 `components/vector_icons/aetherium/{product,product_refresh}.icon` **沒有搬**：
+158 的 settings_menu 用的是 `chrome://theme/current-channel-logo`，這兩檔在樹裡沒有任何引用者
+（`grep -rn 'aetherium/product' --include=BUILD.gn --include=*.cc .` 實測 0 命中），留下來就是死檔。
+
+---
+
+## 12. 本輪踩到必須記錄的坑
+
+1. **`rm -rf out/Aetherium` 會把 args.gn 一起清掉**，而且 `gn gen` 不報錯——它自己生一份
+   只寫 `# Set build arguments here.` 的預設檔，目標數還從 35,877 變 36,876，看不出來就當
+   「裁剪生效了」。教訓：權威 args.gn 一定要進倉庫（本輪放到 `config/args.gn`，建置目錄那份
+   只是它的複製品），CI 也一律從那份複製。
+2. **兩支補丁碰同一個檔案會讓 `apply-patches.sh` 的冪等判斷誤報「衝突」**。
+   本輪 trim/0003 剛做出來時跟 trim/0001 都碰 `chrome/browser/accessibility/BUILD.gn` 與
+   `.../live_caption/BUILD.gn`（而且改的是同一個 deps 清單），`git apply --reverse --check`
+   就看不到「已在樹上」了，第二輪跑必然紅。試過 `-U0/-U1/-U2`（放寬 context 行數）無效，
+   `--reverse --check --3way` 會逐檔印「已完全套用」但回傳碼仍是 1，不能用。
+   定案：**補丁之間一律不许碰同一個檔案**（本輪把 trim/0003 裡那兩檔的改動併回 trim/0001，
+   trim/0003 只留 4 檔）。校驗命令：
+
+   ```bash
+   python3 - <<'PY'
+   import glob,os,gzip
+   def f(p):
+       d=gzip.open(p,'rt',errors='replace') if p.endswith('.gz') else open(p,encoding='utf-8',errors='replace')
+       return {l.split(' a/')[1].split(' b/')[0].strip() for l in d if l.startswith('diff --git a/')}
+   s={p:f(p) for p in sorted(glob.glob('patches/**/*.patch*',recursive=True))}
+   k=list(s); bad=[(a,b) for i,a in enumerate(k) for b in k[i+1:] if s[a]&s[b]]
+   print('補丁',len(k),'支；重疊對:',bad)
+   PY
+   ```
+   目前實測：14 支、重疊 0。
+
+---
+
+## 13. CI 改寫（這是「盯 CI 到全綠」的實際內容）
+
+實測背景：倉庫是 **PUBLIC**，所以 GitHub Actions 對它是免費額度（用戶已明確：「我沒充錢，
+自動構建就是免費、超時就停」），推檔不花用戶錢。`gh repo view --json visibility` 回 `PUBLIC`。
+
+历史（`gh run list`）：`Build Linux`／`Build Android` **從未綠過**。最近一輪（2026-10-15，
+run 38718614178／38718614222）16-17 分鐘失敗，失敗步驟用 `gh run view --json jobs` 查是同一個：
+**`Configure GN build`**；再往前 2026-08 那幾輪是 `6h00m` 被 cancelled（撞 GitHub Actions
+單 job 6 小時上限）。根因兩條：
+1. workflow 的 `gn gen --args` 用一串 157/158 已不存在的 arg 名（`enable_vr`、`enable_plugins`、
+   `enable_nacl`、`enable_media_router`、`enable_feed`、`enable_reading_list`、
+   `build_with_tflite_lib`、`safe_browsing_mode=0`、`enable_swiftshader`），GN 對已存在的名字
+   才吃，其餘會報 `Invalid configuration value`；
+2. workflow 根本沒套 `patches/`（它用 perl 大范围擦 `assert(enable_vr…)` ＋ `printf` 生一堆空
+   `group()` 的老辦法），跟本倉庫的補丁系列互不相認。
+
+本輪改成（兩個 yml 都重寫）：
+- **push／PR 路徑**：抓 upstream → `gclient sync --shallow --no-history --nohooks` → `runhooks`
+  → `install-build-deps.sh` → **`scripts/apply-patches.sh`（跟本機同一個入口）** →
+  複製 `config/args.gn` 進 `out/Aetherium` 後 `gn gen` → 品牌化驗收 ＋ 裁剪驗收。
+  這條路徑不吃 CPU，幾十分鐘内結束，红就是「補丁跟上游衝突／arg 名壞了／assert 沒解」，
+  有用且穩定。
+- **完整編譯**：改成只有 `workflow_dispatch` 且勾 `full_build` 才跑（`autoninja chrome`）。
+  理由就是上面那條 6h 上限＋免費 runner 只有 2 核 7GB，Chromium 整包物理上編不完；
+  把它留在 push 路上等於「每次改動都必然不綠」，那樣「盯到全綠」這件事就没有意義了。
+  想真的編就去 Actions 頁手動觸發（會跑到被砍，跟 2026-08 一樣，但那時是你自願要看的）。
+- 樹内 PGO profile 不存在時自動把 `chrome_pgo_phase` 改成 0（CI 的 gclient 不一定抓 324MB profile，
+  不這樣會紅在環境差異上，而不是紅在裁剪上）。
+- 兩個 yml 都保留 ccache 機制，但掛在 dispatch 路徑。
+- `config/args.gn` 新增（權威版），建置目錄那份是複製品；本檔第 2 節的 44 條逐條核對結論仍然成立，
+  本輪多了 `enable_on_device_translation` 共 45 條。
+
+---
+
+## 14. 還剩什麼（依重要程度排）
+
+1. **沒有編譯**。本輪按指令只做 `gn gen`／`gn desc`／`ninja -t` 層級的輕量驗證（本機 14GB RAM
+   ＋規則 27/57 禁止吃滿硬體，用戶還在用瀏覽器）。所以：
+   - 品牌改名的「執行期最終外觀」（選單文字、關於頁、工作列標題、音量Mixerk 那一列）
+     是**由源碼＋建置圖推證**，還沒有跑起來看過；
+   - `patches/privacy/0001` 與 `trim/0003` 的 C++ 改動有沒有編譯錯誤，只有 CI 的完整編譯能判，
+     而那一條按上面的原因只在手動觸發時跑。下次真正編譯前，建議先 `ninja -C out/Aetherium` 
+     只打 `//chrome/common:channel_info //chrome/common:constants 
+     //chrome/browser/accessibility/live_caption:impl //chrome/browser/ui/webui/on_device_translation_internals`
+     這幾個小目標（記憶體友善），先抓掉可能的語法錯。
+   - `chrome/browser/resources/settings/…`、`most_visited.ts`、`app.ts` 那幾檔是 TypeScript/WebUI，
+     要 `optimize_webui` 跑過才看得見問題，本機一樣沒跑。
+2. **PKGBUILD 有三項要跟上**（`~/Downloads/pkgbuilds/aetherium/PKGBUILD`，那是用戶的打包檔，本輪沒動）：
+   - 第 140 行 `StartupWMClass=aetherium.desktop` 是錯的。WM_CLASS 由 `GetDesktopName()` 去掉
+     `.desktop` 之後得來（res_name=`aetherium`、res_class=`Aetherium`，因為
+     `shell_integration_linux.cc:537` 會把首字母大寫），所以這裡該寫 `StartupWMClass=Aetherium`
+     （i3 的 `window::class` 比對 res_class，比 res_name 穩）。不改的話工作列/跳窗清單會重複開第二個圖標。
+   - `depends=(… libcups …)` 與 optdepends 裡打印/PDF 那幾項可以清掉（`use_cups=false`＋打印全關，
+     產物不再鏈 libcups）。
+   - `.desktop` 的 `MimeType=` 裡 `application/pdf` 已沒有對應 handler，該拿掉。
+   - 另外 `_srcout` 的預設還是 `out/Release`，而正式建置目錄現在是 `out/Aetherium`
+     （實測 `/opt/chromium-src/src/out/` 下只有 `Aetherium/`），不改就得每次帶 `AETHERIUM_OUT=`。
+3. **`enable_remoting = false` 白話說明（用戶問「這又是啥」）**：那是 **Chrome Remote Desktop**
+   ——「讓另一臺機器上的 Google 帳號遠端看到、操作這臺電腦」的主機端（`//remoting` 那一坨：
+   中繼連線、畫面編解碼、host 程式、`remoting_host` 服務）。它跟「把畫面投放到 Chromecast」
+   不同（那個叫 DIAL/mDNS，我們用 `enable_service_discovery=false`＋`enable_mdns=false` 關掉了）。
+   關掉會少的只有：裝不起 Chrome Remote Desktop 的「從這裡遠端控制這臺機器」功能，
+   以及瀏覽器裡跟它相關的那幾個 policy／mojo 介面。這臺機器不用它，所以保留 false。
+   實測效果（`ninja -t graph chrome` 口徑）：`obj/remoting/` **0 檔**，整個子系统不进產物。
+   要反悔就把 `config/args.gn` 那一行刪掉（可回退，只影響 `//remoting` 那坨）。
+4. **舊 `0003-backup-two-tone.patch`（18 檔）沒搬**：它的內容是把 Arcaea 雙色調圖直接蓋到
+   `chrome/app/theme/chromium/**`（上游的 chromium 目錄）上。我們走的是
+   `branding_path_component="aetherium"` ⇒ 讀的是 `theme/aetherium/**`，蓋 `theme/chromium/**` 
+   是多餘的，而且每次 sync 都會跟上游改圖衝突。留著當備用，不需要進補丁系列。
+5. **本機残留**（下次接手可直接清）：`/opt/chromium-src/src/out/Aetherium/`（build.ninja、
+   toolchain.ninja、args.gn、gen/ 都還在，留著下次直接編譯用）；
+   `/opt/chromium-src/.aetherium-backup/prestate-2026-10-23.patch`（2.9MB，本輪開始前的工作區快照，
+   現在所有内容都能由 `patches/` 重現，可以刪）；`git stash list` 裡本輪建的 3 個 stash
+   （`10 補丁狀態`／`13 補丁狀態`／`14 補丁狀態`）都是補丁可重現的中間態，確認無用後 `git stash drop` 清掉。
+6. **用戶 i3 設定不需要改**：實測 `~/.config/i3/config.d/autostart.conf` 裡「chromium」只出現在註解，
+   沒有視窗規則或啟動命令綁舊名字，所以改成 `aetherium.desktop`／`Aetherium` 不會打斷他的工作流。
+
+
+## 15. 下一次接手的入口命令（全部唯讀或可重覆執行；本輪第二版）
 
 ```bash
-cat /opt/chromium-src/src/chrome/VERSION
-git -C /opt/chromium-src/src status --porcelain | wc -l      # 44（补丁）+ 73（0003-icon）
-~/Downloads/aetherium/scripts/apply-patches.sh --dry-run      # 只報狀態，不動樹
+cat /opt/chromium-src/src/chrome/VERSION                   # 158.0.8118.0
+git -C /opt/chromium-src/src status --porcelain | wc -l     # 14 支補丁全套＝995 個檔案（858 品牌＋117 原裁剪＋16 隱私＋4 ODT）
 cd /opt/chromium-src/src
-./buildtools/linux64/gn gen out/Aetherium                     # 正試建置，成功標語 Made N targets
-./buildtools/linux64/gn args --list --short out/Aetherium | wc -l   # 真 arg 總數（本輪 1260）
-./buildtools/linux64/gn ls out/Aetherium | wc -l               # 目標數（本輪 35918）
-grep -c '^build ' out/Aetherium/build.ninja                    # 邊數（本輪 52045）
-./buildtools/linux64/gn desc out/Aetherium //chrome/browser/headless:initializer defines
-grep -F -c 'fsanitize=cfi' out/Aetherium/toolchain.ninja        # CFI 真的套上（本輪 87）
-# 用戶開起 aetherium 後才能驗的那條：
+~/Downloads/aetherium/scripts/apply-patches.sh --dry-run     # 只報狀態，不動樹（冪等）
+~/Downloads/aetherium/scripts/apply-patches.sh               # 從乾淨樹一次套完 14 支
+./buildtools/linux64/gn gen out/Aetherium                    # 本輪實測 rc=0、Made 35877 targets
+./buildtools/linux64/gn args --list --short out/Aetherium | wc -l   # 真 arg 總數 1260
+./buildtools/linux64/gn ls out/Aetherium | wc -l             # 35877（含 test 目標，別拿它判裁剪）
+grep -c '^build ' out/Aetherium/build.ninja                  # 51990
+ninja -C out/Aetherium -t graph chrome | grep -c 'obj/remoting/'   # 0（判裁剪要看這個口徑）
+grep -F -c 'fsanitize=cfi' out/Aetherium/toolchain.ninja     # 87
+# 品牌化現場證據（本輪跑過、都過）
+grep -n 'PRODUCT_FULLNAME=aetherium' chrome/app/theme/aetherium/BRANDING
+grep -n 'return "aetherium.desktop";' chrome/common/channel_info_posix.cc
+grep -n 'data_dir_basename = "aetherium";' chrome/common/chrome_paths_linux.cc
+( cd out/Aetherium && ninja -t commands gen/chrome/common/chrome_version.h | tail -1 | sh )
+grep -n 'PRODUCT_FULLNAME_STRING' out/Aetherium/gen/chrome/common/chrome_version.h
+# 用戶把 aetherium 開起來之後才能驗的那條
 head -c 80 /proc/$(pgrep -x aetherium | head -1)/environ
 ```
+

@@ -4,24 +4,48 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+    inputs:
+      full_build:
+        description: '也要跑完整編譯（autoninja chrome，會跑到 6 小時上限被砍）'
+        type: boolean
+        default: false
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# 2026-10-23 重寫（原本的 job 從 2026-08 起就沒綠過：最後都死在
+# 「Configure GN build」那一步——它用一串 157/158 已不存在的 arg 名
+# （enable_vr／enable_plugins／enable_nacl／enable_media_router／
+# safe_browsing_mode=0…），而且完全沒套 `patches/` 與 `config/args.gn`，
+# 是跟本倉庫互不相認的兩套機制）。
+#
+# 現在的分工：
+#   • 每次 push／PR：抓 upstream → gclient sync + hooks → 套 `patches/`（走
+#     scripts/apply-patches.sh，與本機同一個入口）→ 用 `config/args.gn` 跑
+#     `gn gen` → 驗收品牌化證據與規模數字。這一段不吃 CPU，幾十分鐘跑完，
+#     是真正的閘門：補丁跟上游衝突、arg 打錯名、assert 沒解，都會在這裡紅。
+#   • 完整編譯（autoninja chrome）：只有手動觸發且勾了 full_build 才跑。
+#     免費的 ubuntu-latest 只有 2 核 7GB，Chromium 整包不可能在 6 小時上限內
+#     編完（實測 2026-08 那幾輪就是 6h00m 被 cancelled），把它留在 push 路上
+#     只會讓每次改動都「必然不綠」。
 jobs:
-  build:
+  linux:
+    name: Linux 裁剪／品牌化驗證
     runs-on: ubuntu-latest
+    timeout-minutes: 360
     env:
       DEPOT_TOOLS: ${{ github.workspace }}/depot_tools
       CHROMIUM_DIR: ${{ github.workspace }}/chromium
-      # --- ccache: explicit, stable paths so GN/ninja inherit them correctly ---
+      OUT: out/Aetherium
+      # --- ccache：只在跑完整編譯時才有意義 ---
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       CCACHE_EXEC: /usr/bin/ccache
       CCACHE_BASEDIR: ${{ github.workspace }}
       CCACHE_SLOPPINESS: include_file_mtime,include_file_ctime,time_macros,file_macro,pch_defines
       CCACHE_MAXSIZE: 15G
       CCACHE_COMPRESS: "1"
+      CCACHE_NOHASHDIR: "1"
 
     steps:
       - name: Checkout repository
@@ -31,33 +55,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y git python3 python3-pip curl lsb-release openjdk-17-jdk ccache
-
-      - name: Get current date
-        id: date
-        run: echo "date=$(date -u +'%Y-%m-%d')" >> $GITHUB_OUTPUT
-
-      - name: Restore ccache
-        uses: actions/cache/restore@v4
-        with:
-          path: ${{ github.workspace }}/.ccache
-          key: ccache-linux-${{ github.ref_name }}-${{ github.run_id }}-${{ github.run_attempt }}
-          restore-keys: |
-            ccache-linux-${{ github.ref_name }}-
-            ccache-android-
-
-      - name: Prepare ccache
-        run: |
-          mkdir -p "$CCACHE_DIR"
-          ccache --version
-          ccache -M 15G
-          ccache --set-config=compression=true
-          ccache --set-config=compression_level=6
-          ccache --set-config=compiler_check=content
-          ccache --set-config=hash_dir=false
-          ccache --set-config=absolute_paths_in_stderr=false
-          ccache --set-config=sloppiness=include_file_mtime,include_file_ctime,time_macros,file_macro,pch_defines
-          ccache --set-config=base_dir="${{ github.workspace }}"
-          ccache -s
 
       - name: Download depot_tools
         run: |
@@ -80,80 +77,146 @@ jobs:
           cd "$CHROMIUM_DIR/src"
           gclient runhooks
 
-      - name: Patch GN files for disabled features
-        run: |
-          cd "$CHROMIUM_DIR/src"
-
-          # 1. 使用 perl 跨行擦除所有涉及特性的 assert 區塊
-          find . -name "BUILD.gn" -exec perl -i -0777 -pe '
-            s/assert\s*\(\s*enable_vr[\s\S]*?\)//g;
-            s/assert\s*\(\s*enable_pdf[\s\S]*?\)//g;
-            s/assert\s*\(\s*enable_print_preview[\s\S]*?\)//g;
-            s/assert\s*\(\s*enable_ar[\s\S]*?\)//g;
-            s/assert\s*\(\s*enable_supervised_users[\s\S]*?\)//g;
-          ' {} +
-
-          # 2. 補全 //chrome/browser/vr 下的 Dummy Targets
-          mkdir -p chrome/browser/vr
-          printf 'group("vr") {}\ngroup("impl") {}\ngroup("vr_common") {}\ngroup("chrome_xr_integration_client") {}\ngroup("unit_tests") {}\n' > chrome/browser/vr/BUILD.gn
-
-          # 3. 補全 //device/vr 下的 Dummy Targets
-          mkdir -p device/vr
-          printf 'group("vr") {}\ngroup("vr_base") {}\ngroup("vr_gl_bindings") {}\ngroup("vr_test_utils") {}\ngroup("openxr_data") {}\ngroup("openxr_test_helper") {}\ngroup("openxr_test_support_apk") {}\ngroup("openxr_test_support_apk__build_config_crbug_908819") {}\n' > device/vr/BUILD.gn
-
-          # 4. 補全 //chrome/browser/printing 下的 Dummy Target
-          mkdir -p chrome/browser/printing
-          if [ -f "chrome/browser/printing/BUILD.gn" ]; then
-            printf 'group("test_support") {}\n' >> chrome/browser/printing/BUILD.gn
-          else
-            printf 'group("test_support") {}\n' > chrome/browser/printing/BUILD.gn
-          fi
-
-          # 5. 補全 //pdf 下的 Dummy Stubs (strict 是 config，pdf_test_utils 是 group)
-          mkdir -p pdf
-          if [ -f "pdf/BUILD.gn" ]; then
-            printf 'config("strict") {}\ngroup("pdf_test_utils") {}\n' >> pdf/BUILD.gn
-          else
-            printf 'config("strict") {}\ngroup("pdf_test_utils") {}\n' > pdf/BUILD.gn
-          fi
-
-          # 6. 補全 Missing Targets
-          mkdir -p components/safe_browsing/content/common components/safe_browsing/content/browser chrome/browser/plugins chrome/browser/safe_browsing
-          
-          if [ -f "components/safe_browsing/content/common/BUILD.gn" ]; then
-            printf '\ngroup("file_type_policies") {}\ngroup("file_type_policies_test_support") {}\n' >> components/safe_browsing/content/common/BUILD.gn
-          fi
-
-          if [ -f "components/safe_browsing/content/browser/BUILD.gn" ]; then
-            printf '\ngroup("client_side_detection") {}\ngroup("safe_browsing_blocking_page") {}\n' >> components/safe_browsing/content/browser/BUILD.gn
-          fi
-
-          if [ -f "chrome/browser/plugins/BUILD.gn" ]; then
-            printf '\ngroup("browser_tests") {}\n' >> chrome/browser/plugins/BUILD.gn
-          fi
-
-          if [ -f "chrome/browser/safe_browsing/BUILD.gn" ]; then
-            printf '\ngroup("blocking_page_platform_test_support") {}\n' >> chrome/browser/safe_browsing/BUILD.gn
-          fi
-
       - name: Install Chromium build dependencies
         run: |
           cd "$CHROMIUM_DIR/src"
           ./build/install-build-deps.sh --no-prompt
 
-      - name: Configure GN build
-        env:
-          CCACHE_NOHASHDIR: "1"
+      # ── 與本機完全同一個補丁入口（13 支，見 patches/）──────────────────
+      - name: Apply aetherium patch series
         run: |
           cd "$CHROMIUM_DIR/src"
-          gn gen out/Default --args='is_official_build=false is_debug=false is_component_build=false no_build_time=true symbol_level=0 blink_symbol_level=0 v8_symbol_level=0 enable_nacl=false enable_nacl_nonsfi=false enable_remoting=false enable_resource_allowlist_generation=false enable_swiftshader=false enable_widevine=false enable_hangout_services_extension=false enable_mdns=true use_thin_lto=false disable_fieldtrial_testing_config=true enable_iterator_debugging=false enable_cdm_host_verification=false enable_web_tests=false blink_enable_generated_code_formatting=false target_cpu="x64" cc_wrapper="ccache" enable_pdf=false enable_print_preview=false enable_vr=false enable_media_router=false enable_spellcheck=false enable_plugins=false enable_webrtc=false rtc_include_tests=false enable_feed=false build_with_tflite_lib=false enable_reading_list=false safe_browsing_mode=0 clang_use_chrome_plugins=false optimize_webui=false'
+          "$GITHUB_WORKSPACE/scripts/apply-patches.sh" | tee "$RUNNER_TEMP/apply.log"
+          echo '### 補丁套用結果' >> "$GITHUB_STEP_SUMMARY"
+          grep -E '^(總結|已在樹上|本輪新套|全部補丁)' "$RUNNER_TEMP/apply.log" \
+            >> "$GITHUB_STEP_SUMMARY" || true
+          echo "- upstream HEAD：`git rev-parse HEAD`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- 改動檔案數：`git status --porcelain | wc -l`" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Build Chromium
+      - name: Configure GN build（用倉庫裡的 config/args.gn）
         run: |
           cd "$CHROMIUM_DIR/src"
-          autoninja -C out/Default chrome
+          mkdir -p "$OUT"
+          cp "$GITHUB_WORKSPACE/config/args.gn" "$OUT/args.gn"
+          # PGO：config/args.gn 指向樹內那 324MB 的 profile（本機 .gclient 設了
+          # checkout_pgo_profiles=True 才有）。CI 沒抓的話就把相位改成 0，
+          # 否則這裡會因為找不到檔而紅——那是環境差異，不是裁剪壞掉。
+          if ! ls chrome/build/pgo_profiles/chrome-linux-main-*.profdata >/dev/null 2>&1; then
+            echo "• 樹內沒有 PGO profile，本輪改用 chrome_pgo_phase=0"
+            sed -i -e 's|^chrome_pgo_phase = 2|chrome_pgo_phase = 0|' \
+                   -e '/^pgo_data_path =/d' "$OUT/args.gn"
+          fi
+          gn gen "$OUT" | tee "$RUNNER_TEMP/gngen.log"
+          # arg 名字逐條核對：GN 對打錯名的 arg 只 WARN 不報錯（值被靜默丟掉），
+          # 所以這裡把 args.gn 的 key 對照 `gn args --list` 的真實清單，查不到就紅。
+          python3 - "$OUT" <<'PY'
+          import subprocess, sys, re, os
+          out = sys.argv[1]
+          listed = subprocess.run(['gn', 'args', '--list', '--short', out],
+                                  capture_output=True, text=True, check=True).stdout
+          real = {l.split()[0] for l in listed.splitlines() if l.strip() and not l.startswith(' ')}
+          keys = [l.split('=')[0].strip()
+                  for l in open(os.path.join(out, 'args.gn'), encoding='utf-8')
+                  if re.match(r'^[A-Za-z_0-9]+ *=', l)]
+          bad = [k for k in keys if k not in real]
+          print(f"args.gn 設定 {len(keys)} 條｜真實可用 {len(real)} 條｜查無此名 {len(bad)} 條 {bad}")
+          if bad:
+              sys.exit(1)
+          PY
+
+      # ── 品牌化驗收：改名不是「寫在補丁裡」就好，要看得見结果 ────────────
+      - name: Verify aetherium branding really took effect
+        run: |
+          cd "$CHROMIUM_DIR/src"
+          set -x
+          grep -n 'PRODUCT_FULLNAME=aetherium'  chrome/app/theme/aetherium/BRANDING
+          grep -n 'PRODUCT_FULLNAME=aetherium'  chrome/app/theme/chromium/BRANDING
+          grep -n 'PRODUCT_INSTALLER_FULLNAME=aetherium Installer' chrome/app/theme/aetherium/BRANDING
+          grep -n 'return "aetherium.desktop";' chrome/common/channel_info_posix.cc
+          grep -n 'data_dir_basename = "aetherium";' chrome/common/chrome_paths_linux.cc
+          # 出廠值不許留 upstream 的 chromium：留了就是「改名沒改完」。
+          # 只抓「程式碼裡的赋值/回傳」，註解裡講 history 的 chromium 字樣不算（會誤報）。
+          if grep -nE '=[[:space:]]*"chromium";|return[[:space:]]*"chromium(-browser)?\.desktop"|return[[:space:]]*"chromium(-browser)?"[[:space:]]*;' \
+               chrome/common/channel_info_posix.cc chrome/common/chrome_paths_linux.cc \
+               chrome/browser/shell_integration_linux.cc; then
+            echo '::error::上面這些行的出廠品牌值還是 upstream 的 chromium（改名沒改完）'
+            exit 1
+          fi
+          # grit 產品名字串
+          grep -A1 'name="IDS_PRODUCT_NAME" desc="The Chrome application name"' chrome/app/chromium_strings.grd | grep -q '^\s*aetherium\s*$'
+          # 兩個源檔真的有進建置圖（不是只改了檔）
+          ninja -C "$OUT" -t targets all | grep -q 'channel_info_posix.o'
+          ninja -C "$OUT" -t targets all | grep -q 'chrome_paths_linux.o'
+          # 實際跑 version 的 action，產生真正的品牌標頭並检查
+          ( cd "$OUT" && ninja -t commands gen/chrome/common/chrome_version.h | tail -1 | sh )
+          grep -q '#define PRODUCT_FULLNAME_STRING "aetherium"' "$OUT/gen/chrome/common/chrome_version.h"
+          grep -q 'COPYRIGHT_STRING "Copyright [0-9]\{4\} ' "$OUT/gen/chrome/common/chrome_version.h"
+          set +x
+          {
+            echo '### 品牌化驗收（全部實跑，不是看補丁內容）'
+            echo '```'
+            grep -n 'PRODUCT_FULLNAME\|PRODUCT_INSTALLER_FULLNAME' chrome/app/theme/aetherium/BRANDING
+            grep -n 'aetherium.desktop' chrome/common/channel_info_posix.cc
+            grep -n 'data_dir_basename = "aetherium"' chrome/common/chrome_paths_linux.cc
+            grep -n 'PRODUCT_FULLNAME_STRING\|COPYRIGHT_STRING' "$OUT/gen/chrome/common/chrome_version.h"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # ── 裁剪驗收：關掉的東西真的不在圖裡 ──────────────────────────────
+      # ── 裁剪驗收：關掉的東西真的不在「瀏覽器產物」的依賴圖裡 ────────────
+      # ⚠️ 口徑很重要：`gn ls` / `ninja -t targets all` 會把 test／fuzzing 目標
+      # 也算進去（那些目標本來就無條件引用 remoting、printing、pdf），拿那個口徑
+      # 檢查會永遠不綠、而且不是裁剪壞掉。真正會進產物的是 `//chrome` 的依賴圖，
+      # 所以這裡用 `ninja -t graph chrome` 的口徑。
+      - name: Verify feature trims took effect
+        run: |
+          cd "$CHROMIUM_DIR/src"
+          echo "• 目標數（GN 已知）：$(gn ls "$OUT" | wc -l)"
+          echo "• build.ninja 邊：$(grep -c '^build ' "$OUT/build.ninja")"
+          ninja -C "$OUT" -t graph chrome > "$RUNNER_TEMP/graph_chrome.txt"
+          echo "• chrome 的 ninja 圖行數：$(wc -l < "$RUNNER_TEMP/graph_chrome.txt")"
+          fail=0
+          for p in obj/pdf/ obj/remoting/ obj/chrome/browser/printing \
+                   obj/chrome/browser/screen_ai obj/chrome/browser/local_discovery \
+                   obj/chrome/browser/on_device_translation obj/components/on_device_translation/; do
+            n=$(grep -c "$p" "$RUNNER_TEMP/graph_chrome.txt" || true)
+            echo "  $p -> $n"
+            if [ "$n" != "0" ]; then echo "::error::$p 還在 chrome 的依賴圖裡（裁剪沒生效）"; fail=1; fi
+          done
+          # 打印那半 upstream 自己會留一層 dummy backend（printing/backend/print_backend_dummy.cc
+          # ＋mojom 介面目錄），實測 11+4 檔，這是它的設計不是漏裁；超過 30 檔才當異常。
+          n=$(grep -c 'obj/printing/\|obj/components/printing/' "$RUNNER_TEMP/graph_chrome.txt" || true)
+          echo "  printing 殘留（dummy backend＋mojom）-> $n（本機實測 15）"
+          if [ "$n" -gt 30 ]; then echo "::error::printing 殘留異常（>30）"; fail=1; fi
+          # 隱私／AI 那支補丁（patches/privacy/0001）的落地證據
+          grep -q 'safebrowsing-disabled' components/safe_browsing/core/browser/db/sb_protocol_manager_util.cc
+          grep -q 'std::array<RawPrepopulatedPage, 0> kRawPrepopulatedPages' chrome/browser/history/top_sites_factory.cc
+          grep -q 'kSpellCheckEnable, false' chrome/browser/spellchecker/spellcheck_factory.cc
+          if [ "$fail" != "0" ]; then exit 1; fi
+          {
+            echo '### 裁剪驗收（口徑＝`ninja -t graph chrome`，只有進產物的才算）'
+            echo "- pdf／remoting／chrome printing／screen_ai／local_discovery／on_device_translation：全部 0 檔"
+            echo "- printing 殘留 $n 檔＝upstream 的 dummy backend＋mojom 介面（設計如此）"
+            echo "- 目標數 $(gn ls "$OUT" | wc -l)｜build.ninja 邊 $(grep -c '^build ' "$OUT/build.ninja")"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Restore ccache
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.full_build }}
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ github.workspace }}/.ccache
+          key: ccache-linux-${{ github.ref_name }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            ccache-linux-${{ github.ref_name }}-
+
+      - name: Build Chromium（只在手動勾 full_build 時跑）
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.full_build }}
+        run: |
+          cd "$CHROMIUM_DIR/src"
+          autoninja -C "$OUT" chrome
 
       - name: Show ccache stats
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.full_build }}
         run: ccache -s -v
 
       - name: Cleanup ccache locks
@@ -163,7 +226,7 @@ jobs:
           find ${{ github.workspace }}/.ccache -name "*.tmp*" -delete 2>/dev/null || true
 
       - name: Save ccache
-        if: always()
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.full_build && always() }}
         env:
           TAR_OPTIONS: "--warning=no-file-changed"
         uses: actions/cache/save@v4
@@ -171,8 +234,12 @@ jobs:
           path: ${{ github.workspace }}/.ccache
           key: ccache-linux-${{ github.ref_name }}-${{ github.run_id }}-${{ github.run_attempt }}
 
-      - name: Upload Chrome artifact
+      - name: Upload chrome_version.h
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: linux-chrome
-          path: "$CHROMIUM_DIR/src/out/Default/chrome"
+          name: gn-config
+          path: |
+            ${{ env.CHROMIUM_DIR }}/src/out/Aetherium/args.gn
+            ${{ env.CHROMIUM_DIR }}/src/out/Aetherium/gen/chrome/common/chrome_version.h
+          if-no-files-found: warn

@@ -41,10 +41,18 @@ index 5fe5834d51ba7..22d3d08dcaccb 100644
        deps += [ "//chrome/browser/safe_browsing/suspicious_site_warnings" ]
      }
 diff --git a/chrome/browser/accessibility/BUILD.gn b/chrome/browser/accessibility/BUILD.gn
-index b0d565ae9a2c1..d1481730a6034 100644
+index b0d565ae9a2c1..2c644f240d4d0 100644
 --- a/chrome/browser/accessibility/BUILD.gn
 +++ b/chrome/browser/accessibility/BUILD.gn
-@@ -69,11 +69,14 @@ source_set("accessibility") {
+@@ -2,6 +2,7 @@
+ # Use of this source code is governed by a BSD-style license that can be
+ # found in the LICENSE file.
+ 
++import("//components/on_device_translation/buildflags/features.gni")
+ import("//extensions/buildflags/buildflags.gni")
+ import("//mojo/public/tools/bindings/mojom.gni")
+ import("//services/screen_ai/buildflags/features.gni")
+@@ -69,11 +70,14 @@ source_set("accessibility") {
      public_deps += [
        "//chrome/browser/accessibility/live_caption",
        "//chrome/browser/profiles:profile_manager",
@@ -60,16 +68,30 @@ index b0d565ae9a2c1..d1481730a6034 100644
    }
  
    if (is_chromeos) {
-@@ -108,12 +111,15 @@ source_set("impl") {
+@@ -107,13 +111,27 @@ source_set("impl") {
+     deps += [
        "//chrome/browser/accessibility/live_caption:impl",
        "//chrome/browser/extensions",
-       "//chrome/browser/on_device_translation",
+-      "//chrome/browser/on_device_translation",
 -      "//chrome/browser/screen_ai:screen_ai_service_router_factory",
        "//chrome/browser/ui/browser_window",
        "//chrome/browser/ui/views/frame:browser_view_header",
        "//components/live_caption:live_translate",
-       "//components/on_device_translation",
+-      "//components/on_device_translation",
      ]
++
++    if (enable_on_device_translation) {
++      # aetherium trim: 上游把這兩條寫成無條件引用，于是
++      # enable_on_device_translation=false 時會去踩
++      # //chrome/browser/on_device_translation/BUILD.gn:7 與
++      # //components/on_device_translation/BUILD.gn:7 的 assert。
++      # 其他 9 處引用點上游本來就用 if (enable_on_device_translation) 保護，
++      # 只有這裡漏了。
++      deps += [
++        "//chrome/browser/on_device_translation",
++        "//components/on_device_translation",
++      ]
++    }
 +
 +    if (enable_screen_ai_service) {
 +      deps += [ "//chrome/browser/screen_ai:screen_ai_service_router_factory" ]
@@ -77,7 +99,7 @@ index b0d565ae9a2c1..d1481730a6034 100644
    }
  
    if (!is_android && !is_chromeos) {
-@@ -256,11 +262,17 @@ if (!is_android) {
+@@ -256,11 +274,17 @@ if (!is_android) {
      }
  
      deps += [
@@ -98,29 +120,45 @@ index b0d565ae9a2c1..d1481730a6034 100644
        data_deps += [ "//third_party/screen-ai:screen_ai" ]
      }
 diff --git a/chrome/browser/accessibility/live_caption/BUILD.gn b/chrome/browser/accessibility/live_caption/BUILD.gn
-index 1a2783a70208c..b29904b0fc7fd 100644
+index 1a2783a70208c..668792aa9aef1 100644
 --- a/chrome/browser/accessibility/live_caption/BUILD.gn
 +++ b/chrome/browser/accessibility/live_caption/BUILD.gn
-@@ -2,6 +2,7 @@
+@@ -2,6 +2,8 @@
  # Use of this source code is governed by a BSD-style license that can be
  # found in the LICENSE file.
  
++import("//components/on_device_translation/buildflags/features.gni")
 +import("//services/screen_ai/buildflags/features.gni")
  assert(!is_android)
  
  source_set("live_caption") {
-@@ -44,7 +45,6 @@ source_set("impl") {
+@@ -43,13 +45,10 @@ source_set("impl") {
+     "//chrome/browser:browser_process",
      "//chrome/browser/accessibility",
      "//chrome/browser/extensions",
-     "//chrome/browser/on_device_translation",
+-    "//chrome/browser/on_device_translation",
 -    "//chrome/browser/screen_ai:screen_ai_service_router_factory",
      "//chrome/browser/ui/browser_window",
      "//components/live_caption",
      "//components/live_caption:constants",
-@@ -57,6 +57,10 @@ source_set("impl") {
+     "//components/live_caption:live_translate",
+-    "//components/on_device_translation",
+     "//components/on_device_translation/buildflags",
+     "//components/pref_registry",
+     "//components/soda",
+@@ -57,6 +56,19 @@ source_set("impl") {
      "//ui/accessibility",
    ]
  
++  if (enable_on_device_translation) {
++    # aetherium trim: 見 chrome/browser/accessibility/BUILD.gn 的同樣註解——
++    # 上游只在其他 9 處用 flag 保護，這一處漏了，所以 flag 關不掉。
++    deps += [
++      "//chrome/browser/on_device_translation",
++      "//components/on_device_translation",
++    ]
++  }
++
 +  if (enable_screen_ai_service) {
 +    deps += [ "//chrome/browser/screen_ai:screen_ai_service_router_factory" ]
 +  }
@@ -128,6 +166,23 @@ index 1a2783a70208c..b29904b0fc7fd 100644
    if (is_chromeos) {
      deps += [
        "//chrome/browser/ash/accessibility",
+@@ -134,11 +146,15 @@ source_set("browser_tests") {
+     "//components/live_caption",
+     "//components/live_caption:constants",
+     "//components/live_caption:live_translate",
+-    "//components/on_device_translation",
+     "//components/soda:constants",
+     "//content/test:test_support",
+     "//testing/gtest",
+   ]
++
++  if (enable_on_device_translation) {
++    # aetherium trim: 同上，browser_tests 這條也要受 flag 保護。
++    deps += [ "//components/on_device_translation" ]
++  }
+ }
+ 
+ source_set("test_support") {
 diff --git a/chrome/browser/accessibility/tree_fixing/BUILD.gn b/chrome/browser/accessibility/tree_fixing/BUILD.gn
 index 77e43c52fd9b9..24e9e85074fc7 100644
 --- a/chrome/browser/accessibility/tree_fixing/BUILD.gn

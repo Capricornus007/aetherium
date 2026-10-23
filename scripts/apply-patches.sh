@@ -3,7 +3,7 @@
 #
 # 用法：
 #   在源碼樹裡跑（例：cd /opt/chromium-src/src）
-#     ~/Downloads/aetherium/scripts/apply-patches.sh          # 套用
+#     ~/Downloads/aetherium/scripts/apply-patches.sh           # 套用
 #     ~/Downloads/aetherium/scripts/apply-patches.sh --dry-run # 只回報狀態，不動樹
 #
 # 2026-10-22 修正：舊版某支補丁失敗時只印一行就 exit，後面的補丁整批被跳過卻看不出來
@@ -14,6 +14,9 @@
 # 看的是「能不能再套一次」，重複套用必然衝突），導致第二輪跑一定不綠。
 # 現在先用 git apply --reverse --check 判别「已套用」，這類補丁直接跳過、不算錯誤，
 # 所以本腳本可重複執行（冪等）。真套不上去的才失敗。
+#
+# 2026-10-23（同日第二版）：支援 .patch.gz。品牌改名那支原文 30MB，超過 GitHub
+# 單一檔 25MB 軟上限，改存 gzip（5.1MB）；套用前先解到暫存檔，結束一定刪。
 set -euo pipefail
 
 dry_run=0
@@ -35,45 +38,61 @@ if ! git rev-parse --show-toplevel >/dev/null 2>&1; then
 fi
 printf '目標倉庫：%s\n' "$(git rev-parse --show-toplevel)"
 
-mapfile -t patches < <(find "$patch_dir" -type f -name '*.patch' | sort)
+mapfile -t patches < <(find "$patch_dir" -type f \
+                       \( -name '*.patch' -o -name '*.patch.gz' \) | sort)
 
 already=()   # 樹上已有這支的內容（跳過）
 applied=()   # 這輪新套上去的
+failed=()    # 套不下去（與上游衝突）
 total="${#patches[@]}"
+
+tmp_patch=""
+cleanup() { rm -f "${tmp_patch:-}"; }
+trap cleanup EXIT
 
 for i in "${!patches[@]}"; do
   patch="${patches[$i]}"
+  cleanup
+  tmp_patch=""
+  if [ "${patch##*.}" = "gz" ]; then
+    tmp_patch="$(mktemp --suffix=.patch)"
+    gunzip -c "$patch" > "$tmp_patch"
+    target="$tmp_patch"
+  else
+    target="$patch"
+  fi
+
   printf '\n檢查補丁：%s\n' "$patch"
-  if git apply --reverse --check --ignore-space-change --ignore-whitespace "$patch" 2>/dev/null; then
+  if git apply --reverse --check --ignore-space-change --ignore-whitespace "$target" 2>/dev/null; then
     printf '  狀態：已在樹上（跳過，不重複套用）\n'
     already+=("$patch")
-  elif git apply --check --ignore-space-change --ignore-whitespace "$patch" 2>/dev/null; then
+  elif git apply --check --ignore-space-change --ignore-whitespace "$target" 2>/dev/null; then
     if [ "$dry_run" -eq 1 ]; then
       printf '  狀態：可乾淨套用（dry-run，未實際寫入）\n'
       applied+=("$patch")
     else
-      git apply --index --ignore-space-change --ignore-whitespace "$patch"
+      git apply --index --ignore-space-change --ignore-whitespace "$target"
       printf '  狀態：已套用\n'
       applied+=("$patch")
     fi
   else
     # 既不在樹上、也套不下去 ⇒ 補丁與上游現況衝突，必須修補丁，不可繞過。
-    remaining=("${patches[@]:$((i + 1))}")
     printf '::error::補丁套用失敗（與上游衝突）：%s\n' "$patch"
-    printf '已在新樹上（跳過）%d 支：\n' "${#already[@]}"
-    printf '  %s\n' "${already[@]:-（無）}"
-    printf '本輪已新套 %d 支：\n' "${#applied[@]}"
-    printf '  %s\n' "${applied[@]:-（無）}"
-    printf '未套用 %d 支（含這一支本身）：\n' "${#remaining[@]}"
-    printf '  %s\n' "${remaining[@]:-（無）}"
-    printf '修法：對照上游現況重新產生這一支（git diff 產生後用 git apply --check 驗），\n'
-    printf '      或確認該功能已被上游移除後把這支刪掉。\n'
-    exit 1
+    failed+=("$patch")
   fi
 done
+cleanup
 
-printf '\n總結：補丁共 %d 支｜本輪新套 %d 支｜原本已在樹上 %d 支\n' \
-       "$total" "${#applied[@]}" "${#already[@]}"
+printf '\n總結：補丁共 %d 支｜本輪新套 %d 支｜原本已在樹上 %d 支｜失敗 %d 支\n' \
+       "$total" "${#applied[@]}" "${#already[@]}" "${#failed[@]}"
+printf '已在樹上（跳過）：%s\n' "${already[*]:-（無）}"
+printf '本輪新套：%s\n' "${applied[*]:-（無）}"
+if [ "${#failed[@]}" -gt 0 ]; then
+  printf '套用失敗：%s\n' "${failed[*]}"
+  printf '修法：對照上游現況重新產生這一支（git diff 產生後用 git apply --check 驗），\n'
+  printf '      或確認該功能已被上游移除後把這支刪掉。\n'
+  exit 1
+fi
 if [ "$dry_run" -eq 1 ]; then
   printf '（dry-run：樹未變動）\n'
 fi

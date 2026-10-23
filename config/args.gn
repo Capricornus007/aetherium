@@ -1,0 +1,178 @@
+# =============================================================================
+# aetherium 正式建構參數（定稿 2026-10-23）
+#
+# 源碼樹：/opt/chromium-src/src｜chrome/VERSION = 158.0.8118.0｜HEAD 6ac1da15572a0
+# 對照上一版：~/Downloads/chromium-patches/args.gn.2026-10-11
+# 本檔是權威版本；建置目錄裡的 out/Aetherium/args.gn 就是它的一份複製品
+# （2026-10-23 踩過一次：`rm -rf out/Aetherium` 後 `gn gen` 會自己生一個預設空的
+#  args.gn，整個裁剪設定當場不見還看不出來，所以正式檔一定要留在倉庫裡）。
+#
+# ⚠️ 必查項：GN 對「打錯名字」的 arg 只會 WARN 不會報錯（值會被靜默忽略）。
+#    本檔每條 key 都以 `gn args --list --short out/Aetherium` 逐條核對過存在；
+#    核對命令写在 ~/Downloads/aetherium/TRIM-NOTES.md。
+#
+# ⚠️ 上一版 args.gn 裡有幾條在 157/158 已經不存在（實測 gn args --list 查無：
+#    enable_vr、enable_nacl、enable_plugins、enable_media_router、enable_xfa、
+#    swiftshader 舊名 enable_swiftshader），設了等於沒設，本檔一律拿掉並改用真開關。
+# =============================================================================
+
+# ── 一、建構模式：release、非組件、不剝符號外的多餘東西 ────────────────────
+# is_debug=false：不要 debug 版（debug 版慢、佔碟、DCHECK 全開）。
+is_debug = false
+# is_component_build=false：靜態鏈成單一大檔。組件模式（拆成上百個 .so）
+# 會讓 CFI／ThinLTO／PGO 這三件套失效或大幅打折，所以必須是 false。
+is_component_build = false
+# 三層符號表全部歸零：產物體積與連結時間都省（用戶只要能用，不要符號化產物；
+# 要符號化時另有 unstripped 副檔，見 ~/bin/chromium-build.sh 第 47-60 行）。
+symbol_level = 0
+blink_symbol_level = 0
+v8_symbol_level = 0
+# dcheck_always_on=false：release 行為。同時也是 PGO 的前提——
+# build/config/compiler/pgo/pgo.gni 註明 PGI/PGO 資料取自 dcheck 關掉的建置，
+# 混用會讓編譯器誤判熱路徑、編譯時間爆掉。
+dcheck_always_on = false
+
+# ── 二、最佳化三件套（用戶 2026-10-22 定案：全部開著，體積增加可接受）────────
+# is_official_build 保持 false：官方建置會綁死一堆 upstream 假設
+# （遥測、符號上傳、dcheck、logging assert），我們只要它的最佳化，
+# 所以下面三項逐條手動打開，而不是整包 official。
+is_official_build = false
+# ThinLTO：跨模組最佳化＋死程式碼移除。CFI 硬性要求它
+# （build/config/compiler/compiler.gni:261 `assert(!is_cfi || use_thin_lto)`）。
+use_thin_lto = true
+# CFI（Control Flow Integrity）：保護虛函數呼叫與 cast，是安全緩衝區，
+# 用戶明確要求開（不是省體積的東西，它會讓產物變大、編譯變慢）。
+# 實測本機是 linux/x64，正好是 sanitizers.gni:58 官方也會開 CFI 的组合。
+is_cfi = true
+# PGO 相位：0=關、1=插樁產生 profile、2=吃 profile 最佳化。
+# 本樹已經有 upstream 的 linux profile（.gclient 設了 checkout_pgo_profiles: True，
+# 實測檔在 chrome/build/pgo_profiles/，324MB），所以直接走相位 2，不必自己重採。
+chrome_pgo_phase = 2
+# pgo_data_path 留空時，GN 會 exec_script 跑 tools/update_pgo_profiles.py
+# 去 Google 下載（本機環境 dl.google.com 不可達，規則 42 要用鏡像）。
+# 這裡直接指到樹內已有的那份，等於跳過任何下載。檔名要跟
+# chrome/build/linux.pgo.txt 記錄的 sha 一致，升級源碼後必須重新對一次。
+pgo_data_path = "//chrome/build/pgo_profiles/chrome-linux-main-1792627132-147681bdd59da672e4d24d69ba718bffd2e00a43-c83f6c52463054a973e7f6da978799402177d207.profdata"
+# optimize_for_size=true：熱路徑用 -Os（用戶 2026-10-10 深夜裁定只吃這個）。
+# exclude_unwind_tables 刻意不設——回溯表是崩潰定位要用的，留著。
+optimize_for_size = true
+
+# ── 三、功能裁剪：打印與 PDF 全刪（用戶原話「我就是不需要」）───────────────
+# 這一段是「flag + 補丁」兩半：patches/trim/0001 把 26 個 BUILD.gn 裡
+# 「無條件引用打印/PDF/Screen AI/服務發現/背景模式」的 deps 改成 if 條件，
+# 沒有那些 if，光把 flag 設 false 會讓 gn gen 找不到 label 直接失敗。
+# 所以：改源碼的部分見 TRIM-NOTES.md 的檔案:行號，這裡只放對應開關。
+# enable_printing=false：整個打印子系統（//printing、//components/printing、
+# //chrome/browser/printing）不編進來。
+enable_printing = false
+# enable_print_preview=false：打印預覽（它依附 PDF，上游式子是
+# enable_printing && enable_pdf && !is_android，這裡明寫自證意圖）。
+enable_print_preview = false
+# use_cups=false：不鏈 libcups。注意Printing 已整包關掉，這條是把
+# printing/backend/BUILD.gn 裡 `if (use_cups)` 那條 cups config 也斷掉，
+# 順帶讓產物不再依賴 system/libcups（PKGBUILD 的 depends 裡那條以後可拿掉）。
+use_cups = false
+# enable_pdf=false：內建 PDF 檢視器與 //pdf、//chrome/browser/pdf 全部不編。
+# XFA（表單格式）在 157 已被上游移除，沒有對應 arg 可關了。
+enable_pdf = false
+
+# ── 四、功能裁剪：端側 AI（Screen AI／裝置端翻譯）──────────────────────────
+# enable_screen_ai_service=false：OCR／螢幕理解服務不編（補丁 0001 有 22 處
+# `if (enable_screen_ai_service)` 承接它，才不會斷鏈）。
+enable_screen_ai_service = false
+# enable_on_device_translation=false：裝置端翻譯（TranslateKit 本地翻譯引擎
+# ＋語言包自動下載）整包不編。上游預設值是 is_mac||is_win||is_linux||is_chromeos
+# （components/on_device_translation/buildflags/features.gni:8），桌面三大平台恆真，
+# 所以他們有 4 條 assert 直接寫死「一定開著」，另有 3 處無條件引用沒包 if。
+# patches/trim/0003 就是來補這 3 處（accessibility、live_caption:impl+browser_tests、
+# on_device_translation_internals）與那條 mojom 清單，並替兩個 .cc 加
+# #if BUILDFLAG(ENABLE_ON_DEVICE_TRANSLATION) 分支，這個 flag 才真的關得掉。
+enable_on_device_translation = false
+
+# ── 五、功能裁剪：投放／裝置探索（Cast 那半）───────────────────────────────
+# enable_service_discovery=false：DIAL/mDNS 裝置探索（chromecast 投放找裝置）
+# 整包關掉；補丁 0001 把 //chrome/browser/local_discovery 的 deps 改成條件式。
+enable_service_discovery = false
+# enable_mdns=false：網路層的 mDNS（net/dns 裡那條 MulticastDNS 路徑，
+# 也是 casting 與 print-discovery 的底層）。上游宣告在 net/features.gni:32。
+enable_mdns = false
+# enable_reporting=false：HTTP Reporting API／NEL 上報通道（net/features.gni:36）。
+enable_reporting = false
+# enable_background_mode=false：Background Mode（瀏覽器關掉仍在背景跑行程、
+# 擴充的 background 啟動事件）。補丁 0001 在 chrome/browser/BUILD.gn 把
+# //chrome/browser/background/extensions 改成條件引用。
+# 註：enable_background_contents 保持上游 true——用戶要留擴充功能，
+# 那半是擴充 API 的地基，不是背景常駐。
+enable_background_mode = false
+# enable_hangout_services_extension=false：Hangouts 服務擴充（老 Google 元件）。
+# 上游預設值是 enable_src_internal（外部建置恆為 false），這條寫出來是自證意圖。
+enable_hangout_services_extension = false
+# enable_remoting=false：Chrome Remote Desktop 主機端（//remoting）。
+# 白話：那是「讓別人從另一台電腦遠端操作這台」的功能（要裝一個 host、
+# 跟 Google 的伺服器中繼畫面）。這台機器不用它，關掉少編一坨 remoting 目標與
+# 一個背景 host 程式；要反悔就刪掉這行（可回退，影響的只有 //remoting 那坨）。
+enable_remoting = false
+
+# ── 六、明確保留（用戶 2026-10-22 定案：這幾項一律留，不要翻案）────────────
+# 擴充系統留（MV2 靠 patches/adblock/0001 救回，不是靠這個 flag）。
+enable_extensions = true
+# Rust 工具鏈留（157/158 裡越来越多元件是 Rust，關掉會斷鏈，也省不了多少）。
+enable_rust = true
+# SwiftShader 留。⚠️ 舊 args 裡的 `enable_swiftshader` 已不存在
+# （實測 gn args --list 查無此名），現在拆成下面兩條：
+# enable_swiftshader_vulkan 是 ANGLE 的 Vulkan 軟體後端（gpu/vulkan/features.gni:16），
+# angle_enable_swiftshader 是 ANGLE 自己那個 SwiftShader 橋（third_party/angle/gni/angle.gni:347）。
+enable_swiftshader_vulkan = true
+angle_enable_swiftshader = true
+# Ozone 平台三件套全部編進來——這是 patches/trim/0002 能自動偵測的前提：
+# 那支補丁在執行期照 WAYLAND_DISPLAY 從「有編進來的平台」裡挑一個，
+# 少了哪一個，headless 模式在對應環境就會 LOG(FATAL)  abort。
+use_ozone = true
+ozone_platform_x11 = true         # 用戶本機是 i3/X11
+ozone_platform_wayland = true     # 規則：Wayland 要留
+ozone_platform_headless = true    # headless 三件套之一（截圖/PDF 產生器/測試用）
+# ozone_platform 是「沒帶 --ozone-platform 時用哪個平台」的出廠預設（實測本樹預設就是
+# x11）。明寫出來有兩個理由：① 補丁 0002 把這個值当字串塞進 AETHERIUM_HEADLESS_OZONE_DEFAULT
+# 的 define，headless 模式偵測不到環境時就落回它；② 換桌面環境（例：改投 Wayland）時
+# 只要動這一行，不用猜上游預設。
+ozone_platform = "x11"
+
+# ── 七、編解碼與 CDM（留，理由同上一版）───────────────────────────────────
+# proprietary_codecs=true：用戶要留 enhanced-h264ify 這條線 ⇒ 必須開。
+proprietary_codecs = true
+# ffmpeg_branding="Chrome"：與 proprietary_codecs 配套（"Chromium" 那套不含 H.264）。
+ffmpeg_branding = "Chrome"
+# enable_widevine=true：CDM 是執行期另裝、不在建置產物裡，關掉省不到東西，
+# 日後要回來卻得整包重建，所以留。
+enable_widevine = true
+# XNNPACK（端側 AI 的 CPU 加速庫）不要：跟著第四節的端側 AI 一起退出，
+# 這兩條是 build/ 下的開關，關掉可以少編一大坨第三人稱代碼。
+build_tflite_with_xnnpack = false
+build_litert_with_xnnpack = false
+
+# ── 八、去 Google 化與建置寬容度──────────────────────────────────────────
+# disable_fieldtrial_testing_config=true：不吃 Google 的 Field Trial（灰度設定）
+# ——不想要「某天行為自己變了」，這是 aetherium 的核心訴求之一。
+disable_fieldtrial_testing_config = true
+# treat_warnings_as_errors=false／clang_use_chrome_plugins=false：
+# 我們動了補丁系列，無害警告與外掛檢查不該把整輪構建判死。
+treat_warnings_as_errors = false
+clang_use_chrome_plugins = false
+# use_lld=true：用 clang 附的 lld，比系統 ld 快很多（本機只有 14GB RAM，
+# 連結是記憶體內存最兇的一步）。
+use_lld = true
+# use_glib=true：Linux 桌面整合（glib main loop、檔案對話框）照上游預設留著。
+use_glib = true
+
+# ── 九、品牌與版本號（aetherium 的關鍵兩條）───────────────────────────────
+# branding_path_component="aetherium"：指到 chrome/app/theme/aetherium/BRANDING，
+# 那個檔實測寫著 PRODUCT_FULLNAME=aetherium（全小寫，用戶指定的產品名）。
+# 前提：chrome/app/theme/aetherium/ 必頇存在——由
+# patches/branding/0001-theme-aetherium-icons.patch 建立（0002 再把 BRANDING 的
+# PRODUCT_INSTALLER_* 也改成 aetherium）。少了這目錄，gn gen 會在
+# build/util/branding.gni 的 exec_script 直接失敗（它在建置圖產生階段就要讀 BRANDING 檔）。
+branding_path_component = "aetherium"
+# use_dummy_lastchange=false：上游對非 official 建置預設 true，會把版號
+# 寫死成一串 0（about:version 全 0 就是這個）。關掉才会去讀
+# build/util/LASTCHANGE 的真 commit hash。
+use_dummy_lastchange = false

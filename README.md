@@ -198,9 +198,17 @@
 
 ## 六、2026-10-23 追記（裁剪 trim 收尾，本輪實際狀態）
 
-- 補丁數現為 **10 支**（上面第一節寫的 8 支是 10-12 那輪的舊數字）：新增
-  `patches/trim/0001-disable-printing-pdf-screenai-cast.patch`（26 個 BUILD.gn）與
-  `patches/trim/0002-headless-ozone-autodetect.patch`（2 檔）。10 支全部已在樹上，
+- 補丁數現為 **14 支**（上面第一節寫的 8 支是 10-12 那輪的舊數字，10 支是 10-23 第一輪）：
+  第一輪新增 `patches/trim/0001-disable-printing-pdf-screenai-cast.patch`（26 個 BUILD.gn）與
+  `patches/trim/0002-headless-ozone-autodetect.patch`（2 檔）；第二輪（10-23）新增
+  `patches/branding/0001-theme-aetherium-icons.patch`（73 檔，品牌圖示＋BRANDING）、
+  `patches/branding/0002-branding-rename-aetherium.patch.gz`（858 檔，Chromium→aetherium 全部
+  改名：grit 字串 849 檔 63,419 處＋輸出檔名＋`aetherium.desktop`＋`~/.config/aetherium`）、
+  `patches/trim/0003-disable-on-device-translation.patch`（解掉上游那條 assert，讓
+  `enable_on_device_translation=false` 真的關得掉）與
+  `patches/privacy/0001-local-privacy-and-ai-surface-trims.patch`（16 檔，把舊 0004 mega-patch 裡
+  跟品牌無關的隱私／AI 改動搬進補丁系列）。14 支全部從乾淨樹重跑過、彼此不碰同一個檔案，
+  套完 `gn gen` rc=0（35,877 targets）。
   並用「收乾淨再從零套一次」證明瞭逐位元組可重現。
 - `scripts/apply-patches.sh` 改成**冪等**（先判「已在樹上」就跳過）並新增 `--dry-run`，
   所以第二輪跑不再假報失敗。
