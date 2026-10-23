@@ -7,10 +7,10 @@ on:
     inputs:
       full_build:
         description: '也要跑完整編譯（autoninja chrome，會跑到 6 小時上限被砍）'
-      check_against_head:
-        description: '不要釘在上游基準，改用最新 upstream HEAD 檢查補丁是否漂移'
         type: boolean
         default: false
+      check_against_head:
+        description: '不要釘在上游基準，改用最新 upstream HEAD 檢查補丁是否漂移'
         type: boolean
         default: false
 
@@ -75,7 +75,7 @@ jobs:
         run: |
           cd "$CHROMIUM_DIR/src"
           BASE="$(cat "$GITHUB_WORKSPACE/patches/UPSTREAM_BASE" | tr -d '\r\n')"
-          if [ "${{ inputs.check_against_head }}" = "true" ]; then
+          if [ "${{ github.event.inputs.check_against_head }}" = "true" ]; then
             echo "• 手動要求走 drift 檢查：用 upstream HEAD（`git rev-parse HEAD` = $(git rev-parse HEAD)）"
             echo "• 這一輪如果補丁套不下去，那是「上游漂移」而不是「補丁壞掉」——重新產生補丁即可"
           elif git fetch --depth=1 origin "$BASE" 2>/dev/null && git checkout --quiet FETCH_HEAD; then
