@@ -193,3 +193,20 @@
     find ~/Downloads/aetherium/patches -name '*.patch' | sort
     # 逐条只读试套（第 1 步的两个 for 循环，复制即跑）
     # 完整判定与证据：~/Downloads/aetherium/docs/patch-inventory.md
+
+---
+
+## 六、2026-10-23 追記（裁剪 trim 收尾，本輪實際狀態）
+
+- 補丁數現為 **10 支**（上面第一節寫的 8 支是 10-12 那輪的舊數字）：新增
+  `patches/trim/0001-disable-printing-pdf-screenai-cast.patch`（26 個 BUILD.gn）與
+  `patches/trim/0002-headless-ozone-autodetect.patch`（2 檔）。10 支全部已在樹上，
+  並用「收乾淨再從零套一次」證明瞭逐位元組可重現。
+- `scripts/apply-patches.sh` 改成**冪等**（先判「已在樹上」就跳過）並新增 `--dry-run`，
+  所以第二輪跑不再假報失敗。
+- 正式 args.gn 定稿在 `/opt/chromium-src/src/out/Aetherium/args.gn`，44 條自訂 key
+  逐條對過 `gn args --list --short`（實測 1260 條真 arg，查無打錯字）；
+  `gn gen` 成功（35,918 目標）。
+- 全部結論、邊數實測、檔案:行號、以及「還剩什麼（含品牌化 0004 補丁衝突）」寫在
+  **`~/Downloads/aetherium/TRIM-NOTES.md`**，那份才是裁剪這條線的權威紀錄。
+

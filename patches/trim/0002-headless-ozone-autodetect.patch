@@ -1,0 +1,95 @@
+diff --git a/chrome/browser/headless/BUILD.gn b/chrome/browser/headless/BUILD.gn
+index 424a139c56232..2bd18b2a1af5c 100644
+--- a/chrome/browser/headless/BUILD.gn
++++ b/chrome/browser/headless/BUILD.gn
+@@ -27,6 +27,23 @@ source_set("initializer") {
+     "headless_mode_platform.h",
+   ]
+ 
++  # aetherium: upstream hard-codes --ozone-platform=headless on Linux, which
++  # aborts at startup (ui/ozone/platform_selection.cc LOG(FATAL)) when that
++  # platform is not compiled in. Pass down what this build actually contains so
++  # headless mode can follow the running session instead.
++  defines = [
++    "AETHERIUM_HEADLESS_OZONE_DEFAULT=\"" + ozone_platform + "\"",
++  ]
++  if (ozone_platform_headless) {
++    defines += [ "AETHERIUM_HEADLESS_OZONE_HAS_HEADLESS" ]
++  }
++  if (ozone_platform_x11) {
++    defines += [ "AETHERIUM_HEADLESS_OZONE_HAS_X11" ]
++  }
++  if (ozone_platform_wayland) {
++    defines += [ "AETHERIUM_HEADLESS_OZONE_HAS_WAYLAND" ]
++  }
++
+   if (is_mac) {
+     sources += [ "headless_mode_platform_mac.mm" ]
+   }
+diff --git a/chrome/browser/headless/headless_mode_init.cc b/chrome/browser/headless/headless_mode_init.cc
+index efa123b310982..f84764a7cebcd 100644
+--- a/chrome/browser/headless/headless_mode_init.cc
++++ b/chrome/browser/headless/headless_mode_init.cc
+@@ -25,6 +25,9 @@
+ #include "content/public/common/content_switches.h"
+ 
+ #if BUILDFLAG(IS_LINUX)
++#include <string_view>
++
++#include "base/environment.h"
+ #include "ui/gl/gl_switches.h"               // nogncheck
+ #include "ui/ozone/public/ozone_switches.h"  // nogncheck
+ #endif
+@@ -94,9 +97,49 @@ class HeadlessModeHandleImpl : public HeadlessModeHandle {
+     }
+ 
+ #if BUILDFLAG(IS_LINUX)
+-    // Headless mode on Linux relies on ozone/headless platform.
+-    command_line.AppendSwitchASCII(::switches::kOzonePlatform,
+-                                   switches::kHeadless);
++    // Upstream hard-codes --ozone-platform=headless on Linux, which aborts at
++    // startup (ui/ozone/platform_selection.cc LOG(FATAL) "Invalid ozone
++    // platform") when the build did not compile that platform in. Here: an
++    // explicit --ozone-platform always wins; otherwise prefer the dedicated
++    // headless platform, then the platform matching the running session
++    // (Wayland under WAYLAND_DISPLAY, X11 otherwise), and finally this build's
++    // default platform. Only platforms actually present in the binary are
++    // chosen, so this can never select a missing one.
++    if (!command_line.HasSwitch(::switches::kOzonePlatform)) {
++      const bool wayland_session =
++          base::Environment::Create()->HasVar("WAYLAND_DISPLAY");
++      auto compiled_in = [](std::string_view name) {
++#if defined(AETHERIUM_HEADLESS_OZONE_HAS_HEADLESS)
++        if (name == "headless") {
++          return true;
++        }
++#endif
++#if defined(AETHERIUM_HEADLESS_OZONE_HAS_WAYLAND)
++        if (name == "wayland") {
++          return true;
++        }
++#endif
++#if defined(AETHERIUM_HEADLESS_OZONE_HAS_X11)
++        if (name == "x11") {
++          return true;
++        }
++#endif
++        return false;
++      };
++      std::string chosen = AETHERIUM_HEADLESS_OZONE_DEFAULT;
++      for (std::string_view want : {
++#if defined(AETHERIUM_HEADLESS_OZONE_HAS_HEADLESS)
++               std::string_view("headless"),
++#endif
++               std::string_view(wayland_session ? "wayland" : "x11"),
++               std::string_view(wayland_session ? "x11" : "wayland")}) {
++        if (compiled_in(want)) {
++          chosen = std::string(want);
++          break;
++        }
++      }
++      command_line.AppendSwitchASCII(::switches::kOzonePlatform, chosen);
++    }
+     if (!command_line.HasSwitch(switches::kScreenInfo) &&
+         !command_line.HasSwitch(switches::kOzoneOverrideScreenSize)) {
+       command_line.AppendSwitchASCII(switches::kOzoneOverrideScreenSize,

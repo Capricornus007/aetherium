@@ -1,7 +1,14 @@
 ########################################################################
 # aetherium 補丁 0003（adblock 類）：關掉「內網重新導向探測器」
 #
-# 來源：ungoogled-chromium master（錨定 Chromium 155.0.8059.39）
+# 來源：ungoogled-chromium master（原錨定 Chromium 155.0.8059.39）
+#
+# 2026-10-22 重新產生：上游把 FinishSleep() 改了（前面多了 in_sleep_ 與
+#   IsEnabledByPolicy() 提前返回、DCHECK 換成 CHECK(..., base::NotFatalUntil::M162)），
+#   舊的上下文對不上 ⇒ 舊補丁套用失敗、而且讓 apply-patches.sh 中斷在這一檔，
+#   後面的補丁全部沒被套用（實測：git apply --check 逐支跑，只有這支過時）。
+#   意圖不變：把「只有 --disable-background-networking 才 return」焊成無條件 return，
+#   保留 in_sleep_ 復原與政策判斷那兩段，只砍掉後面的 DNS/HTTP 探測。
 #   原檔：patches/extra/ungoogled-chromium/disable-intranet-redirect-detector.patch
 #   抓取 URL：
 #   https://github.com/ungoogled-software/ungoogled-chromium/blob/master/patches/extra/ungoogled-chromium/disable-intranet-redirect-detector.patch
@@ -35,19 +42,20 @@
 #   patch -p1 --dry-run -i ~/Downloads/aetherium/patches/adblock/0003-disable-intranet-redirect-detector-ungoogled-155.patch
 #   git apply --check -p1 --ignore-whitespace 同一路徑
 ########################################################################
-# Disables the intranet redirect detector. It generates extra DNS requests and the functionality using this is disabled
-# See this page for more information: https://mikewest.org/2012/02/chrome-connects-to-three-random-domains-at-startup
-
+diff --git a/chrome/browser/intranet_redirect_detector.cc b/chrome/browser/intranet_redirect_detector.cc
+index a98fbdbcc8d83..4efc26840785f 100644
 --- a/chrome/browser/intranet_redirect_detector.cc
 +++ b/chrome/browser/intranet_redirect_detector.cc
-@@ -117,9 +117,7 @@ void IntranetRedirectDetector::FinishSle
+@@ -117,9 +117,9 @@ void IntranetRedirectDetector::FinishSleep() {
    simple_loaders_.clear();
    resulting_origins_.clear();
  
 -  const base::CommandLine* cmd_line = base::CommandLine::ForCurrentProcess();
 -  if (cmd_line->HasSwitch(switches::kDisableBackgroundNetworking))
 -    return;
++  // aetherium: unconditionally bail out; the detector otherwise sends DNS and
++  // HTTP probes for randomly generated intranet hostnames at startup.
 +  return;
  
-   DCHECK(simple_loaders_.empty() && resulting_origins_.empty());
- 
+   CHECK(simple_loaders_.empty() && resulting_origins_.empty(),
+         base::NotFatalUntil::M162);
