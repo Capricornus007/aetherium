@@ -7,6 +7,10 @@ on:
     inputs:
       full_build:
         description: '也要跑完整 APK 編譯（autoninja chrome_public_apk，免費 runner 跑不完）'
+      check_against_head:
+        description: '不要釘在上游基準，改用最新 upstream HEAD 檢查補丁是否漂移'
+        type: boolean
+        default: false
         type: boolean
         default: false
 
@@ -64,6 +68,21 @@ jobs:
           mkdir -p "$CHROMIUM_DIR"
           cd "$CHROMIUM_DIR"
           fetch --nohooks --no-history chromium
+
+      - name: 釘到補丁的生成基準（patches/UPSTREAM_BASE）
+        run: |
+          cd "$CHROMIUM_DIR/src"
+          BASE="$(cat "$GITHUB_WORKSPACE/patches/UPSTREAM_BASE" | tr -d '\r\n')"
+          if [ "${{ inputs.check_against_head }}" = "true" ]; then
+            echo "• 手動要求走 drift 檢查：用 upstream HEAD（`git rev-parse HEAD` = $(git rev-parse HEAD)）"
+            echo "• 這一輪如果補丁套不下去，那是「上游漂移」而不是「補丁壞掉」——重新產生補丁即可"
+          elif git fetch --depth=1 origin "$BASE" 2>/dev/null && git checkout --quiet FETCH_HEAD; then
+            echo "• 已釘在 $BASE（patches/ 這一系列就是對它生成的）：$(cat chrome/VERSION | tr '\n' ' ')"
+          else
+            echo "::warning::抓不到釘選的 $BASE（伺服器不依 sha 取物？），改用 HEAD $(git rev-parse --short HEAD)；補丁若衝突請重新產生並更新 patches/UPSTREAM_BASE"
+          fi
+          echo "- upstream commit：`git rev-parse HEAD`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- chrome/VERSION：`tr '\n' ' ' < chrome/VERSION`" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Sync dependencies (shallow, parallel)
         run: |

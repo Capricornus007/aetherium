@@ -489,6 +489,12 @@ run 38718614178／38718614222）16-17 分鐘失敗，失敗步驟用 `gh run vie
   理由就是上面那條 6h 上限＋免費 runner 只有 2 核 7GB，Chromium 整包物理上編不完；
   把它留在 push 路上等於「每次改動都必然不綠」，那樣「盯到全綠」這件事就没有意義了。
   想真的編就去 Actions 頁手動觸發（會跑到被砍，跟 2026-08 一樣，但那時是你自願要看的）。
+- **CI 釘上游基準**：新增 `patches/UPSTREAM_BASE`（目前 = `6ac1da15572a0e79814c92a86b8430805f9def04`，
+  也就是本機這棵樹／補丁生成時的 upstream commit，158.0.8118.0）。兩個 workflow 在 `fetch` 之後、
+  `gclient sync` 之前用 `git fetch --depth=1 origin <sha>` 釘過去，抓不到就退回 HEAD 並發
+  `::warning::`。理由是 `.grd/.xtb` 這 849 個檔上游幾乎天天在動，不釘的話每次 push 都會紅在
+  「補丁與上游衝突」——那是漂移訊號，不該混進「我這次改壞了」的閘門。要看漂移就手動觸發時
+  勾 `check_against_head`（那個 input 就是為此存在）。**重新產生補丁之後記得一起更新這檔。**
 - 樹内 PGO profile 不存在時自動把 `chrome_pgo_phase` 改成 0（CI 的 gclient 不一定抓 324MB profile，
   不這樣會紅在環境差異上，而不是紅在裁剪上）。
 - 兩個 yml 都保留 ccache 機制，但掛在 dispatch 路徑。
