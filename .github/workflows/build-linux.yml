@@ -220,7 +220,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Restore ccache
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.full_build }}
+        if: ${{ github.event_name == 'workflow_dispatch'  && github.event.inputs.full_build == 'true' }}
         uses: actions/cache/restore@v4
         with:
           path: ${{ github.workspace }}/.ccache
@@ -229,13 +229,13 @@ jobs:
             ccache-linux-${{ github.ref_name }}-
 
       - name: Build Chromium（只在手動勾 full_build 時跑）
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.full_build }}
+        if: ${{ github.event_name == 'workflow_dispatch'  && github.event.inputs.full_build == 'true' }}
         run: |
           cd "$CHROMIUM_DIR/src"
           autoninja -C "$OUT" chrome
 
       - name: Show ccache stats
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.full_build }}
+        if: ${{ github.event_name == 'workflow_dispatch'  && github.event.inputs.full_build == 'true' }}
         run: ccache -s -v
 
       - name: Cleanup ccache locks
@@ -245,7 +245,7 @@ jobs:
           find ${{ github.workspace }}/.ccache -name "*.tmp*" -delete 2>/dev/null || true
 
       - name: Save ccache
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.full_build && always() }}
+        if: ${{ github.event_name == 'workflow_dispatch'  && github.event.inputs.full_build == 'true' && always() }}
         env:
           TAR_OPTIONS: "--warning=no-file-changed"
         uses: actions/cache/save@v4
