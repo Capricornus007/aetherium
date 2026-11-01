@@ -1,0 +1,27 @@
+# aetherium: brand 字串改名後，grit 的 resource_ids.spec 還指著舊檔名。
+# 缺這支時 `gn gen` 會過，但 `ninja gen/chrome/branded_strings_zh-TW.pak`
+# 會直接失敗：Please update ... and add a first id for
+# chrome/app/aetherium_strings.grd (messages)。
+# 兩個 top-level grd 改成新檔名；起始 ID 不動（800 / 7020）。
+diff --git a/tools/gritsettings/resource_ids.spec b/tools/gritsettings/resource_ids.spec
+index 928475db8a600..b2aef9e711ceb 100644
+--- a/tools/gritsettings/resource_ids.spec
++++ b/tools/gritsettings/resource_ids.spec
+@@ -35,7 +35,7 @@
+   # Chromium strings and Google Chrome strings must start at the same id.
+   # We only use one file depending on whether we're building Chromium or
+   # Google Chrome.
+-  "chrome/app/chromium_strings.grd": {
++  "chrome/app/aetherium_strings.grd": {
+     "messages": [800],
+   },
+   "chrome/app/google_chrome_strings.grd": {
+@@ -1231,7 +1231,7 @@
+   # Chromium strings and Google Chrome strings must start at the same id.
+   # We only use one file depending on whether we're building Chromium or
+   # Google Chrome.
+-  "components/components_chromium_strings.grd": {
++  "components/components_aetherium_strings.grd": {
+     # Big alignment at start of section.
+     "META": {"join": 2},
+     "messages": [7020],

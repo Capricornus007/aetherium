@@ -1,0 +1,2322 @@
+diff --git a/apps/BUILD.gn b/apps/BUILD.gn
+index bc91f2f4b89ca..b13714d10ae9d 100644
+--- a/apps/BUILD.gn
++++ b/apps/BUILD.gn
+@@ -6,8 +6,8 @@ import("//build/config/ui.gni")
+ import("//extensions/buildflags/buildflags.gni")
+ 
+ assert(!is_android && !is_ios)
+-assert(enable_platform_apps,
+-       "Cannot depend on platform apps because enable_platform_apps=false.")
++# aetherium trim: platform_apps 關（用戶裁定）——assert 退場
++if (false) { assert(enable_platform_apps) }
+ 
+ static_library("apps") {
+   sources = []
+diff --git a/apps/ui/views/BUILD.gn b/apps/ui/views/BUILD.gn
+index 57dbc4ae4c384..affe2aa8ff685 100644
+--- a/apps/ui/views/BUILD.gn
++++ b/apps/ui/views/BUILD.gn
+@@ -5,7 +5,8 @@
+ import("//build/config/ui.gni")
+ import("//extensions/buildflags/buildflags.gni")
+ 
+-assert(enable_platform_apps)
++# aetherium trim: platform_apps 關閉（用戶裁定）——assert 退場
++if (false) { assert(enable_platform_apps) }
+ 
+ source_set("views") {
+   sources = [
+diff --git a/chrome/BUILD.gn b/chrome/BUILD.gn
+index 06bfcf5a90d09..21d77720e6bc0 100644
+--- a/chrome/BUILD.gn
++++ b/chrome/BUILD.gn
+@@ -157,7 +157,7 @@ if (!is_android && !is_mac) {
+   if (is_win) {
+     _chrome_output_name = "initialexe/chrome"
+   } else {
+-    _chrome_output_name = "chrome"
++    _chrome_output_name = "aetherium"
+   }
+ 
+   executable("chrome_initial") {
+@@ -1903,7 +1903,7 @@ if (is_linux || is_chromeos) {
+     }
+ 
+     extract_symbols("chrome_symbols") {
+-      binary = "$root_out_dir/chrome"
++      binary = "$root_out_dir/aetherium"
+ 
+       if (current_cpu == "x86") {
+         # GYP used "ia32" so keep that naming for back-compat.
+@@ -2053,7 +2053,7 @@ if (is_linux || is_chromeos) {
+ 
+ if (_cros_generate_embed_section_target) {
+   embed_sections("section_embedded_chrome_binary") {
+-    binary_input = "$root_out_dir/chrome"
++    binary_input = "$root_out_dir/aetherium"
+     sections_embedded_binary_output = "$root_out_dir/chrome.sections_embedded"
+     deps = [ ":chrome" ]
+   }
+diff --git a/chrome/android/BUILD.gn b/chrome/android/BUILD.gn
+index 06190ea15337b..82cc00f3e8f9b 100644
+--- a/chrome/android/BUILD.gn
++++ b/chrome/android/BUILD.gn
+@@ -9,9 +9,11 @@ import("//build/toolchain/gcc_toolchain.gni")
+ import("//chrome/android/chrome_common_shared_library.gni")
+ import("//chrome/android/modules/chrome_feature_module_tmpl.gni")
+ import("//components/supervised_user/buildflags.gni")
++import("//components/offline_pages/buildflags/features.gni")
+ 
+ assert(!is_cronet_build)
+-assert(enable_supervised_users)
++# aetherium trim: supervised_users 關閉（用戶裁定）——assert 退場
++if (false) { assert(enable_supervised_users) }
+ 
+ _is_default_toolchain = current_toolchain == default_toolchain
+ 
+@@ -2094,8 +2096,6 @@ if (_is_default_toolchain) {
+       "//chrome/browser:browser_process",
+       "//chrome/browser/autofill/test:test_support",
+       "//chrome/browser/gesturenav/android:test_support",
+-      "//chrome/browser/offline_pages",
+-      "//chrome/browser/offline_pages:impl",
+       "//chrome/browser/picture_in_picture/test:test_support",
+       "//chrome/browser/renderer_host/android:test_support",
+       "//chrome/browser/sync",
+@@ -2110,6 +2110,13 @@ if (_is_default_toolchain) {
+       "//url",
+       "//url:android_test_helper",
+     ]
++      if (enable_offline_pages) {
++        deps += [  "//chrome/browser/offline_pages"  ]
++      }
++
++      if (enable_offline_pages) {
++        deps += [ "//chrome/browser/offline_pages:impl" ]
++      }
+ 
+     # TODO(crbug.com/40031409): Fix code that adds exit-time destructors and
+     # enable the diagnostic by removing this line.
+diff --git a/chrome/browser/BUILD.gn b/chrome/browser/BUILD.gn
+index 5fe5834d51ba7..76dacfec7ebca 100644
+--- a/chrome/browser/BUILD.gn
++++ b/chrome/browser/BUILD.gn
+@@ -3,6 +3,7 @@
+ # found in the LICENSE file.
+ 
+ import("//base/allocator/allocator.gni")
++import("//components/safe_browsing/buildflags.gni")
+ import("//build/buildflag_header.gni")
+ import("//build/config/buildflags_paint_preview.gni")
+ import("//build/config/chrome_build.gni")
+@@ -44,7 +45,8 @@ import("//tools/grit/grit_rule.gni")
+ import("//ui/base/ui_features.gni")
+ import("//ui/webui/webui_features.gni")
+ 
+-assert(enable_supervised_users)
++# aetherium trim: supervised_users 關閉（用戶裁定）——assert 退場
++if (false) { assert(enable_supervised_users) }
+ 
+ # //build/config/android/rules.gni imports //tools/grit/grit_rule.gni, which
+ # produces a conflict for the "grit" template so we have to only include one.
+@@ -1556,7 +1558,6 @@ source_set("core") {
+       "//chrome/browser/headless:headless_extra_parts",
+       "//chrome/browser/indigo/onboarding",
+       "//chrome/browser/media/router/discovery/access_code:access_code_sink_service",
+-      "//chrome/browser/printing",
+       "//chrome/browser/record_replay:impl",
+       "//chrome/browser/sensor",
+       "//chrome/browser/sharing_hub",
+@@ -1579,6 +1580,10 @@ source_set("core") {
+       "//chrome/browser/ui/web_applications:impl",
+       "//chrome/browser/ui/webui/util",
+     ]
++
++    if (enable_printing) {
++      deps += [ "//chrome/browser/printing" ]
++    }
+   }
+ 
+   if (!is_android || is_desktop_android) {
+@@ -1900,8 +1905,6 @@ source_set("core") {
+       "//chrome/browser/flags:flags_android",
+       "//chrome/browser/incognito:jni_headers",
+       "//chrome/browser/notifications/chime/android",
+-      "//chrome/browser/offline_pages",
+-      "//chrome/browser/offline_pages:impl",
+       "//chrome/browser/prefetch/android",
+       "//chrome/browser/preloading/android",
+       "//chrome/browser/ui/page_info",
+@@ -1934,6 +1937,13 @@ source_set("core") {
+       "//services/webnn/public/mojom:features",
+       "//ui/compositor",
+     ]
++      if (enable_offline_pages) {
++        deps += [  "//chrome/browser/offline_pages"  ]
++      }
++
++      if (enable_offline_pages) {
++        deps += [ "//chrome/browser/offline_pages:impl" ]
++      }
+   }
+ 
+   if (enable_offline_pages) {
+@@ -3034,7 +3044,6 @@ source_set("browser") {
+       "//chrome/browser/profile_resetter:impl",
+       "//chrome/browser/record_replay",
+       "//chrome/browser/record_replay:impl",
+-      "//chrome/browser/screen_ai:screen_ai_service_router_factory",
+       "//chrome/browser/sharing_hub",
+       "//chrome/browser/sharing_hub:impl",
+       "//chrome/browser/smart_card",
+@@ -3318,6 +3327,10 @@ source_set("browser") {
+       "//ui/views",
+       "//ui/web_dialogs",
+     ]
++
++    if (enable_screen_ai_service) {
++      deps += [ "//chrome/browser/screen_ai:screen_ai_service_router_factory" ]
++    }
+     if (safe_browsing_mode != 0) {
+       deps += [ "//chrome/browser/safe_browsing/suspicious_site_warnings" ]
+     }
+@@ -4144,9 +4157,15 @@ source_set("browser") {
+   }
+   if (enable_offline_pages) {
+     deps += [
+-      "//chrome/browser/offline_pages",
+-      "//chrome/browser/offline_pages:impl",
+     ]
++
++      if (enable_offline_pages) {
++        deps += [ "//chrome/browser/offline_pages" ]
++      }
++
++      if (enable_offline_pages) {
++        deps += [ "//chrome/browser/offline_pages:impl" ]
++      }
+   }
+   if (enable_on_device_translation) {
+     deps += [ "//chrome/browser/on_device_translation" ]
+diff --git a/chrome/browser/accessibility/BUILD.gn b/chrome/browser/accessibility/BUILD.gn
+index b0d565ae9a2c1..2c644f240d4d0 100644
+--- a/chrome/browser/accessibility/BUILD.gn
++++ b/chrome/browser/accessibility/BUILD.gn
+@@ -2,6 +2,7 @@
+ # Use of this source code is governed by a BSD-style license that can be
+ # found in the LICENSE file.
+ 
++import("//components/on_device_translation/buildflags/features.gni")
+ import("//extensions/buildflags/buildflags.gni")
+ import("//mojo/public/tools/bindings/mojom.gni")
+ import("//services/screen_ai/buildflags/features.gni")
+@@ -69,11 +70,14 @@ source_set("accessibility") {
+     public_deps += [
+       "//chrome/browser/accessibility/live_caption",
+       "//chrome/browser/profiles:profile_manager",
+-      "//chrome/browser/screen_ai:screen_ai_install_state",
+       "//components/live_caption",
+       "//components/pref_registry",
+       "//ui/accessibility/platform",
+     ]
++
++    if (enable_screen_ai_service) {
++      public_deps += [ "//chrome/browser/screen_ai:screen_ai_install_state" ]
++    }
+   }
+ 
+   if (is_chromeos) {
+@@ -107,13 +111,27 @@ source_set("impl") {
+     deps += [
+       "//chrome/browser/accessibility/live_caption:impl",
+       "//chrome/browser/extensions",
+-      "//chrome/browser/on_device_translation",
+-      "//chrome/browser/screen_ai:screen_ai_service_router_factory",
+       "//chrome/browser/ui/browser_window",
+       "//chrome/browser/ui/views/frame:browser_view_header",
+       "//components/live_caption:live_translate",
+-      "//components/on_device_translation",
+     ]
++
++    if (enable_on_device_translation) {
++      # aetherium trim: 上游把這兩條寫成無條件引用，于是
++      # enable_on_device_translation=false 時會去踩
++      # //chrome/browser/on_device_translation/BUILD.gn:7 與
++      # //components/on_device_translation/BUILD.gn:7 的 assert。
++      # 其他 9 處引用點上游本來就用 if (enable_on_device_translation) 保護，
++      # 只有這裡漏了。
++      deps += [
++        "//chrome/browser/on_device_translation",
++        "//components/on_device_translation",
++      ]
++    }
++
++    if (enable_screen_ai_service) {
++      deps += [ "//chrome/browser/screen_ai:screen_ai_service_router_factory" ]
++    }
+   }
+ 
+   if (!is_android && !is_chromeos) {
+@@ -256,11 +274,17 @@ if (!is_android) {
+     }
+ 
+     deps += [
+-      "//chrome/browser/screen_ai:screen_ai_service_router_factory",
+       "//chrome/browser/ui/views/frame:browser_view_header",
+-      "//services/screen_ai/public/cpp:utilities",
+     ]
+ 
++    if (enable_screen_ai_service) {
++      deps += [ "//chrome/browser/screen_ai:screen_ai_service_router_factory" ]
++    }
++
++    if (enable_screen_ai_service) {
++      deps += [ "//services/screen_ai/public/cpp:utilities" ]
++    }
++
+     if (enable_screen_ai_browsertests) {
+       data_deps += [ "//third_party/screen-ai:screen_ai" ]
+     }
+diff --git a/chrome/browser/accessibility/live_caption/BUILD.gn b/chrome/browser/accessibility/live_caption/BUILD.gn
+index 1a2783a70208c..668792aa9aef1 100644
+--- a/chrome/browser/accessibility/live_caption/BUILD.gn
++++ b/chrome/browser/accessibility/live_caption/BUILD.gn
+@@ -2,6 +2,8 @@
+ # Use of this source code is governed by a BSD-style license that can be
+ # found in the LICENSE file.
+ 
++import("//components/on_device_translation/buildflags/features.gni")
++import("//services/screen_ai/buildflags/features.gni")
+ assert(!is_android)
+ 
+ source_set("live_caption") {
+@@ -43,13 +45,10 @@ source_set("impl") {
+     "//chrome/browser:browser_process",
+     "//chrome/browser/accessibility",
+     "//chrome/browser/extensions",
+-    "//chrome/browser/on_device_translation",
+-    "//chrome/browser/screen_ai:screen_ai_service_router_factory",
+     "//chrome/browser/ui/browser_window",
+     "//components/live_caption",
+     "//components/live_caption:constants",
+     "//components/live_caption:live_translate",
+-    "//components/on_device_translation",
+     "//components/on_device_translation/buildflags",
+     "//components/pref_registry",
+     "//components/soda",
+@@ -57,6 +56,19 @@ source_set("impl") {
+     "//ui/accessibility",
+   ]
+ 
++  if (enable_on_device_translation) {
++    # aetherium trim: 見 chrome/browser/accessibility/BUILD.gn 的同樣註解——
++    # 上游只在其他 9 處用 flag 保護，這一處漏了，所以 flag 關不掉。
++    deps += [
++      "//chrome/browser/on_device_translation",
++      "//components/on_device_translation",
++    ]
++  }
++
++  if (enable_screen_ai_service) {
++    deps += [ "//chrome/browser/screen_ai:screen_ai_service_router_factory" ]
++  }
++
+   if (is_chromeos) {
+     deps += [
+       "//chrome/browser/ash/accessibility",
+@@ -134,11 +146,15 @@ source_set("browser_tests") {
+     "//components/live_caption",
+     "//components/live_caption:constants",
+     "//components/live_caption:live_translate",
+-    "//components/on_device_translation",
+     "//components/soda:constants",
+     "//content/test:test_support",
+     "//testing/gtest",
+   ]
++
++  if (enable_on_device_translation) {
++    # aetherium trim: 同上，browser_tests 這條也要受 flag 保護。
++    deps += [ "//components/on_device_translation" ]
++  }
+ }
+ 
+ source_set("test_support") {
+diff --git a/chrome/browser/accessibility/tree_fixing/BUILD.gn b/chrome/browser/accessibility/tree_fixing/BUILD.gn
+index 77e43c52fd9b9..24e9e85074fc7 100644
+--- a/chrome/browser/accessibility/tree_fixing/BUILD.gn
++++ b/chrome/browser/accessibility/tree_fixing/BUILD.gn
+@@ -3,6 +3,7 @@
+ # found in the LICENSE file.
+ 
+ import("//build/buildflag_header.gni")
++import("//services/screen_ai/buildflags/features.gni")
+ 
+ assert(!is_android, "AXTreeFixingService does not run on Android.")
+ 
+@@ -63,11 +64,17 @@ source_set("internal") {
+   deps = [
+     "//base",
+     "//chrome/browser/profiles:profile",
+-    "//chrome/browser/screen_ai:screen_ai_service_router_factory",
+     "//components/paint_preview/browser",
+     "//components/paint_preview/common",
+     "//components/paint_preview/public",
+     "//content/public/browser",
+-    "//services/screen_ai/public/mojom",
+   ]
++
++  if (enable_screen_ai_service) {
++    deps += [ "//services/screen_ai/public/mojom" ]
++  }
++
++  if (enable_screen_ai_service) {
++    deps += [ "//chrome/browser/screen_ai:screen_ai_service_router_factory" ]
++  }
+ }
+diff --git a/chrome/browser/ai/BUILD.gn b/chrome/browser/ai/BUILD.gn
+index bad99a3dcab04..3f62629b7b973 100644
+--- a/chrome/browser/ai/BUILD.gn
++++ b/chrome/browser/ai/BUILD.gn
+@@ -6,7 +6,8 @@ import("//chrome/common/features.gni")
+ import("//components/optimization_guide/features.gni")
+ import("//pdf/features.gni")
+ 
+-assert(build_with_model_execution)
++# aetherium trim: 端側 AI 全清（用戶裁定）——assert 退場
++if (false) { assert(build_with_model_execution) }
+ assert(is_win || is_mac || is_linux || is_chromeos || is_android)
+ 
+ source_set("ai") {
+@@ -126,11 +127,14 @@ source_set("test_support") {
+     "//chrome/browser/optimization_guide:test_support",
+     "//chrome/test:test_support",
+     "//chrome/test/base:chrome_render_view_host_test_harness",
+-    "//components/optimization_guide/core:manifest_broker_test_support",
+     "//components/optimization_guide/core:test_support",
+     "//testing/gmock",
+     "//testing/gtest",
+   ]
++
++    if (build_with_model_execution) {
++      deps += [ "//components/optimization_guide/core:manifest_broker_test_support" ]
++    }
+   deps = [ ":ai" ]
+ }
+ 
+@@ -162,11 +166,14 @@ source_set("unit_tests") {
+     "//chrome/test/base:testing_browser_process",
+     "//components/component_updater:test_support",
+     "//components/on_device_ai",
+-    "//components/optimization_guide/core:manifest_broker_test_support",
+     "//components/optimization_guide/core:test_support",
+     "//components/optimization_guide/core/model_execution/configs:summarize_config",
+     "//components/passage_embeddings/core:test_support",
+   ]
++
++    if (build_with_model_execution) {
++      deps += [ "//components/optimization_guide/core:manifest_broker_test_support" ]
++    }
+ }
+ 
+ if (!is_android) {
+diff --git a/chrome/browser/android/BUILD.gn b/chrome/browser/android/BUILD.gn
+index 76b1a906cd353..0c9ccc37db9ac 100644
+--- a/chrome/browser/android/BUILD.gn
++++ b/chrome/browser/android/BUILD.gn
+@@ -3,6 +3,7 @@
+ # found in the LICENSE file.
+ 
+ import("//build/config/buildflags_paint_preview.gni")
++import("//components/safe_browsing/buildflags.gni")
+ import("//chrome/android/features/dev_ui/dev_ui_module.gni")
+ import("//chrome/common/features.gni")
+ import("//device/vr/buildflags/buildflags.gni")
+@@ -10,6 +11,7 @@ import("//extensions/buildflags/buildflags.gni")
+ import("//printing/buildflags/buildflags.gni")
+ import("//third_party/protobuf/proto_library.gni")
+ import("//ui/webui/webui_features.gni")
++import("//components/offline_pages/buildflags/features.gni")
+ 
+ source_set("tabs_public") {
+   public = [
+@@ -189,7 +191,6 @@ source_set("tabs_impl") {
+     "//chrome/browser/media",
+     "//chrome/browser/navigation_predictor",
+     "//chrome/browser/net",
+-    "//chrome/browser/offline_pages",
+     "//chrome/browser/optimization_guide",
+     "//chrome/browser/page_content_annotations",
+     "//chrome/browser/page_content_annotations:extraction_service",
+@@ -285,6 +286,9 @@ source_set("tabs_impl") {
+     "//printing/buildflags",
+     "//ui/base",
+   ]
++    if (enable_offline_pages) {
++      deps += [  "//chrome/browser/offline_pages"  ]
++    }
+   if (enable_webui_ntp) {
+     deps += [
+       "//chrome/browser/ui/customize_chrome:customize_chrome_base",
+@@ -1023,7 +1027,6 @@ if (is_android) {
+       "//chrome/browser/metrics:impl",
+       "//chrome/browser/navigation_predictor",
+       "//chrome/browser/notifications:impl",
+-      "//chrome/browser/offline_pages",
+       "//chrome/browser/omnibox",
+       "//chrome/browser/optimization_guide",
+       "//chrome/browser/optimization_guide:impl",
+@@ -1099,6 +1102,10 @@ if (is_android) {
+       "//ui/snapshot",
+     ]
+ 
++      if (enable_offline_pages) {
++        deps += [ "//chrome/browser/offline_pages" ]
++      }
++
+     if (enable_printing) {
+       deps += [
+         "//chrome/browser/printing",
+diff --git a/chrome/browser/apps/platform_apps/BUILD.gn b/chrome/browser/apps/platform_apps/BUILD.gn
+index 9b5fc52ec8378..2dbb9c4e258ad 100644
+--- a/chrome/browser/apps/platform_apps/BUILD.gn
++++ b/chrome/browser/apps/platform_apps/BUILD.gn
+@@ -5,7 +5,8 @@
+ import("//extensions/buildflags/buildflags.gni")
+ import("//printing/buildflags/buildflags.gni")
+ 
+-assert(enable_platform_apps)
++# aetherium trim: platform_apps 關閉（用戶裁定）——assert 退場
++if (false) { assert(enable_platform_apps) }
+ 
+ source_set("platform_apps") {
+   sources = [
+diff --git a/chrome/browser/apps/platform_apps/api/BUILD.gn b/chrome/browser/apps/platform_apps/api/BUILD.gn
+index 976e1ab21aac3..1072418212096 100644
+--- a/chrome/browser/apps/platform_apps/api/BUILD.gn
++++ b/chrome/browser/apps/platform_apps/api/BUILD.gn
+@@ -6,7 +6,8 @@ import("//chrome/common/apps/platform_apps/api/api_sources.gni")
+ import("//extensions/buildflags/buildflags.gni")
+ import("//tools/json_schema_compiler/json_schema_api.gni")
+ 
+-assert(enable_platform_apps)
++# aetherium trim: platform_apps 關閉（用戶裁定）——assert 退場
++if (false) { assert(enable_platform_apps) }
+ 
+ function_registration("api_registration") {
+   sources = chrome_apps_api_schema_files
+diff --git a/chrome/browser/back_forward_cache/BUILD.gn b/chrome/browser/back_forward_cache/BUILD.gn
+index 0c5ab3048ba8b..56262af17f5a1 100644
+--- a/chrome/browser/back_forward_cache/BUILD.gn
++++ b/chrome/browser/back_forward_cache/BUILD.gn
+@@ -32,7 +32,6 @@ if (!is_android) {
+       "//chrome/browser:browser_process",
+       "//chrome/browser/content_settings",
+       "//chrome/browser/content_settings:content_settings_factory",
+-      "//chrome/browser/pdf:test_mime_handler_stream_manager",
+       "//chrome/browser/preloading:test_support",
+       "//chrome/browser/profiles:profile",
+       "//chrome/browser/task_manager:test_support",
+@@ -58,6 +57,10 @@ if (!is_android) {
+       "//ui/base",
+     ]
+ 
++    if (enable_pdf) {
++      deps += [ "//chrome/browser/pdf:test_mime_handler_stream_manager" ]
++    }
++
+     if (enable_pdf) {
+       deps += [
+         "//chrome/browser/pdf:pdf_extension_test_utils",
+diff --git a/chrome/browser/bookmarks/BUILD.gn b/chrome/browser/bookmarks/BUILD.gn
+index 5c317f55c3dfd..6df8b3a761118 100644
+--- a/chrome/browser/bookmarks/BUILD.gn
++++ b/chrome/browser/bookmarks/BUILD.gn
+@@ -84,9 +84,8 @@ source_set("impl") {
+     "//content/public/browser",
+     "//ui/gfx",
+   ]
+-
+   if (enable_offline_pages) {
+-    deps += [ "//chrome/browser/offline_pages" ]
++    deps += [  "//chrome/browser/offline_pages"  ]
+   }
+ }
+ 
+diff --git a/chrome/browser/browsing_data/BUILD.gn b/chrome/browser/browsing_data/BUILD.gn
+index bde16a01f0566..61c942e5be6a5 100644
+--- a/chrome/browser/browsing_data/BUILD.gn
++++ b/chrome/browser/browsing_data/BUILD.gn
+@@ -3,6 +3,7 @@
+ # found in the LICENSE file.
+ 
+ import("//extensions/buildflags/buildflags.gni")
++import("//components/offline_pages/buildflags/features.gni")
+ import("//ui/webui/webui_features.gni")
+ 
+ source_set("constants") {
+@@ -237,7 +238,7 @@ source_set("impl") {
+     ]
+   }
+ 
+-  if (is_android) {
++  if (is_android && enable_offline_pages) {
+     deps += [ "//chrome/browser/offline_pages" ]
+   }
+ }
+diff --git a/chrome/browser/component_updater/BUILD.gn b/chrome/browser/component_updater/BUILD.gn
+index d006b9e17ed11..b2b9301c41a2c 100644
+--- a/chrome/browser/component_updater/BUILD.gn
++++ b/chrome/browser/component_updater/BUILD.gn
+@@ -12,6 +12,7 @@ import("//net/features.gni")
+ import("//third_party/blink/public/public_features.gni")
+ import("//third_party/widevine/cdm/widevine.gni")
+ import("//ui/webui/webui_features.gni")
++import("//services/screen_ai/buildflags/features.gni")
+ 
+ # Header-only target. Only .h files; no sources.
+ source_set("component_updater") {
+@@ -244,9 +245,15 @@ source_set("impl") {
+   if (!is_android && !is_chromeos) {
+     sources += [ "screen_ai_component_installer.cc" ]
+     deps += [
+-      "//chrome/browser/screen_ai:screen_ai_install_state",
+-      "//services/screen_ai/public/cpp:utilities",
+     ]
++
++    if (enable_screen_ai_service) {
++      deps += [ "//services/screen_ai/public/cpp:utilities" ]
++    }
++
++    if (enable_screen_ai_service) {
++      deps += [ "//chrome/browser/screen_ai:screen_ai_install_state" ]
++    }
+   }
+ 
+   if (use_minikin_hyphenation) {
+diff --git a/chrome/browser/compose/BUILD.gn b/chrome/browser/compose/BUILD.gn
+index ddd8fab3ebc5a..393d1580f7c32 100644
+--- a/chrome/browser/compose/BUILD.gn
++++ b/chrome/browser/compose/BUILD.gn
+@@ -5,8 +5,8 @@
+ import("//components/compose/features.gni")
+ import("//third_party/protobuf/proto_library.gni")
+ 
+-assert(enable_compose)
+-
++# aetherium trim: enable_compose 關（用戶裁定）——assert 退場
++if (false) { assert(enable_compose) }
+ source_set("compose") {
+   sources = [
+     "chrome_compose_client.h",
+diff --git a/chrome/browser/contextual_tasks/BUILD.gn b/chrome/browser/contextual_tasks/BUILD.gn
+index 8317e057a4799..9879a786dac58 100644
+--- a/chrome/browser/contextual_tasks/BUILD.gn
++++ b/chrome/browser/contextual_tasks/BUILD.gn
+@@ -524,7 +524,6 @@ source_set("ui_impl") {
+     ]
+     deps += [
+       "//chrome/browser:file_select_helper",
+-      "//chrome/browser/pdf",
+       "//chrome/browser/resources/contextual_tasks:resources",
+       "//chrome/browser/resources/webui_toolbar_shared:resources",
+       "//chrome/browser/tab_list",
+@@ -550,6 +549,10 @@ source_set("ui_impl") {
+       "//ui/views/controls/webview",
+       "//url",
+     ]
++
++  if (enable_pdf) {
++    deps += [ "//chrome/browser/pdf" ]
++  }
+   }
+ 
+   if (enable_dice_support) {
+diff --git a/chrome/browser/download/BUILD.gn b/chrome/browser/download/BUILD.gn
+index 6f9c54ba8b703..f5ac756e18a4e 100644
+--- a/chrome/browser/download/BUILD.gn
++++ b/chrome/browser/download/BUILD.gn
+@@ -272,13 +272,15 @@ source_set("impl") {
+       "//chrome/browser/android:tabs_public",
+       "//chrome/browser/download/android:jni_headers",
+       "//chrome/browser/flags:flags_android",
+-      "//chrome/browser/offline_pages:impl",
+       "//chrome/browser/permissions",
+       "//chrome/browser/ui/android/pdf:pdf_jni_headers",
+       "//chrome/browser/ui/android/tab_model",
+       "//components/safe_browsing/android:safe_browsing_api_handler",
+       "//ui/android",
+     ]
++      if (enable_offline_pages) {
++        deps += [  "//chrome/browser/offline_pages:impl"  ]
++      }
+   }
+ 
+   if (!is_android) {
+@@ -594,8 +596,6 @@ if (!is_android) {
+       "//components/lookalikes/core:safety_tips",
+       "//components/page_load_metrics/browser:test_support",
+       "//components/safe_browsing/content/browser:safe_browsing_service",
+-      "//components/safe_browsing/content/common:file_type_policies",
+-      "//components/safe_browsing/content/common:file_type_policies_test_support",
+       "//components/services/quarantine:test_support",
+       "//content/public/browser",
+       "//content/test:test_support",
+@@ -604,6 +604,14 @@ if (!is_android) {
+       "//ui/shell_dialogs:test_support",
+     ]
+ 
++      if (safe_browsing_mode != 0) {
++        deps += [ "//components/safe_browsing/content/common:file_type_policies" ]
++      }
++
++      if (safe_browsing_mode != 0) {
++        deps += [ "//components/safe_browsing/content/common:file_type_policies_test_support" ]
++      }
++
+     if (is_chromeos) {
+       sources += [ "notification/download_notification_browsertest.cc" ]
+       deps += [ "//chromeos/dbus/dlp" ]
+diff --git a/chrome/browser/enterprise/connectors/test/BUILD.gn b/chrome/browser/enterprise/connectors/test/BUILD.gn
+index 1a2d19a810320..5994d09e88fe8 100644
+--- a/chrome/browser/enterprise/connectors/test/BUILD.gn
++++ b/chrome/browser/enterprise/connectors/test/BUILD.gn
+@@ -47,7 +47,6 @@ source_set("test_support") {
+ 
+     public_deps += [
+       "//chrome/browser/safe_browsing",
+-      "//chrome/test:test_support_ui",
+       "//components/policy/core/common:common_constants",
+       "//components/policy/core/common:test_support",
+       "//components/policy/proto",
+@@ -55,6 +54,9 @@ source_set("test_support") {
+       "//components/safe_browsing/core/common/proto:realtimeapi_proto",
+       "//third_party/abseil-cpp:absl",
+     ]
++    if (!is_android) {
++      public_deps += [ "//chrome/test:test_support_ui" ]
++    }
+ 
+     deps += [
+       "//chrome/browser:browser_process",
+diff --git a/chrome/browser/enterprise/data_controls/BUILD.gn b/chrome/browser/enterprise/data_controls/BUILD.gn
+index 7b83fd5cd300c..b796493fa8e28 100644
+--- a/chrome/browser/enterprise/data_controls/BUILD.gn
++++ b/chrome/browser/enterprise/data_controls/BUILD.gn
+@@ -7,7 +7,8 @@ import("//components/enterprise/buildflags/buildflags.gni")
+ import("//components/safe_browsing/buildflags.gni")
+ import("//extensions/buildflags/buildflags.gni")
+ 
+-assert(enterprise_data_controls)
++# aetherium trim: enterprise_data_controls 關（用戶裁定：雙端企業族全刪）——assert 退場；引用 gate 見 deep-trim 專項
++if (false) { assert(enterprise_data_controls) }
+ 
+ source_set("data_controls") {
+   configs += [ "//components/enterprise:extra_warnings" ]
+diff --git a/chrome/browser/enterprise/data_protection/BUILD.gn b/chrome/browser/enterprise/data_protection/BUILD.gn
+index ca865c84a294c..cda2000bacc7e 100644
+--- a/chrome/browser/enterprise/data_protection/BUILD.gn
++++ b/chrome/browser/enterprise/data_protection/BUILD.gn
+@@ -56,7 +56,9 @@ source_set("unit_tests") {
+ 
+   if (enable_extensions && enterprise_local_content_analysis) {
+     sources += [ "print_utils_unittest.cc" ]
+-    deps += [ "//chrome/browser/printing:test_support" ]
++    if (enable_print_preview) {
++  deps += [ "//chrome/browser/printing:test_support" ]
++    }
+   }
+ 
+   if (enterprise_data_controls) {
+diff --git a/chrome/browser/extensions/BUILD.gn b/chrome/browser/extensions/BUILD.gn
+index 3a5f0df845a78..198db6c1759d5 100644
+--- a/chrome/browser/extensions/BUILD.gn
++++ b/chrome/browser/extensions/BUILD.gn
+@@ -24,7 +24,8 @@ import("//third_party/protobuf/proto_library.gni")
+ import("//ui/webui/webui_features.gni")
+ 
+ assert(enable_extensions_core)
+-assert(enable_supervised_users)
++# aetherium trim: supervised_users 關閉（用戶裁定）——assert 退場
++if (false) { assert(enable_supervised_users) }
+ assert(!is_fuchsia, "Fuchsia shouldn't use anything in //chrome")
+ 
+ source_set("external_loader") {
+@@ -3177,11 +3178,9 @@ source_set("browser_tests") {
+       "//chrome/browser/extensions/api/messaging:test_support",
+       "//chrome/browser/extensions/api/mime_handlers:browser_tests",
+       "//chrome/browser/extensions/api/passwords_private:test_support",
+-      "//chrome/browser/extensions/api/pdf_viewer_private:browser_tests",
+       "//chrome/browser/hid",
+       "//chrome/browser/password_manager",
+       "//chrome/browser/password_manager:test_support",
+-      "//chrome/browser/pdf:pdf_extension_test_utils",
+       "//chrome/browser/prefetch",
+       "//chrome/browser/service_worker:browser_tests",
+       "//chrome/browser/sync_file_system",
+@@ -3264,12 +3263,23 @@ source_set("browser_tests") {
+       "//ui/web_dialogs:test_support",
+     ]
+ 
++  if (enable_pdf) {
++    data += [ "//chrome/browser/pdf:pdf_extension_test_utils" ]
++  }
++
++  if (enable_pdf) {
++    data += [ "//chrome/browser/extensions/api/pdf_viewer_private:browser_tests" ]
++  }
++
+     if (!is_chromeos) {
+       # Chrome OS doesn't use background mode or download bubbles.
+       deps += [
+-        "//chrome/browser/background/extensions",
+         "//chrome/browser/download/bubble",
+       ]
++
++      if (enable_background_mode) {
++        deps += [ "//chrome/browser/background/extensions" ]
++      }
+     }
+ 
+     if (enable_background_mode) {
+diff --git a/chrome/browser/extensions/api/BUILD.gn b/chrome/browser/extensions/api/BUILD.gn
+index a331860da83f3..066c147f1f8f6 100644
+--- a/chrome/browser/extensions/api/BUILD.gn
++++ b/chrome/browser/extensions/api/BUILD.gn
+@@ -3,6 +3,7 @@
+ # found in the LICENSE file.
+ 
+ import("//chrome/common/extensions/api/api_sources.gni")
++import("//components/safe_browsing/buildflags.gni")
+ import("//chrome/common/features.gni")
+ import("//extensions/buildflags/buildflags.gni")
+ import("//pdf/features.gni")
+@@ -76,11 +77,14 @@ group("api_implementations") {
+       "//chrome/browser/extensions/api/networking_private",
+       "//chrome/browser/extensions/api/passwords_private",
+       "//chrome/browser/extensions/api/resources_private",
+-      "//chrome/browser/extensions/api/safe_browsing_private",
+       "//chrome/browser/extensions/api/settings_overrides",
+       "//chrome/browser/extensions/api/webrtc_desktop_capture_private",
+     ]
+ 
++    if (safe_browsing_mode != 0) {
++      public_deps += [ "//chrome/browser/extensions/api/safe_browsing_private" ]
++    }
++
+     if (enable_pdf) {
+       public_deps += [ "//chrome/browser/extensions/api/pdf_viewer_private" ]
+     }
+diff --git a/chrome/browser/feedback/BUILD.gn b/chrome/browser/feedback/BUILD.gn
+index 9159fe65b60ae..f195f2311d53d 100644
+--- a/chrome/browser/feedback/BUILD.gn
++++ b/chrome/browser/feedback/BUILD.gn
+@@ -3,6 +3,7 @@
+ # found in the LICENSE file.
+ 
+ import("//build/config/ui.gni")
++import("//components/safe_browsing/buildflags.gni")
+ 
+ assert(is_win || is_mac || is_linux || is_chromeos || is_android)
+ 
+@@ -143,7 +144,6 @@ source_set("feedback_impl") {
+       "//components/device_event_log",
+       "//components/feedback",
+       "//components/performance_manager",
+-      "//components/safe_browsing/content/browser:client_side_detection",
+       "//components/supervised_user/core/browser",
+       "//components/tabs:public",
+       "//extensions/browser",
+@@ -152,6 +152,10 @@ source_set("feedback_impl") {
+       "//net",
+       "//services/cert_verifier:lib",
+     ]
++
++      if (safe_browsing_mode != 0) {
++        deps += [ "//components/safe_browsing/content/browser:client_side_detection" ]
++      }
+     if (is_win || is_mac || is_linux) {
+       sources += [ "feedback_disabled_dialog.cc" ]
+       deps += [
+@@ -300,9 +304,12 @@ if (!is_android) {
+       "//chrome/browser/ui/toolbar",
+       "//chrome/test:test_support",
+       "//chrome/test:test_support_ui",
+-      "//components/safe_browsing/content/browser:client_side_detection",
+       "//content/test:test_support",
+       "//testing/gtest",
+     ]
++
++      if (safe_browsing_mode != 0) {
++        deps += [ "//components/safe_browsing/content/browser:client_side_detection" ]
++      }
+   }
+ }
+diff --git a/chrome/browser/feedback/report_unsafe_site/BUILD.gn b/chrome/browser/feedback/report_unsafe_site/BUILD.gn
+index 592884cfb9f71..566fd203e992c 100644
+--- a/chrome/browser/feedback/report_unsafe_site/BUILD.gn
++++ b/chrome/browser/feedback/report_unsafe_site/BUILD.gn
+@@ -1,6 +1,7 @@
+ # Copyright 2026 The Chromium Authors
+ # Use of this source code is governed by a BSD-style license that can be
+ # found in the LICENSE file.
++import("//components/safe_browsing/buildflags.gni")
+ 
+ if (!is_android) {
+   source_set("report_unsafe_site") {
+@@ -12,9 +13,12 @@ if (!is_android) {
+       "//skia",
+     ]
+     deps = [
+-      "//components/safe_browsing/content/browser:client_side_detection",
+       "//components/viz/common",
+     ]
++
++      if (safe_browsing_mode != 0) {
++        deps += [ "//components/safe_browsing/content/browser:client_side_detection" ]
++      }
+   }
+ 
+   source_set("unit_tests") {
+diff --git a/chrome/browser/guest_view/BUILD.gn b/chrome/browser/guest_view/BUILD.gn
+index b4e94778b3f9d..9b00ae5d8b5fe 100644
+--- a/chrome/browser/guest_view/BUILD.gn
++++ b/chrome/browser/guest_view/BUILD.gn
+@@ -5,6 +5,7 @@
+ import("//components/captive_portal/core/features.gni")
+ import("//components/guest_view/buildflags/buildflags.gni")
+ import("//extensions/buildflags/buildflags.gni")
++import("//printing/buildflags/buildflags.gni")
+ 
+ assert(enable_guest_view)
+ 
+@@ -110,9 +111,7 @@ if (!is_android && enable_extensions) {
+ 
+     deps = [
+       "//chrome/browser/extensions:test_support",
+-      "//chrome/browser/printing:test_support",
+       "//chrome/browser/profiles:profile",
+-      "//chrome/browser/ui/webui/print_preview",
+       "//chrome/test:test_support",
+       "//chrome/test:test_support_ui",
+       "//components/guest_view/browser",
+@@ -128,6 +127,14 @@ if (!is_android && enable_extensions) {
+       "//net:test_support",
+       "//testing/gtest",
+     ]
++
++    if (enable_print_preview) {
++      deps += [ "//chrome/browser/printing:test_support" ]
++    }
++
++    if (enable_print_preview) {
++      deps += [ "//chrome/browser/ui/webui/print_preview" ]
++    }
+   }
+ 
+   source_set("interactive_ui_tests") {
+diff --git a/chrome/browser/headless/BUILD.gn b/chrome/browser/headless/BUILD.gn
+index 424a139c56232..2bd18b2a1af5c 100644
+--- a/chrome/browser/headless/BUILD.gn
++++ b/chrome/browser/headless/BUILD.gn
+@@ -27,6 +27,23 @@ source_set("initializer") {
+     "headless_mode_platform.h",
+   ]
+ 
++  # aetherium: upstream hard-codes --ozone-platform=headless on Linux, which
++  # aborts at startup (ui/ozone/platform_selection.cc LOG(FATAL)) when that
++  # platform is not compiled in. Pass down what this build actually contains so
++  # headless mode can follow the running session instead.
++  defines = [
++    "AETHERIUM_HEADLESS_OZONE_DEFAULT=\"" + ozone_platform + "\"",
++  ]
++  if (ozone_platform_headless) {
++    defines += [ "AETHERIUM_HEADLESS_OZONE_HAS_HEADLESS" ]
++  }
++  if (ozone_platform_x11) {
++    defines += [ "AETHERIUM_HEADLESS_OZONE_HAS_X11" ]
++  }
++  if (ozone_platform_wayland) {
++    defines += [ "AETHERIUM_HEADLESS_OZONE_HAS_WAYLAND" ]
++  }
++
+   if (is_mac) {
+     sources += [ "headless_mode_platform_mac.mm" ]
+   }
+diff --git a/chrome/browser/net/BUILD.gn b/chrome/browser/net/BUILD.gn
+index d46845bbd810c..4d5741e11ba37 100644
+--- a/chrome/browser/net/BUILD.gn
++++ b/chrome/browser/net/BUILD.gn
+@@ -301,9 +301,8 @@ source_set("impl") {
+   if (enable_extensions_core) {
+     deps += [ "//extensions/browser/api/proxy:proxy_api" ]
+   }
+-
+   if (enable_offline_pages) {
+-    deps += [ "//chrome/browser/offline_pages" ]
++    deps += [  "//chrome/browser/offline_pages"  ]
+   }
+ 
+   if (use_nss_certs) {
+diff --git a/chrome/browser/page_load_metrics/BUILD.gn b/chrome/browser/page_load_metrics/BUILD.gn
+index a5d9783a84283..25dd9d6eb1104 100644
+--- a/chrome/browser/page_load_metrics/BUILD.gn
++++ b/chrome/browser/page_load_metrics/BUILD.gn
+@@ -3,6 +3,7 @@
+ # found in the LICENSE file.
+ 
+ import("//extensions/buildflags/buildflags.gni")
++import("//components/offline_pages/buildflags/features.gni")
+ 
+ if (is_android) {
+   import("//build/config/android/rules.gni")
+@@ -163,9 +164,11 @@ source_set("impl") {
+     sources += [ "observers/android_page_load_metrics_observer.cc" ]
+     deps += [
+       ":jni_headers",
+-      "//chrome/browser/offline_pages",
+       "//chrome/browser/ui/android/tab_model",
+     ]
++      if (enable_offline_pages) {
++        deps += [  "//chrome/browser/offline_pages"  ]
++      }
+   }
+ 
+   if (!is_android) {
+diff --git a/chrome/browser/prefs/BUILD.gn b/chrome/browser/prefs/BUILD.gn
+index 66f9c0d285f33..cc98017fd187e 100644
+--- a/chrome/browser/prefs/BUILD.gn
++++ b/chrome/browser/prefs/BUILD.gn
+@@ -10,6 +10,8 @@ import("//components/safe_browsing/buildflags.gni")
+ import("//extensions/buildflags/buildflags.gni")
+ import("//pdf/features.gni")
+ import("//rlz/buildflags/buildflags.gni")
++import("//printing/buildflags/buildflags.gni")
++import("//services/screen_ai/buildflags/features.gni")
+ 
+ assert(is_win || is_mac || is_linux || is_chromeos || is_android)
+ 
+@@ -396,7 +398,6 @@ source_set("impl") {
+       "//chrome/browser/desktop_to_mobile_promos:utils",
+       "//chrome/browser/device_identity",
+       "//chrome/browser/new_tab_page",
+-      "//chrome/browser/screen_ai:prefs",
+       "//chrome/browser/search_engine_choice",
+       "//chrome/browser/search_engines",
+       "//chrome/browser/sharing_hub",
+@@ -418,6 +419,10 @@ source_set("impl") {
+       "//components/live_caption",
+       "//components/live_caption:live_translate",
+     ]
++
++    if (enable_screen_ai_service) {
++      deps += [ "//chrome/browser/screen_ai:prefs" ]
++    }
+     sources += [
+       "persistent_renderer_prefs_manager.cc",
+       "persistent_renderer_prefs_manager_factory.cc",
+diff --git a/chrome/browser/profiles/BUILD.gn b/chrome/browser/profiles/BUILD.gn
+index 31fbd9556e19b..b0c3f8e74681b 100644
+--- a/chrome/browser/profiles/BUILD.gn
++++ b/chrome/browser/profiles/BUILD.gn
+@@ -12,6 +12,7 @@ import("//components/on_device_translation/buildflags/features.gni")
+ import("//components/signin/features.gni")
+ import("//components/spellcheck/spellcheck_build_features.gni")
+ import("//extensions/buildflags/buildflags.gni")
++import("//services/screen_ai/buildflags/features.gni")
+ 
+ # This target should be the default place for adding public interface things
+ # (ie, non-factory, non-impl). There will likely need to be a :factory or :impl
+@@ -967,7 +968,6 @@ source_set("profiles_extra_parts_impl") {
+       "//chrome/browser/profile_resetter",
+       "//chrome/browser/record_replay",
+       "//chrome/browser/record_replay:impl",
+-      "//chrome/browser/screen_ai:screen_ai_service_router_factory",
+       "//chrome/browser/search",
+       "//chrome/browser/search_engine_choice",
+       "//chrome/browser/sharing_hub",
+@@ -993,6 +993,10 @@ source_set("profiles_extra_parts_impl") {
+       "//chrome/browser/web_applications/isolated_web_apps",
+       "//chrome/browser/web_applications/isolated_web_apps/window_management",
+     ]
++
++    if (enable_screen_ai_service) {
++      deps += [ "//chrome/browser/screen_ai:screen_ai_service_router_factory" ]
++    }
+   }
+   if (!is_android && !is_chromeos) {
+     deps += [ "//chrome/browser/download/bubble" ]
+@@ -1116,9 +1120,8 @@ source_set("profiles_extra_parts_impl") {
+       "//components/commerce/core:coupon_db_content_proto",
+     ]
+   }
+-
+   if (enable_offline_pages) {
+-    deps += [ "//chrome/browser/offline_pages" ]
++    deps += [  "//chrome/browser/offline_pages"  ]
+   }
+ }
+ 
+diff --git a/chrome/browser/renderer_context_menu/BUILD.gn b/chrome/browser/renderer_context_menu/BUILD.gn
+index ffaa00e6e9127..80d294f7fc7f1 100644
+--- a/chrome/browser/renderer_context_menu/BUILD.gn
++++ b/chrome/browser/renderer_context_menu/BUILD.gn
+@@ -137,7 +137,6 @@ source_set("impl") {
+       "//chrome/browser/lens/region_search",
+       "//chrome/browser/media/router:media_router_feature",
+       "//chrome/browser/password_manager",
+-      "//chrome/browser/pdf",
+       "//chrome/browser/predictors",
+       "//chrome/browser/prefs",
+       "//chrome/browser/preloading:prefs",
+@@ -199,6 +198,10 @@ source_set("impl") {
+       "//url",
+     ]
+ 
++  if (enable_pdf) {
++    deps += [ "//chrome/browser/pdf" ]
++  }
++
+     if (enable_print_preview) {
+       deps += [ "//chrome/browser/printing" ]
+     }
+@@ -402,7 +405,6 @@ if (!is_android) {
+       "//chrome/browser/devtools",
+       "//chrome/browser/download:test_support",
+       "//chrome/browser/enterprise/data_controls:test_support",
+-      "//chrome/browser/pdf:pdf_extension_test_utils",
+       "//chrome/browser/profiles:misc",
+       "//chrome/browser/search_engines",
+       "//chrome/browser/send_tab_to_self",
+@@ -440,6 +442,10 @@ if (!is_android) {
+       "//url",
+     ]
+ 
++    if (enable_pdf) {
++      deps += [ "//chrome/browser/pdf:pdf_extension_test_utils" ]
++    }
++
+     if (is_linux || is_chromeos || is_win) {
+       sources += [
+         # This test is for the spelling options submenu that's only for
+diff --git a/chrome/browser/resources/reset_password/BUILD.gn b/chrome/browser/resources/reset_password/BUILD.gn
+index 6e03175d6bb15..80dcece2bf4b8 100644
+--- a/chrome/browser/resources/reset_password/BUILD.gn
++++ b/chrome/browser/resources/reset_password/BUILD.gn
+@@ -5,8 +5,8 @@
+ import("//components/safe_browsing/buildflags.gni")
+ import("//ui/webui/resources/tools/build_webui.gni")
+ 
+-assert(safe_browsing_mode == 1)
+-
++# aetherium trim: safe_browsing_mode 關（用戶裁定）——assert 退場
++if (false) { assert(safe_browsing_mode) }
+ build_webui("build") {
+   grd_prefix = "reset_password"
+ 
+diff --git a/chrome/browser/resources/watermark/BUILD.gn b/chrome/browser/resources/watermark/BUILD.gn
+index 11338a1ce67b8..a2a075fc3b6af 100644
+--- a/chrome/browser/resources/watermark/BUILD.gn
++++ b/chrome/browser/resources/watermark/BUILD.gn
+@@ -5,7 +5,8 @@
+ import("//components/enterprise/buildflags/buildflags.gni")
+ import("//ui/webui/resources/tools/build_webui.gni")
+ 
+-assert(enterprise_watermark)
++# aetherium trim: enterprise_watermark 關（用戶裁定：雙端企業族全刪）——assert 退場；引用 gate 見 deep-trim 專項
++if (false) { assert(enterprise_watermark) }
+ 
+ build_webui("build") {
+   grd_prefix = "watermark"
+diff --git a/chrome/browser/safe_browsing/suspicious_site_warnings/BUILD.gn b/chrome/browser/safe_browsing/suspicious_site_warnings/BUILD.gn
+index 2de0fea77e73d..dd3ed665ec211 100644
+--- a/chrome/browser/safe_browsing/suspicious_site_warnings/BUILD.gn
++++ b/chrome/browser/safe_browsing/suspicious_site_warnings/BUILD.gn
+@@ -4,8 +4,8 @@
+ 
+ import("//components/safe_browsing/buildflags.gni")
+ 
+-assert(safe_browsing_mode != 0)
+-
++# aetherium trim: safe_browsing_mode 關（用戶裁定）——assert 退場
++if (false) { assert(safe_browsing_mode) }
+ source_set("suspicious_site_warnings") {
+   sources = [
+     "suspicious_site_controller_desktop.cc",
+diff --git a/chrome/browser/signin/BUILD.gn b/chrome/browser/signin/BUILD.gn
+index 97e698440bda6..992fc949b1882 100644
+--- a/chrome/browser/signin/BUILD.gn
++++ b/chrome/browser/signin/BUILD.gn
+@@ -6,6 +6,7 @@ import("//build/config/chromeos/args.gni")
+ import("//components/signin/features.gni")
+ import("//extensions/buildflags/buildflags.gni")
+ import("//third_party/protobuf/proto_library.gni")
++import("//components/offline_pages/buildflags/features.gni")
+ 
+ source_set("signin") {
+   public = [
+@@ -638,7 +639,6 @@ source_set("unit_tests") {
+     deps += [
+       "//chrome/browser/bookmarks",
+       "//chrome/browser/content_settings:content_settings_factory",
+-      "//chrome/browser/offline_pages",
+       "//chrome/browser/password_manager/factories",
+       "//chrome/browser/reading_list",
+       "//chrome/browser/ui/android/tab_model:test_support",
+@@ -647,6 +647,9 @@ source_set("unit_tests") {
+       "//components/reading_list/core:test_support",
+       "//services/tracing/public/cpp/background_tracing",
+     ]
++      if (enable_offline_pages) {
++        deps += [  "//chrome/browser/offline_pages"  ]
++      }
+   }
+ 
+   if (!is_android) {
+diff --git a/chrome/browser/sync_file_system/BUILD.gn b/chrome/browser/sync_file_system/BUILD.gn
+index 8a1266cb617ff..eba9bc289491a 100644
+--- a/chrome/browser/sync_file_system/BUILD.gn
++++ b/chrome/browser/sync_file_system/BUILD.gn
+@@ -4,7 +4,8 @@
+ 
+ import("//extensions/buildflags/buildflags.gni")
+ 
+-assert(enable_platform_apps)
++# aetherium trim: platform_apps 關閉（用戶裁定）——assert 退場
++if (false) { assert(enable_platform_apps) }
+ 
+ source_set("sync_file_system") {
+   public = [
+diff --git a/chrome/browser/ui/BUILD.gn b/chrome/browser/ui/BUILD.gn
+index 23af05c2737c2..8166744793bc4 100644
+--- a/chrome/browser/ui/BUILD.gn
++++ b/chrome/browser/ui/BUILD.gn
+@@ -29,7 +29,8 @@ import("//tools/metrics/generate_allowlist_from_histograms_file.gni")
+ import("//ui/base/ui_features.gni")
+ import("//ui/views/features.gni")
+ 
+-assert(enable_supervised_users)
++# aetherium trim: supervised_users 關閉（用戶裁定）——assert 退場
++if (false) { assert(enable_supervised_users) }
+ assert(!is_fuchsia, "Fuchsia shouldn't use anything in //chrome")
+ 
+ generate_allowlist_from_histograms_file("webui_name_variants") {
+@@ -155,12 +156,15 @@ if (!is_android) {
+       "//chrome/browser/history",
+       "//chrome/browser/lifetime",
+       "//chrome/browser/lifetime:termination_notification",
+-      "//chrome/browser/printing",
+       "//chrome/browser/profiles:profile",
+       "//chrome/browser/profiles:profile_manager",
+       "//components/keep_alive_registry",
+       "//printing/buildflags",
+     ]
++
++    if (enable_printing) {
++      deps += [ "//chrome/browser/printing" ]
++    }
+   }
+ 
+   source_set("intent_picker_tab_helper") {
+@@ -874,11 +878,9 @@ if (!is_android) {
+       "//chrome/browser/media/router:media_router_feature",
+       "//chrome/browser/page_info",
+       "//chrome/browser/password_manager",
+-      "//chrome/browser/pdf",
+       "//chrome/browser/permissions",
+       "//chrome/browser/picture_in_picture",
+       "//chrome/browser/prefs",
+-      "//chrome/browser/printing",
+       "//chrome/browser/profiles:profile",
+       "//chrome/browser/profiles:profile_util",
+       "//chrome/browser/reading_list",
+@@ -984,6 +986,14 @@ if (!is_android) {
+       "//ui/gfx",
+       "//ui/gfx/geometry",
+     ]
++
++    if (enable_printing) {
++      deps += [ "//chrome/browser/printing" ]
++    }
++
++    if (enable_pdf) {
++      deps += [ "//chrome/browser/pdf" ]
++    }
+     if (is_win || is_mac || is_linux) {
+       deps += [ "//chrome/browser/ui/views/scheduled_restart" ]
+     }
+@@ -1394,7 +1404,6 @@ if (!is_android) {
+       "//chrome/browser/picture_in_picture",
+       "//chrome/browser/policy",
+       "//chrome/browser/prefs",
+-      "//chrome/browser/printing",
+       "//chrome/browser/profiles",
+       "//chrome/browser/profiles:profile",
+       "//chrome/browser/profiles:profile_manager",
+@@ -1468,6 +1477,10 @@ if (!is_android) {
+       "//ui/gfx",
+       "//url",
+     ]
++
++    if (enable_printing) {
++      deps += [ "//chrome/browser/printing" ]
++    }
+     if (is_chromeos) {
+       deps += [
+         "//ash/constants",
+diff --git a/chrome/browser/ui/blocked_content/BUILD.gn b/chrome/browser/ui/blocked_content/BUILD.gn
+index b831198f1eb1b..a65b597bbb8bd 100644
+--- a/chrome/browser/ui/blocked_content/BUILD.gn
++++ b/chrome/browser/ui/blocked_content/BUILD.gn
+@@ -5,6 +5,7 @@
+ import("//build/config/chromeos/args.gni")
+ import("//build/config/ozone.gni")
+ import("//extensions/buildflags/buildflags.gni")
++import("//printing/buildflags/buildflags.gni")
+ 
+ assert(is_win || is_mac || is_linux || is_chromeos || is_android)
+ 
+@@ -117,7 +118,6 @@ if (!is_android && !is_chromeos_device) {
+     deps = [
+       ":blocked_content",
+       "//chrome/browser/content_settings:content_settings_factory",
+-      "//chrome/browser/printing",
+       "//chrome/browser/search_engines",
+       "//chrome/browser/ui:browser_commands",
+       "//chrome/browser/ui:browser_window_header",
+@@ -131,6 +131,10 @@ if (!is_android && !is_chromeos_device) {
+       "//components/embedder_support",
+       "//components/javascript_dialogs",
+     ]
++
++    if (enable_printing) {
++      deps += [ "//chrome/browser/printing" ]
++    }
+   }
+ }
+ 
+diff --git a/chrome/browser/ui/lens/BUILD.gn b/chrome/browser/ui/lens/BUILD.gn
+index ea9719f8dcecb..840430848ac36 100644
+--- a/chrome/browser/ui/lens/BUILD.gn
++++ b/chrome/browser/ui/lens/BUILD.gn
+@@ -383,7 +383,6 @@ if (!is_android) {
+       "//chrome/browser/contextual_tasks:test_support",
+       "//chrome/browser/contextual_tasks:ui",
+       "//chrome/browser/lens/core/mojom:mojo_bindings",
+-      "//chrome/browser/pdf:pdf_extension_test_base",
+       "//chrome/browser/profiles:profile",
+       "//chrome/browser/signin/e2e_tests:test_support",
+       "//chrome/browser/sync",
+@@ -449,6 +448,10 @@ if (!is_android) {
+       "//ui/views/controls/webview",
+       "//url",
+     ]
++
++    if (enable_pdf) {
++      deps += [ "//chrome/browser/pdf:pdf_extension_test_base" ]
++    }
+     if (enable_pdf) {
+       deps += [ "//chrome/browser/pdf" ]
+     }
+diff --git a/chrome/browser/ui/read_anything/BUILD.gn b/chrome/browser/ui/read_anything/BUILD.gn
+index 0b6886a28ba7c..1a2ea2b4a6b9b 100644
+--- a/chrome/browser/ui/read_anything/BUILD.gn
++++ b/chrome/browser/ui/read_anything/BUILD.gn
+@@ -179,7 +179,6 @@ source_set("browser_tests") {
+     "//base/test:test_support",
+     "//chrome/browser",
+     "//chrome/browser/optimization_guide:test_support",
+-    "//chrome/browser/pdf:pdf_extension_test_utils",
+     "//chrome/browser/search_engines",
+     "//chrome/browser/ui:browser_actions",
+     "//chrome/browser/ui:browser_commands",
+@@ -210,6 +209,10 @@ source_set("browser_tests") {
+     "//ui/views",
+   ]
+ 
++  if (enable_pdf) {
++    deps += [ "//chrome/browser/pdf:pdf_extension_test_utils" ]
++  }
++
+   if (enable_print_preview) {
+     sources += [ "read_anything_printing_browsertest.cc" ]
+     deps += [
+diff --git a/chrome/browser/ui/tabs/BUILD.gn b/chrome/browser/ui/tabs/BUILD.gn
+index 1c4df06838acd..c341c0b97ffee 100644
+--- a/chrome/browser/ui/tabs/BUILD.gn
++++ b/chrome/browser/ui/tabs/BUILD.gn
+@@ -5,6 +5,7 @@
+ assert(is_win || is_mac || is_linux || is_chromeos || is_android)
+ 
+ import("//chrome/common/features.gni")
++import("//components/safe_browsing/buildflags.gni")
+ import("//components/captive_portal/core/features.gni")
+ import("//components/compose/features.gni")
+ import("//components/offline_pages/buildflags/features.gni")
+@@ -837,9 +838,8 @@ if (!is_android) {
+         "//extensions/common:mojom",
+       ]
+     }
+-
+     if (enable_offline_pages) {
+-      deps += [ "//chrome/browser/offline_pages" ]
++      deps += [  "//chrome/browser/offline_pages"  ]
+     }
+ 
+     if (safe_browsing_mode != 0) {
+diff --git a/chrome/browser/ui/views/apps/app_dialog/BUILD.gn b/chrome/browser/ui/views/apps/app_dialog/BUILD.gn
+index 387c9e55dbf27..38f1cf592dc02 100644
+--- a/chrome/browser/ui/views/apps/app_dialog/BUILD.gn
++++ b/chrome/browser/ui/views/apps/app_dialog/BUILD.gn
+@@ -8,7 +8,8 @@ import("//extensions/buildflags/buildflags.gni")
+ 
+ assert(is_chromeos)
+ assert(enable_extensions_core)
+-assert(enable_supervised_users)
++# aetherium trim: supervised_users 關閉（用戶裁定）——assert 退場
++if (false) { assert(enable_supervised_users) }
+ assert(toolkit_views)
+ 
+ source_set("app_dialog") {
+diff --git a/chrome/browser/ui/views/compose/BUILD.gn b/chrome/browser/ui/views/compose/BUILD.gn
+index b5a18ee174aa7..20558f5c9abd1 100644
+--- a/chrome/browser/ui/views/compose/BUILD.gn
++++ b/chrome/browser/ui/views/compose/BUILD.gn
+@@ -4,8 +4,8 @@
+ 
+ import("//components/compose/features.gni")
+ 
+-assert(enable_compose)
+-
++# aetherium trim: enable_compose 關（用戶裁定）——assert 退場
++if (false) { assert(enable_compose) }
+ source_set("compose") {
+   public = [
+     "chrome_compose_dialog_controller.h",
+@@ -15,11 +15,14 @@ source_set("compose") {
+   public_deps = [
+     "//base",
+     "//chrome/browser/ui/views/bubble",
+-    "//chrome/browser/ui/webui/compose",
++
+     "//chrome/browser/ui/webui/top_chrome",
+     "//components/compose/core/browser",
+     "//ui/views",
+   ]
++    if (enable_compose) {
++      deps += [ "//chrome/browser/ui/webui/compose" ]
++    }
+ }
+ 
+ source_set("impl") {
+diff --git a/chrome/browser/ui/views/file_system_access/BUILD.gn b/chrome/browser/ui/views/file_system_access/BUILD.gn
+index 6be940259a4c6..c3919fff13dc1 100644
+--- a/chrome/browser/ui/views/file_system_access/BUILD.gn
++++ b/chrome/browser/ui/views/file_system_access/BUILD.gn
+@@ -3,6 +3,7 @@
+ # found in the LICENSE file.
+ 
+ import("//build/config/ui.gni")
++import("//components/safe_browsing/buildflags.gni")
+ 
+ source_set("file_system_access") {
+   public = []
+@@ -105,8 +106,11 @@ if (!is_android) {
+         "//chrome/browser/safe_browsing",
+         "//chrome/browser/ui/test:dialog",
+         "//chrome/browser/ui/views:file_system_access_test_support",
+-        "//components/safe_browsing/content/common:file_type_policies_test_support",
+       ]
++
++        if (safe_browsing_mode != 0) {
++          deps += [ "//components/safe_browsing/content/common:file_type_policies_test_support" ]
++        }
+     }
+   }
+ 
+diff --git a/chrome/browser/ui/webui/feedback/report_unsafe_site/BUILD.gn b/chrome/browser/ui/webui/feedback/report_unsafe_site/BUILD.gn
+index 36f0049602173..ddbd70c69dcde 100644
+--- a/chrome/browser/ui/webui/feedback/report_unsafe_site/BUILD.gn
++++ b/chrome/browser/ui/webui/feedback/report_unsafe_site/BUILD.gn
+@@ -3,6 +3,7 @@
+ # found in the LICENSE file.
+ 
+ import("//mojo/public/tools/bindings/mojom.gni")
++import("//components/safe_browsing/buildflags.gni")
+ 
+ mojom("mojo_bindings") {
+   sources = [ "report_unsafe_site.mojom" ]
+@@ -26,7 +27,6 @@ static_library("report_unsafe_site") {
+     "//chrome/browser/feedback/report_unsafe_site",
+     "//chrome/browser/ui/webui/top_chrome",
+     "//chrome/common",
+-    "//components/safe_browsing/content/browser:client_side_detection",
+     "//components/url_formatter",
+     "//components/viz/common",
+     "//content/public/browser",
+@@ -34,4 +34,8 @@ static_library("report_unsafe_site") {
+     "//ui/base",
+     "//ui/views",
+   ]
++
++    if (safe_browsing_mode != 0) {
++      deps += [ "//components/safe_browsing/content/browser:client_side_detection" ]
++    }
+ }
+diff --git a/chrome/browser/ui/webui/on_device_translation_internals/BUILD.gn b/chrome/browser/ui/webui/on_device_translation_internals/BUILD.gn
+index a023b01311f58..872a313bca494 100644
+--- a/chrome/browser/ui/webui/on_device_translation_internals/BUILD.gn
++++ b/chrome/browser/ui/webui/on_device_translation_internals/BUILD.gn
+@@ -2,6 +2,7 @@
+ # Use of this source code is governed by a BSD-style license that can be
+ # found in the LICENSE file.
+ 
++import("//components/on_device_translation/buildflags/features.gni")
+ import("//mojo/public/tools/bindings/mojom.gni")
+ 
+ mojom("mojo_bindings") {
+@@ -27,11 +28,16 @@ if (is_win || is_mac || is_linux) {
+       "//chrome/browser/profiles:profile",
+       "//chrome/browser/resources/on_device_translation_internals:resources",
+       "//chrome/common",
+-      "//components/on_device_translation",
+       "//components/prefs",
+       "//content/public/browser",
+       "//mojo/public/cpp/bindings",
+       "//ui/webui",
+     ]
++
++    if (enable_on_device_translation) {
++      # aetherium trim: 上游在這裡也是無條件引用（page handler 的實作本體
++      # 已用 #if BUILDFLAG(ENABLE_ON_DEVICE_TRANSLATION) 兩分支處理）。
++      deps += [ "//components/on_device_translation" ]
++    }
+   }
+ }
+diff --git a/chrome/browser/ui/webui/settings/BUILD.gn b/chrome/browser/ui/webui/settings/BUILD.gn
+index 55cffbc5c87da..3c51d2221a149 100644
+--- a/chrome/browser/ui/webui/settings/BUILD.gn
++++ b/chrome/browser/ui/webui/settings/BUILD.gn
+@@ -5,6 +5,7 @@
+ import("//build/config/ozone.gni")
+ import("//build/config/ui.gni")
+ import("//components/signin/features.gni")
++import("//services/screen_ai/buildflags/features.gni")
+ 
+ assert(is_win || is_mac || is_linux || is_chromeos)
+ 
+@@ -66,7 +67,6 @@ source_set("settings") {
+     "//chrome/browser/profile_resetter",
+     "//chrome/browser/profile_resetter:profile_reset_report_proto",
+     "//chrome/browser/profiles:profile",
+-    "//chrome/browser/screen_ai:screen_ai_install_state",
+     "//chrome/browser/speech",
+     "//chrome/browser/themes",
+     "//chrome/browser/ui/safety_hub",
+@@ -106,6 +106,10 @@ source_set("settings") {
+     "//url",
+   ]
+ 
++  if (enable_screen_ai_service) {
++    public_deps += [ "//chrome/browser/screen_ai:screen_ai_install_state" ]
++  }
++
+   if (enable_dice_support || is_chromeos) {
+     public_deps +=
+         [ "//ui/webui/resources/js/batch_upload_promo:mojo_bindings" ]
+@@ -705,9 +709,12 @@ if (!is_android) {
+       ]
+       deps += [
+         "//chrome/browser/profiles",
+-        "//chrome/browser/screen_ai:screen_ai_install_state",
+         "//ui/accessibility",
+       ]
++
++      if (enable_screen_ai_service) {
++        deps += [ "//chrome/browser/screen_ai:screen_ai_install_state" ]
++      }
+     }
+ 
+     if (is_chrome_branded) {
+diff --git a/chrome/browser/ui/webui/side_panel/read_anything/BUILD.gn b/chrome/browser/ui/webui/side_panel/read_anything/BUILD.gn
+index c502b2acc5b68..79fbb81231ae4 100644
+--- a/chrome/browser/ui/webui/side_panel/read_anything/BUILD.gn
++++ b/chrome/browser/ui/webui/side_panel/read_anything/BUILD.gn
+@@ -2,6 +2,8 @@
+ # Use of this source code is governed by a BSD-style license that can be
+ # found in the LICENSE file.
+ 
++import("//pdf/features.gni")
++import("//services/screen_ai/buildflags/features.gni")
+ assert(!is_android)
+ 
+ source_set("read_anything") {
+@@ -39,7 +41,6 @@ source_set("read_anything") {
+     "//chrome/browser/profiles:profile",
+     "//chrome/browser/resources/side_panel/read_anything:resources",
+     "//chrome/browser/resources/side_panel/shared:resources_grit",
+-    "//chrome/browser/screen_ai:screen_ai_service_router_factory",
+     "//chrome/browser/speech",
+     "//chrome/browser/translate",
+     "//chrome/browser/ui:accelerator_table",
+@@ -68,6 +69,10 @@ source_set("read_anything") {
+     "//ui/webui/tracked_element",
+   ]
+ 
++  if (enable_screen_ai_service) {
++    deps += [ "//chrome/browser/screen_ai:screen_ai_service_router_factory" ]
++  }
++
+   if (is_chromeos) {
+     public_deps += [ "//chromeos/ash/components/language_packs" ]
+   }
+@@ -107,7 +112,6 @@ source_set("browser_tests") {
+   sources = [ "read_anything_untrusted_page_handler_browsertest.cc" ]
+   deps = [
+     ":read_anything",
+-    "//chrome/browser/pdf:pdf_extension_test_utils",
+     "//chrome/browser/speech",
+     "//chrome/browser/translate",
+     "//chrome/browser/ui/browser_window",
+@@ -133,4 +137,8 @@ source_set("browser_tests") {
+     "//testing/gmock",
+     "//testing/gtest",
+   ]
++
++  if (enable_pdf) {
++    deps += [ "//chrome/browser/pdf:pdf_extension_test_utils" ]
++  }
+ }
+diff --git a/chrome/browser/ui/webui/watermark/BUILD.gn b/chrome/browser/ui/webui/watermark/BUILD.gn
+index e1e2c58a0eb3d..ce324febe572a 100644
+--- a/chrome/browser/ui/webui/watermark/BUILD.gn
++++ b/chrome/browser/ui/webui/watermark/BUILD.gn
+@@ -5,7 +5,8 @@
+ import("//components/enterprise/buildflags/buildflags.gni")
+ import("//mojo/public/tools/bindings/mojom.gni")
+ 
+-assert(enterprise_watermark)
++# aetherium trim: enterprise_watermark 關（用戶裁定：雙端企業族全刪）——assert 退場；引用 gate 見 deep-trim 專項
++if (false) { assert(enterprise_watermark) }
+ 
+ static_library("watermark") {
+   sources = [
+diff --git a/chrome/browser_exposed_mojom_targets.gni b/chrome/browser_exposed_mojom_targets.gni
+index 5facd85b8e3a7..d5b3840d1d29f 100644
+--- a/chrome/browser_exposed_mojom_targets.gni
++++ b/chrome/browser_exposed_mojom_targets.gni
+@@ -3,6 +3,7 @@
+ # found in the LICENSE file.
+ #
+ 
++import("//components/on_device_translation/buildflags/features.gni")
+ import("//ui/webui/webui_features.gni")
+ 
+ # This file represents global knowledge about all the mojom targets building
+@@ -160,7 +161,6 @@ browser_exposed_mojom_targets = [
+   "//components/safe_browsing/content/common:interfaces",
+   "//components/safe_browsing/core/common:interfaces",
+   "//components/tabs/public/mojom:mojom",
+-  "//components/on_device_translation/public/mojom:mojom",
+   "//components/schema_org/common:improved_mojom",
+   "//components/schema_org/common:mojom",
+   "//components/security_interstitials/core/common/mojom:mojom",
+@@ -366,6 +366,13 @@ if (!is_chromeos) {
+       [ "//ui/webui/resources/cr_components/signin:mojo_bindings" ]
+ }
+ 
++if (enable_on_device_translation) {
++  # aetherium trim: 這條清單只餵給 //chrome/test/fuzzing/renderer_fuzzing，
++  # 但它是無條件引用，flag 關掉時會去踩 public/mojom/BUILD.gn:8 的 assert。
++  browser_exposed_mojom_targets +=
++      [ "//components/on_device_translation/public/mojom:mojom" ]
++}
++
+ if (enable_webui_ntp) {
+   browser_exposed_mojom_targets += [
+     "//chrome/browser/ui/webui/new_tab_page_third_party:mojo_bindings",
+diff --git a/chrome/common/BUILD.gn b/chrome/common/BUILD.gn
+index 59bf31b925c2f..bafa8b7729ca8 100644
+--- a/chrome/common/BUILD.gn
++++ b/chrome/common/BUILD.gn
+@@ -3,6 +3,7 @@
+ # found in the LICENSE file.
+ 
+ import("//build/buildflag_header.gni")
++import("//components/safe_browsing/buildflags.gni")
+ import("//build/config/chrome_build.gni")
+ import("//build/util/process_version.gni")
+ import("//chrome/browser/downgrade/buildflags.gni")
+@@ -22,7 +23,8 @@ import("//testing/libfuzzer/fuzzer_test.gni")
+ import("//third_party/widevine/cdm/widevine.gni")
+ import("//tools/grit/grit_rule.gni")
+ 
+-assert(enable_supervised_users)
++# aetherium trim: supervised_users 關閉（用戶裁定）——assert 退場
++if (false) { assert(enable_supervised_users) }
+ assert(!is_fuchsia, "Fuchsia shouldn't use anything in //chrome")
+ 
+ fuzzer_test("ini_parser_fuzzer") {
+diff --git a/chrome/common/apps/platform_apps/BUILD.gn b/chrome/common/apps/platform_apps/BUILD.gn
+index 0ff6085886747..cb3f5d0f4d49c 100644
+--- a/chrome/common/apps/platform_apps/BUILD.gn
++++ b/chrome/common/apps/platform_apps/BUILD.gn
+@@ -4,8 +4,8 @@
+ 
+ import("//extensions/buildflags/buildflags.gni")
+ 
+-assert(enable_platform_apps,
+-       "Cannot depend on chrome apps because enable_platform_apps=false.")
++# aetherium trim: platform_apps 關（用戶裁定）——assert 退場
++if (false) { assert(enable_platform_apps) }
+ 
+ source_set("platform_apps") {
+   sources = [
+diff --git a/chrome/common/apps/platform_apps/api/BUILD.gn b/chrome/common/apps/platform_apps/api/BUILD.gn
+index a107b68143469..e38e26938f6de 100644
+--- a/chrome/common/apps/platform_apps/api/BUILD.gn
++++ b/chrome/common/apps/platform_apps/api/BUILD.gn
+@@ -7,7 +7,8 @@ import("//extensions/buildflags/buildflags.gni")
+ import("//tools/json_schema_compiler/json_features.gni")
+ import("//tools/json_schema_compiler/json_schema_api.gni")
+ 
+-assert(enable_platform_apps)
++# aetherium trim: platform_apps 關閉（用戶裁定）——assert 退場
++if (false) { assert(enable_platform_apps) }
+ 
+ ################################################################################
+ # Public Targets
+diff --git a/chrome/common/apps/platform_apps/api/api_sources.gni b/chrome/common/apps/platform_apps/api/api_sources.gni
+index ba95a4b4f6cc6..2675ea0c7b2ac 100644
+--- a/chrome/common/apps/platform_apps/api/api_sources.gni
++++ b/chrome/common/apps/platform_apps/api/api_sources.gni
+@@ -4,8 +4,9 @@
+ 
+ import("//chrome/common/features.gni")
+ 
+-assert(enable_platform_apps)
+-
++# aetherium trim: platform_apps 關（用戶裁定）——assert 退場
++# aetherium trim-if-false
++if (false) { assert(enable_platform_apps) }
+ chrome_apps_api_schema_files_ = [ "sync_file_system.idl" ]
+ 
+ if (is_chromeos) {
+diff --git a/chrome/installer/linux/BUILD.gn b/chrome/installer/linux/BUILD.gn
+index 2a75b4c07d1e7..57f92b61bb67f 100644
+--- a/chrome/installer/linux/BUILD.gn
++++ b/chrome/installer/linux/BUILD.gn
+@@ -71,7 +71,7 @@ if (current_cpu == "x86") {
+ }
+ 
+ packaging_files_executables = [
+-  "$root_out_dir/chrome",
++  "$root_out_dir/aetherium",
+   "$root_out_dir/chrome_crashpad_handler",
+   "$root_out_dir/chrome_management_service",
+   "$root_out_dir/chrome_sandbox",
+@@ -208,7 +208,7 @@ action("merge_rpm_dependencies") {
+ }
+ 
+ strip_binary("strip_chrome_binary") {
+-  binary_input = "$root_out_dir/chrome"
++  binary_input = "$root_out_dir/aetherium"
+   deps = [ "//chrome" ]
+ }
+ 
+@@ -565,7 +565,7 @@ template("linux_package") {
+   if (is_chrome_branded) {
+     package = "google-chrome"
+   } else {
+-    package = "chromium-browser"
++    package = "aetherium"
+   }
+ 
+   deb_target_name = "${target_name}_deb"
+diff --git a/chrome/renderer/BUILD.gn b/chrome/renderer/BUILD.gn
+index a28d0ae008cf3..1eeb19f0e966f 100644
+--- a/chrome/renderer/BUILD.gn
++++ b/chrome/renderer/BUILD.gn
+@@ -3,6 +3,7 @@
+ # found in the LICENSE file.
+ 
+ import("//build/config/buildflags_paint_preview.gni")
++import("//components/safe_browsing/buildflags.gni")
+ import("//chrome/common/features.gni")
+ import("//chrome/common/request_header_integrity/buildflags.gni")
+ import("//components/guest_view/buildflags/buildflags.gni")
+@@ -18,8 +19,11 @@ import("//testing/libfuzzer/fuzzer_test.gni")
+ import("//third_party/widevine/cdm/widevine.gni")
+ import("//tools/grit/grit_rule.gni")
+ import("//ui/webui/webui_features.gni")
++import("//printing/buildflags/buildflags.gni")
++import("//services/screen_ai/buildflags/features.gni")
+ 
+-assert(enable_supervised_users)
++# aetherium trim: supervised_users 關閉（用戶裁定）——assert 退場
++if (false) { assert(enable_supervised_users) }
+ 
+ grit("resources") {
+   source = "resources/renderer_resources.grd"
+@@ -394,7 +398,6 @@ static_library("renderer") {
+       "//components/record_replay/content/renderer",
+       "//components/trusted_vault",
+       "//services/screen_ai/buildflags",
+-      "//services/screen_ai/public/mojom",
+       "//services/strings",
+       "//third_party/re2",
+       "//third_party/tensorflow-text",
+@@ -405,6 +408,10 @@ static_library("renderer") {
+       "//third_party/tflite_support",
+       "//third_party/tflite_support:tflite_support_proto",
+     ]
++
++    if (enable_screen_ai_service) {
++      deps += [ "//services/screen_ai/public/mojom" ]
++    }
+   }
+ 
+   if (is_chromeos) {
+diff --git a/chrome/services/redirection/BUILD.gn b/chrome/services/redirection/BUILD.gn
+index e81fa06df6e45..150eaa5adb8dc 100644
+--- a/chrome/services/redirection/BUILD.gn
++++ b/chrome/services/redirection/BUILD.gn
+@@ -5,8 +5,8 @@
+ import("//media/media_options.gni")
+ 
+ # This service only exists to serve media remoting redirection.
+-assert(enable_media_remoting_redirection)
+-
++# aetherium trim: enable_media_remoting 關（用戶裁定）——assert 退場
++if (false) { assert(enable_media_remoting) }
+ source_set("redirection_service") {
+   sources = [
+     "redirection_remoting_sender.cc",
+diff --git a/chrome/services/speech/BUILD.gn b/chrome/services/speech/BUILD.gn
+index f72c83c1040d5..8ff74828eb60b 100644
+--- a/chrome/services/speech/BUILD.gn
++++ b/chrome/services/speech/BUILD.gn
+@@ -4,7 +4,8 @@
+ 
+ import("//chrome/services/speech/buildflags/buildflags.gni")
+ 
+-assert(enable_speech_service)
++# aetherium trim: enable_speech_service 關（用戶裁定）——assert 退場
++if (false) { assert(enable_speech_service) }
+ 
+ source_set("lib") {
+   sources = [
+diff --git a/chrome/test/BUILD.gn b/chrome/test/BUILD.gn
+index 9d0a9385a94e3..6b4d0602072c3 100644
+--- a/chrome/test/BUILD.gn
++++ b/chrome/test/BUILD.gn
+@@ -67,7 +67,10 @@ import("//v8/gni/v8.gni")
+ 
+ assert(!is_ios, "Chromium/iOS shouldn't use anything in //chrome")
+ assert(!is_fuchsia, "Fuchsia shouldn't use anything in //chrome")
+-assert(enable_supervised_users)
++# aetherium trim（2026-10-24）：enable_supervised_users=false（用戶裁定）——
++# 上游用檔級 assert 擋測試面；我們不構建這些受監護用戶測試，assert 退場。
++# 若日後要跑對應 target 而斷鏈，在引用點補 if (enable_supervised_users)。
++if (false) { assert(enable_supervised_users) }
+ 
+ if (is_android) {
+   import("//build/config/android/rules.gni")
+@@ -908,15 +911,20 @@ if (is_android) {
+     ]
+ 
+     deps += [
+-      "//chrome/browser/offline_pages",
+-      "//chrome/browser/offline_pages:android_browsertests",
+-      "//chrome/browser/offline_pages:impl",
+       "//chrome/browser/ui/android/tab_model",
+       "//chrome/browser/ui/android/tab_model:browser_tests",
+       "//chrome/browser/ui/android/tab_model:test_support",
+       "//chrome/browser/ui/tabs/tab_strip_api:browser_tests",
+     ]
+ 
++    if (enable_offline_pages) {
++      deps += [
++        "//chrome/browser/offline_pages",
++        "//chrome/browser/offline_pages:android_browsertests",
++        "//chrome/browser/offline_pages:impl",
++      ]
++    }
++
+     # TODO(crbug.com/40626932): This is needed for ShellManager which is what
+     # the ChromeBrowserTestsActivity is using to build the java UI. It's
+     # likely we want to replace it with something new that uses ChromeWindow
+@@ -1271,7 +1279,7 @@ if (!is_android) {
+       "//chrome/browser/permissions:browser_tests",
+       "//chrome/browser/personal_context:browser_tests",
+       "//chrome/browser/picture_in_picture:browser_tests",
+-      "//chrome/browser/plugins:browser_tests",
++
+       "//chrome/browser/policy:browser_tests",
+       "//chrome/browser/predictors:browser_tests",
+       "//chrome/browser/prefetch:browser_tests",
+@@ -1292,7 +1300,6 @@ if (!is_android) {
+       "//chrome/browser/renderer_context_menu:browser_tests",
+       "//chrome/browser/renderer_host:browser_tests",
+       "//chrome/browser/safe_browsing:browser_tests",
+-      "//chrome/browser/screen_ai:browser_tests",
+       "//chrome/browser/search:browser_tests",
+       "//chrome/browser/search_engines:browser_tests",
+       "//chrome/browser/send_tab_to_self:browser_tests",
+@@ -1314,7 +1321,6 @@ if (!is_android) {
+       "//chrome/browser/sync:browser_tests",
+       "//chrome/browser/sync_tab_context:browser_tests",
+       "//chrome/browser/tab_contents:browser_tests",
+-      "//chrome/browser/text_detection:browser_tests",
+       "//chrome/browser/themes:browser_tests",
+       "//chrome/browser/tracing:browser_tests",
+       "//chrome/browser/translate:browser_tests",
+@@ -1502,6 +1508,17 @@ if (!is_android) {
+       "//ui/resources",
+       "//ui/webui:buildflags",
+     ]
++      if (enable_plugins) {
++        deps += [ "//chrome/browser/plugins:browser_tests" ]
++      }
++
++    if (enable_screen_ai_service) {
++      deps += [ "//chrome/browser/text_detection:browser_tests" ]
++    }
++
++    if (enable_screen_ai_service) {
++      deps += [ "//chrome/browser/screen_ai:browser_tests" ]
++    }
+ 
+     # Runtime dependencies
+     data_deps = [
+@@ -3179,7 +3196,6 @@ test("unit_tests") {
+     # TODO(crbug.com/417513088): Maybe merge with the non-android `deps`
+     # declaration above?
+     deps += [
+-      "../browser/screen_ai:screen_ai_install_state",
+       "//chrome:packed_resources",
+       "//chrome/browser/apps/app_service:unit_tests",
+       "//chrome/browser/apps/app_service/app_icon:unit_tests",
+@@ -3194,12 +3210,10 @@ test("unit_tests") {
+       "//chrome/browser/omnibox:unit_tests",
+       "//chrome/browser/profile_resetter:unit_tests",
+       "//chrome/browser/resources/new_tab_page_instant:resources_grit",
+-      "//chrome/browser/screen_ai:unit_tests",
+       "//chrome/browser/search_engine_choice:unit_tests",
+       "//chrome/browser/sensor:unit_tests",
+       "//chrome/browser/support_tool:unit_tests",
+       "//chrome/browser/task_manager:unit_tests",
+-      "//chrome/browser/text_detection:unit_tests",
+       "//chrome/browser/themes:unit_tests",
+       "//chrome/browser/ui/actions:unit_tests",
+       "//chrome/browser/ui/color:unit_tests",
+@@ -3249,6 +3263,18 @@ test("unit_tests") {
+       "//ui/webui/tracked_element:unit_tests",
+     ]
+ 
++    if (enable_screen_ai_service) {
++      deps += [ "../browser/screen_ai:screen_ai_install_state" ]
++    }
++
++    if (enable_screen_ai_service) {
++      deps += [ "//chrome/browser/text_detection:unit_tests" ]
++    }
++
++    if (enable_screen_ai_service) {
++      deps += [ "//chrome/browser/screen_ai:unit_tests" ]
++    }
++
+     data += [ "//chromeos/ash/experiences/arc/test/data/icons/" ]
+ 
+     if (include_js2gtest_tests && is_chromeos) {
+@@ -3467,7 +3493,7 @@ test("unit_tests") {
+     ]
+   }
+ 
+-  if (enterprise_cloud_content_analysis) {
++  if (enterprise_cloud_content_analysis && enable_extensions) {
+     deps +=
+         [ "//chrome/browser/extensions/api/safe_browsing_private:unit_tests" ]
+   }
+@@ -3939,7 +3965,6 @@ if (!is_android && !is_chromeos_device) {
+       "//chrome/browser/ui/webui/access_code_cast:interactive_ui_tests",
+       "//chrome/browser/ui/webui/cr_components/history_embeddings:interactive_ui_tests",
+       "//chrome/browser/ui/webui/downloads:interactive_ui_tests",
+-      "//chrome/browser/ui/webui/print_preview:interactive_ui_tests",
+       "//chrome/browser/ui/webui/searchbox:interactive_ui_tests",
+       "//chrome/browser/ui/webui/searchbox:searchbox_test_utils",
+       "//chrome/browser/ui/webui/settings:interactive_ui_tests",
+@@ -3965,6 +3990,10 @@ if (!is_android && !is_chromeos_device) {
+       "//ui/events:events_interactive_ui_tests",
+     ]
+ 
++    if (enable_print_preview) {
++      deps += [ "//chrome/browser/ui/webui/print_preview:interactive_ui_tests" ]
++    }
++
+     if (is_linux) {
+       deps += [ "//ui/linux:display_server_utils" ]
+     }
+diff --git a/chrome/tools/service_discovery_sniffer/BUILD.gn b/chrome/tools/service_discovery_sniffer/BUILD.gn
+index d11ed6eed68aa..9d48703859392 100644
+--- a/chrome/tools/service_discovery_sniffer/BUILD.gn
++++ b/chrome/tools/service_discovery_sniffer/BUILD.gn
+@@ -2,6 +2,7 @@
+ # Use of this source code is governed by a BSD-style license that can be
+ # found in the LICENSE file.
+ 
++import("//chrome/common/features.gni")
+ executable("service_discovery_sniffer") {
+   testonly = true
+   sources = [
+@@ -13,9 +14,15 @@ executable("service_discovery_sniffer") {
+     "//base",
+     "//base/test:test_support",
+     "//chrome/browser",
+-    "//chrome/browser/local_discovery",
+-    "//chrome/browser/local_discovery:impl",
+     "//net",
+     "//third_party/webrtc_overrides:webrtc_component",
+   ]
++
++  if (enable_service_discovery) {
++    deps += [ "//chrome/browser/local_discovery" ]
++  }
++
++  if (enable_service_discovery) {
++    deps += [ "//chrome/browser/local_discovery:impl" ]
++  }
+ }
+diff --git a/chrome/updater/branding.gni b/chrome/updater/branding.gni
+index 2b6f9e23b21e3..f6f14501026fb 100644
+--- a/chrome/updater/branding.gni
++++ b/chrome/updater/branding.gni
+@@ -39,7 +39,7 @@ if (is_chrome_branded) {
+   legacy_service_name_prefix = "cupdate"
+   prefs_access_mutex = "{A6B9ECD5-772A-4D3F-BFEB-CF9340534A3E}"
+   setup_mutex_prefix = "{25569F82-3B67-4185-8127-88E4CF803680}"
+-  grdfile_name = "chromium_strings"
++  grdfile_name = "aetherium_strings"
+   extra_args_is_chrome_branded = "IS_CHROME_BRANDED=False"
+   update_check_url = "https://omaha-qa.sandbox.google.com/service/update2/json"
+   updater_event_logging_url = "https://play.googleapis.com/staging/log/"
+diff --git a/chrome/utility/BUILD.gn b/chrome/utility/BUILD.gn
+index e5b851a44d644..cef00f33971c8 100644
+--- a/chrome/utility/BUILD.gn
++++ b/chrome/utility/BUILD.gn
+@@ -14,6 +14,7 @@ import("//media/media_options.gni")
+ import("//pdf/features.gni")
+ import("//printing/buildflags/buildflags.gni")
+ import("//services/screen_ai/buildflags/features.gni")
++import("//components/safe_browsing/buildflags.gni")
+ 
+ assert(!is_fuchsia, "Fuchsia shouldn't use anything in //chrome")
+ 
+@@ -150,8 +151,11 @@ static_library("utility") {
+       "//components/user_data_importer/content",
+       "//components/user_data_importer/utility:bookmarks",
+       "//services/proxy_resolver:lib",
+-      "//services/screen_ai",
+     ]
++
++    if (enable_screen_ai_service) {
++      deps += [ "//services/screen_ai" ]
++    }
+   }
+ 
+   if (enable_extensions) {
+diff --git a/components/enterprise/data_controls/content/browser/BUILD.gn b/components/enterprise/data_controls/content/browser/BUILD.gn
+index 1f053de3205b5..828edffd0a608 100644
+--- a/components/enterprise/data_controls/content/browser/BUILD.gn
++++ b/components/enterprise/data_controls/content/browser/BUILD.gn
+@@ -4,7 +4,8 @@
+ 
+ import("//components/enterprise/buildflags/buildflags.gni")
+ 
+-assert(enterprise_data_controls)
++# aetherium trim: enterprise_data_controls 關（用戶裁定：雙端企業族全刪）——assert 退場；引用 gate 見 deep-trim 專項
++if (false) { assert(enterprise_data_controls) }
+ 
+ source_set("browser") {
+   configs += [ "//components/enterprise:extra_warnings" ]
+diff --git a/components/enterprise/data_controls/core/browser/BUILD.gn b/components/enterprise/data_controls/core/browser/BUILD.gn
+index f1b6372988c8b..b0051b2fb9d6d 100644
+--- a/components/enterprise/data_controls/core/browser/BUILD.gn
++++ b/components/enterprise/data_controls/core/browser/BUILD.gn
+@@ -6,7 +6,8 @@ import("//build/config/features.gni")
+ import("//components/enterprise/buildflags/buildflags.gni")
+ import("//third_party/protobuf/proto_library.gni")
+ 
+-assert(enterprise_data_controls)
++# aetherium trim: enterprise_data_controls 關（用戶裁定：雙端企業族全刪）——assert 退場；引用 gate 見 deep-trim 專項
++if (false) { assert(enterprise_data_controls) }
+ 
+ source_set("features") {
+   configs += [ "//components/enterprise:extra_warnings" ]
+diff --git a/components/enterprise/encryption/cache/BUILD.gn b/components/enterprise/encryption/cache/BUILD.gn
+index 47886088183c7..25dba04be778a 100644
+--- a/components/enterprise/encryption/cache/BUILD.gn
++++ b/components/enterprise/encryption/cache/BUILD.gn
+@@ -4,7 +4,8 @@
+ 
+ import("//components/enterprise/buildflags/buildflags.gni")
+ 
+-assert(enterprise_cache_encryption)
++# aetherium trim: enterprise_cache_encryption 關（用戶裁定：雙端企業族全刪）——assert 退場；引用 gate 見 deep-trim 專項
++if (false) { assert(enterprise_cache_encryption) }
+ 
+ source_set("cache") {
+   configs += [ "//components/enterprise:extra_warnings" ]
+diff --git a/components/optimization_guide/core/model_execution/configs/BUILD.gn b/components/optimization_guide/core/model_execution/configs/BUILD.gn
+index 014d74af0d5d4..6c0625d488d3c 100644
+--- a/components/optimization_guide/core/model_execution/configs/BUILD.gn
++++ b/components/optimization_guide/core/model_execution/configs/BUILD.gn
+@@ -1,6 +1,7 @@
+ # Copyright 2026 The Chromium Authors
+ # Use of this source code is governed by a BSD-style license that can be
+ # found in the LICENSE file.
++import("//components/optimization_guide/features.gni")
+ 
+ static_library("substitution_builders") {
+   sources = [
+@@ -33,7 +34,10 @@ source_set("manifest_builder") {
+   ]
+   public_deps = [
+     "//base",
+-    "//components/optimization_guide/core:manifest_broker",
+     "//components/optimization_guide/proto:optimization_guide_proto",
+   ]
++
++    if (build_with_model_execution) {
++      deps += [ "//components/optimization_guide/core:manifest_broker" ]
++    }
+ }
+diff --git a/components/printing/browser/BUILD.gn b/components/printing/browser/BUILD.gn
+index 478121da0b45b..8853f1307c20f 100644
+--- a/components/printing/browser/BUILD.gn
++++ b/components/printing/browser/BUILD.gn
+@@ -3,6 +3,7 @@
+ # found in the LICENSE file.
+ 
+ import("//components/enterprise/buildflags/buildflags.gni")
++import("//printing/buildflags/buildflags.gni")
+ 
+ static_library("browser") {
+   sources = [
+@@ -21,19 +22,28 @@ static_library("browser") {
+     "//components/crash/core/common",
+     "//components/discardable_memory/service",
+     "//components/enterprise/buildflags",
+-    "//components/printing/common",
+-    "//components/printing/common:mojo_interfaces",
+     "//components/services/print_compositor/public/cpp",
+     "//components/services/print_compositor/public/mojom",
+     "//components/site_isolation",
+     "//components/strings:components_strings_grit",
+-    "//printing",
+     "//printing/backend",
+     "//printing/common",
+     "//ui/base",
+     "//ui/gfx/geometry",
+   ]
+ 
++  if (enable_printing) {
++    deps += [ "//printing" ]
++  }
++
++  if (enable_printing) {
++    deps += [ "//components/printing/common:mojo_interfaces" ]
++  }
++
++  if (enable_printing) {
++    deps += [ "//components/printing/common" ]
++  }
++
+   if (enterprise_watermark) {
+     deps += [ "//components/enterprise/watermarking/content" ]
+   }
+diff --git a/components/supervised_user/core/browser/resources/BUILD.gn b/components/supervised_user/core/browser/resources/BUILD.gn
+index 1a66b0df03538..63be9ba253fa9 100644
+--- a/components/supervised_user/core/browser/resources/BUILD.gn
++++ b/components/supervised_user/core/browser/resources/BUILD.gn
+@@ -7,7 +7,8 @@ import("//tools/grit/preprocess_if_expr.gni")
+ import("//ui/webui/resources/tools/minify_js.gni")
+ import("//ui/webui/webui_features.gni")
+ 
+-assert(enable_supervised_users)
++# aetherium trim: supervised_users 關閉（用戶裁定）——assert 退場
++if (false) { assert(enable_supervised_users) }
+ 
+ group("bundle_js") {
+   if (optimize_webui) {
+diff --git a/extensions/browser/api/app_current_window_internal/BUILD.gn b/extensions/browser/api/app_current_window_internal/BUILD.gn
+index 6d5128a534642..7e7899c9239f8 100644
+--- a/extensions/browser/api/app_current_window_internal/BUILD.gn
++++ b/extensions/browser/api/app_current_window_internal/BUILD.gn
+@@ -4,9 +4,8 @@
+ 
+ import("//extensions/buildflags/buildflags.gni")
+ 
+-assert(enable_platform_apps,
+-       "Cannot depend on platform apps because enable_platform_apps=false.")
+-
++# aetherium trim: platform_apps 關——assert 退場
++if (false) { assert(enable_platform_apps) }
+ source_set("app_current_window_internal") {
+   sources = [
+     "app_current_window_internal_api.cc",
+diff --git a/extensions/browser/api/app_runtime/BUILD.gn b/extensions/browser/api/app_runtime/BUILD.gn
+index f9d240901212c..3a9e8faa5ff8b 100644
+--- a/extensions/browser/api/app_runtime/BUILD.gn
++++ b/extensions/browser/api/app_runtime/BUILD.gn
+@@ -4,9 +4,8 @@
+ 
+ import("//extensions/buildflags/buildflags.gni")
+ 
+-assert(enable_platform_apps,
+-       "Cannot depend on platform apps because enable_platform_apps=false.")
+-
++# aetherium trim: platform_apps 關——assert 退場
++if (false) { assert(enable_platform_apps) }
+ source_set("app_runtime") {
+   sources = [
+     "app_runtime_api.cc",
+diff --git a/extensions/browser/api/app_window/BUILD.gn b/extensions/browser/api/app_window/BUILD.gn
+index 7b52477f08273..a10dbc673ce76 100644
+--- a/extensions/browser/api/app_window/BUILD.gn
++++ b/extensions/browser/api/app_window/BUILD.gn
+@@ -4,9 +4,8 @@
+ 
+ import("//extensions/buildflags/buildflags.gni")
+ 
+-assert(enable_platform_apps,
+-       "Cannot depend on platform apps because enable_platform_apps=false.")
+-
++# aetherium trim: platform_apps 關——assert 退場
++if (false) { assert(enable_platform_apps) }
+ source_set("app_window") {
+   sources = [
+     "app_window_api.cc",
+diff --git a/extensions/browser/api/file_system/BUILD.gn b/extensions/browser/api/file_system/BUILD.gn
+index c482fd347d38b..06d07e0d359f0 100644
+--- a/extensions/browser/api/file_system/BUILD.gn
++++ b/extensions/browser/api/file_system/BUILD.gn
+@@ -4,9 +4,8 @@
+ 
+ import("//extensions/buildflags/buildflags.gni")
+ 
+-assert(enable_platform_apps,
+-       "Cannot depend on platform apps because enable_platform_apps=false.")
+-
++# aetherium trim: platform_apps 關——assert 退場
++if (false) { assert(enable_platform_apps) }
+ source_set("file_system") {
+   sources = [
+     "consent_provider.h",
+diff --git a/extensions/browser/api/guest_view/app_view/BUILD.gn b/extensions/browser/api/guest_view/app_view/BUILD.gn
+index 937d3e5d35383..3b0528a6f824a 100644
+--- a/extensions/browser/api/guest_view/app_view/BUILD.gn
++++ b/extensions/browser/api/guest_view/app_view/BUILD.gn
+@@ -5,8 +5,8 @@
+ import("//components/guest_view/buildflags/buildflags.gni")
+ import("//extensions/buildflags/buildflags.gni")
+ 
+-assert(enable_platform_apps,
+-       "Cannot depend on platform apps because enable_platform_apps=false.")
++# aetherium trim: platform_apps 關——assert 退場
++if (false) { assert(enable_platform_apps) }
+ assert(enable_guest_view,
+        "Cannot depend on guest_view because enable_guest_view=false.")
+ 
+diff --git a/extensions/components/native_app_window/BUILD.gn b/extensions/components/native_app_window/BUILD.gn
+index a9924b3ebd9ae..9c9528b583039 100644
+--- a/extensions/components/native_app_window/BUILD.gn
++++ b/extensions/components/native_app_window/BUILD.gn
+@@ -5,9 +5,8 @@
+ import("//build/config/ui.gni")
+ import("//extensions/buildflags/buildflags.gni")
+ 
+-assert(enable_platform_apps,
+-       "Cannot depend on platform apps because enable_platform_apps=false.")
+-
++# aetherium trim: platform_apps 關——assert 退場
++if (false) { assert(enable_platform_apps) }
+ static_library("native_app_window") {
+   sources = [
+     "native_app_window_views.cc",
+diff --git a/extensions/strings/BUILD.gn b/extensions/strings/BUILD.gn
+index 9fb23a9622401..11ef9aceb5a73 100644
+--- a/extensions/strings/BUILD.gn
++++ b/extensions/strings/BUILD.gn
+@@ -11,7 +11,7 @@ assert(enable_extensions_core)
+ grit_strings("strings") {
+   source = "extensions_strings.grd"
+   inputs = [
+-    "extensions_chromium_strings.grdp",
++    "extensions_aetherium_strings.grdp",
+     "extensions_google_chrome_strings.grdp",
+   ]
+   inputs +=
+diff --git a/printing/backend/BUILD.gn b/printing/backend/BUILD.gn
+index 165da663e05ba..179dd4d075262 100644
+--- a/printing/backend/BUILD.gn
++++ b/printing/backend/BUILD.gn
+@@ -32,7 +32,9 @@ component("backend") {
+   ]
+ 
+   public_configs = []
++  if (enable_printing) {
+   configs += [ "//printing/:strict" ]
++  }
+   cflags = []
+   defines = [ "IS_PRINT_BACKEND_IMPL" ]
+ 
+@@ -40,12 +42,15 @@ component("backend") {
+   deps = [
+     "//base",
+     "//build:chromeos_buildflags",
+-    "//printing:printing_base",
+     "//printing/mojom",
+     "//ui/gfx/geometry",
+     "//url",
+   ]
+ 
++  if (enable_printing) {
++    deps += [ "//printing:printing_base" ]
++  }
++
+   if (is_chromeos) {
+     # PRINT_BACKEND_AVAILABLE disables the default dummy implementation
+     # print backend and enables a custom implementation instead.
+@@ -72,7 +77,9 @@ component("backend") {
+   }
+ 
+   if (use_cups) {
+-    public_configs += [ "//printing:cups" ]
++    if (enable_printing) {
++  public_configs += [ "//printing:cups" ]
++    }
+ 
+     sources += [
+       "cups_deleters.cc",
+diff --git a/printing/common/BUILD.gn b/printing/common/BUILD.gn
+index 3707ef0219cf7..49ac76e68fae5 100644
+--- a/printing/common/BUILD.gn
++++ b/printing/common/BUILD.gn
+@@ -2,13 +2,16 @@
+ # Use of this source code is governed by a BSD-style license that can be
+ # found in the LICENSE file.
+ 
++import("//printing/buildflags/buildflags.gni")
+ source_set("common") {
+   sources = [
+     "metafile_utils.cc",
+     "metafile_utils.h",
+   ]
+ 
++  if (enable_printing) {
+   configs += [ "//printing/:strict" ]
++  }
+ 
+   public_deps = [
+     "//base",

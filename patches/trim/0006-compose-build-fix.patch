@@ -1,0 +1,25 @@
+# aetherium: 修掉 trim/0005 在 compose BUILD.gn 留下的 GN 語法錯誤
+# （`deps +=` 出現在沒有 deps 變數的 source_set 內，gn gen 直接 Undefined identifier）。
+# 改成 public_deps +=，enable_compose=true 時行為與上游相同；false 時才省略 webui/compose。
+diff --git a/chrome/browser/ui/views/compose/BUILD.gn b/chrome/browser/ui/views/compose/BUILD.gn
+--- a/chrome/browser/ui/views/compose/BUILD.gn
++++ b/chrome/browser/ui/views/compose/BUILD.gn
+@@ -17,15 +17,15 @@
+     "//chrome/browser/ui/views/bubble",
+ 
+     "//chrome/browser/ui/webui/top_chrome",
+     "//components/compose/core/browser",
+     "//ui/views",
+   ]
+-    if (enable_compose) {
+-      deps += [ "//chrome/browser/ui/webui/compose" ]
+-    }
++  if (enable_compose) {
++    public_deps += [ "//chrome/browser/ui/webui/compose" ]
++  }
+ }
+ 
+ source_set("impl") {
+   sources = [
+     "chrome_compose_dialog_controller.cc",
+     "compose_dialog_view.cc",

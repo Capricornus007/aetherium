@@ -1,0 +1,353 @@
+diff --git a/chrome/browser/ui/bookmarks/bookmark_utils_desktop.cc b/chrome/browser/ui/bookmarks/bookmark_utils_desktop.cc
+index 1ea324c91042a..bf344ed63e28b 100644
+--- a/chrome/browser/ui/bookmarks/bookmark_utils_desktop.cc
++++ b/chrome/browser/ui/bookmarks/bookmark_utils_desktop.cc
+@@ -313,7 +313,8 @@ void DoOpen(
+     model->AddToNewSplit(
+         {opened_web_contents_index}, split_tabs::SplitTabVisualData(),
+         split_tabs::SplitTabCreatedSource::kBookmarkContextMenu);
+-  } else if (folder_title.has_value()) {
++  } else if (folder_title.has_value() &&
++             browser->tab_strip_model()->SupportsTabGroups()) {
+     TabStripModel* model = browser->tab_strip_model();
+ 
+     // Figure out which tabs we actually opened in this browser that
+diff --git a/chrome/browser/ui/browser.cc b/chrome/browser/ui/browser.cc
+index 4e9be10d04e98..63e43674388ae 100644
+--- a/chrome/browser/ui/browser.cc
++++ b/chrome/browser/ui/browser.cc
+@@ -271,10 +271,10 @@ Browser::Browser(BrowserWindowCreateParams params)
+       tab_strip_model_(std::make_unique<TabStripModel>(
+           tab_strip_model_delegate_.get(),
+           profile_,
+-          // Tab groups are disabled for app browsers.
+-          (type_ == TYPE_APP || type_ == TYPE_APP_POPUP)
+-              ? nullptr
+-              : TabGroupModelFactory::GetInstance())),
++          // aetherium: tab groups are removed. A null factory leaves the
++          // TabStripModel without a TabGroupModel, so no group can ever be
++          // created, restored, or shown.
++          nullptr)),
+       session_id_(SessionID::NewUnique()),
+       keep_alive_(
+           std::make_unique<ScopedKeepAlive>(KeepAliveOrigin::BROWSER,
+diff --git a/chrome/browser/ui/browser_commands.cc b/chrome/browser/ui/browser_commands.cc
+index 70b5c0ad9eca8..1b4e3eb9c8694 100644
+--- a/chrome/browser/ui/browser_commands.cc
++++ b/chrome/browser/ui/browser_commands.cc
+@@ -1863,6 +1863,10 @@ void AddNewTabToGroup(BrowserWindowInterface* browser) {
+ }
+ 
+ void CreateNewTabGroup(BrowserWindowInterface* browser) {
++  // aetherium: tab groups are removed; never open a dangling editor.
++  if (!browser->GetTabStripModel()->SupportsTabGroups()) {
++    return;
++  }
+   NewTab(browser, NewTabTypes::kNewTabCommand);
+   browser->GetTabStripModel()->ExecuteContextMenuCommand(
+       browser->GetTabStripModel()->active_index(),
+@@ -1959,12 +1963,16 @@ bool CanGroupAllUngroupedTabs(BrowserWindowInterface* browser) {
+ }
+ 
+ bool GroupAllUngroupedTabs(BrowserWindowInterface* browser) {
++  TabStripModel* tab_strip_model = browser->GetTabStripModel();
++  if (!tab_strip_model->SupportsTabGroups()) {
++    return false;
++  }
++
+   std::vector<int> indices = GetUngroupedTabIndices(browser);
+   if (indices.empty()) {
+     return false;
+   }
+ 
+-  TabStripModel* tab_strip_model = browser->GetTabStripModel();
+   tab_groups::TabGroupId group = tab_strip_model->AddToNewGroup(indices);
+   tab_strip_model->OpenTabGroupEditor(group);
+   return true;
+diff --git a/chrome/browser/ui/browser_tabrestore.cc b/chrome/browser/ui/browser_tabrestore.cc
+index 6aca93a450796..e80848aacca08 100644
+--- a/chrome/browser/ui/browser_tabrestore.cc
++++ b/chrome/browser/ui/browser_tabrestore.cc
+@@ -142,6 +142,11 @@ WebContents* AddRestoredTabImpl(std::unique_ptr<WebContents> web_contents,
+                                 bool from_session_restore,
+                                 std::optional<bool> is_active_browser) {
+   TabStripModel* const tab_strip_model = browser->tab_strip_model();
++  // aetherium: a browser without a group model must never attach restored tabs
++  // to a group, even if the session file still mentions one.
++  if (!tab_strip_model->group_model()) {
++    group.reset();
++  }
+ 
+   int add_types = select ? AddTabTypes::ADD_ACTIVE : AddTabTypes::ADD_NONE;
+   if (pin) {
+diff --git a/chrome/browser/ui/tabs/tab_list_bridge.cc b/chrome/browser/ui/tabs/tab_list_bridge.cc
+index 1964f543c3dc0..1d060fe7b1e8f 100644
+--- a/chrome/browser/ui/tabs/tab_list_bridge.cc
++++ b/chrome/browser/ui/tabs/tab_list_bridge.cc
+@@ -421,6 +421,11 @@ void TabListBridge::SetTabGroupVisualData(
+ std::optional<tab_groups::TabGroupId> TabListBridge::AddTabsToGroup(
+     std::optional<tab_groups::TabGroupId> group_id,
+     const std::set<tabs::TabHandle>& tabs) {
++  // Not all browsers support tab groups (aetherium: none do).
++  if (!tab_strip_->group_model()) {
++    return std::nullopt;
++  }
++
+   std::vector<int> tab_indices;
+   tab_indices.reserve(tabs.size());
+ 
+@@ -447,6 +452,11 @@ std::optional<tab_groups::TabGroupId> TabListBridge::AddTabsToGroup(
+ }
+ 
+ void TabListBridge::Ungroup(const std::set<tabs::TabHandle>& tabs) {
++  // Not all browsers support tab groups (aetherium: none do).
++  if (!tab_strip_->group_model()) {
++    return;
++  }
++
+   std::vector<int> tab_indices;
+   tab_indices.reserve(tabs.size());
+ 
+@@ -467,6 +477,11 @@ void TabListBridge::Unsplit(split_tabs::SplitTabId split_id) {
+ }
+ 
+ void TabListBridge::MoveGroupTo(tab_groups::TabGroupId group_id, int index) {
++  // Not all browsers support tab groups (aetherium: none do).
++  if (!tab_strip_->group_model()) {
++    return;
++  }
++
+   TabGroup* tab_group = tab_strip_->group_model()->GetTabGroup(group_id);
+   CHECK(tab_group) << "Tab group does not exist";
+ 
+diff --git a/chrome/browser/ui/tabs/tab_menu_model.cc b/chrome/browser/ui/tabs/tab_menu_model.cc
+index b4b2c1b3d4b71..241c66272dc60 100644
+--- a/chrome/browser/ui/tabs/tab_menu_model.cc
++++ b/chrome/browser/ui/tabs/tab_menu_model.cc
+@@ -440,7 +440,8 @@ void TabMenuModel::Build(int index) {
+     }
+   }
+ 
+-  if (ExistingTabGroupSubMenuModel::ShouldShowSubmenu(
++  if (tab_strip_->SupportsTabGroups() &&
++      ExistingTabGroupSubMenuModel::ShouldShowSubmenu(
+           tab_strip_, index, tab_menu_model_delegate_)) {
+     // Create submenu with existing groups
+     add_to_existing_group_submenu_ =
+@@ -459,7 +460,7 @@ void TabMenuModel::Build(int index) {
+                   : kSavedTabGroupBarEverythingOldIcon,
+               ui::kColorMenuIcon, ui::SimpleMenuModel::kDefaultIconSize));
+     }
+-  } else {
++  } else if (tab_strip_->SupportsTabGroups()) {
+     AddItem(TabStripModel::CommandAddToNewGroup,
+             l10n_util::GetPluralStringFUTF16(
+                 IDS_TAB_CXMENU_ADD_TAB_TO_NEW_GROUP, num_tabs));
+diff --git a/chrome/browser/ui/toolbar/app_menu_model.cc b/chrome/browser/ui/toolbar/app_menu_model.cc
+index 49ef721d9e96f..3b9bc29969068 100644
+--- a/chrome/browser/ui/toolbar/app_menu_model.cc
++++ b/chrome/browser/ui/toolbar/app_menu_model.cc
+@@ -2267,18 +2267,7 @@ void AppMenuModel::Build() {
+         kBookmarksMenuItem);
+   }
+ 
+-  if (browser_->GetProfile()->IsRegularProfile()) {
+-    auto saved_tab_groups_model = std::make_unique<ui::SimpleMenuModel>(this);
+-    sub_menus_.push_back(std::move(saved_tab_groups_model));
+-    AddSubMenuWithStringIdAndVectorIcon(
+-        this, kSavedTabGroupsMenuPlaceholder, IDS_SAVED_TAB_GROUPS_MENU,
+-        sub_menus_.back().get(),
+-        features::IsRoundedIconsEnabled() ? kGridViewIcon
+-                                          : kSavedTabGroupBarEverythingOldIcon);
+-    SetElementIdentifierAt(
+-        GetIndexOfCommandId(kSavedTabGroupsMenuPlaceholder).value(),
+-        kTabGroupsMenuItem);
+-  }
++  // aetherium: the saved tab groups submenu is intentionally absent.
+ 
+   // Extensions and Skills sub menu.
+   auto* skills_and_extensions_action = actions::ActionManager::Get().FindAction(
+diff --git a/chrome/browser/ui/unload_controller.cc b/chrome/browser/ui/unload_controller.cc
+index 9cefffb0e2bf7..4b3d99e89d3fb 100644
+--- a/chrome/browser/ui/unload_controller.cc
++++ b/chrome/browser/ui/unload_controller.cc
+@@ -430,7 +430,7 @@ bool UnloadController::BeforeUnloadFired(content::WebContents* contents,
+     std::optional<tab_groups::TabGroupId> group =
+         browser_->tab_strip_model()->GetTabGroupForTab(
+             browser_->tab_strip_model()->GetIndexOfWebContents(contents));
+-    if (group.has_value()) {
++    if (group.has_value() && browser_->tab_strip_model()->group_model()) {
+       TabGroup* const tab_group =
+           browser_->tab_strip_model()->group_model()->GetTabGroup(
+               group.value());
+diff --git a/chrome/browser/ui/views/app_menu/action_app_menu_manager.cc b/chrome/browser/ui/views/app_menu/action_app_menu_manager.cc
+index be74c8f346433..19e5e01e1e238 100644
+--- a/chrome/browser/ui/views/app_menu/action_app_menu_manager.cc
++++ b/chrome/browser/ui/views/app_menu/action_app_menu_manager.cc
+@@ -75,8 +75,6 @@
+ #include "chrome/browser/ui/views/app_menu/profile_dynamic_menu.h"
+ #include "chrome/browser/ui/views/app_menu/recent_tabs_dynamic_menu.h"
+ #include "chrome/browser/ui/views/app_menu/send_tab_to_self_dynamic_menu.h"
+-#include "chrome/browser/ui/views/app_menu/tab_group_dynamic_menu.h"
+-#include "chrome/browser/ui/views/bookmarks/saved_tab_groups/saved_tab_group_everything_menu.h"
+ #include "chrome/browser/ui/views/toolbar/toolbar_button_menu_highlighter.h"
+ #include "chrome/browser/ui/web_applications/app_browser_controller.h"
+ #include "chrome/browser/ui/web_applications/web_app_menu_model.h"
+@@ -451,8 +449,6 @@ ActionAppMenuManager::ActionAppMenuManager(
+       bookmarks_menu_(
+           std::make_unique<BookmarksDynamicMenu>(browser_window_interface,
+                                                  drag_and_drop_host)),
+-      tab_groups_menu_(
+-          std::make_unique<TabGroupDynamicMenu>(browser_window_interface)),
+       send_tab_to_self_menu_(
+           std::make_unique<SendTabToSelfDynamicMenu>(browser_window_interface)),
+       profile_menu_(
+@@ -852,19 +848,7 @@ void ActionAppMenuManager::AddYourChromeActions(actions::ActionItem* root) {
+               {.element_id = AppMenuModel::kBookmarksMenuItem});
+         }
+ 
+-        if (profile->IsRegularProfile()) {
+-          section.AddDynamicSubmenu(
+-              kActionSavedTabGroupsSubmenu,
+-              base::BindRepeating(&TabGroupDynamicMenu::BuildTabGroupsAction,
+-                                  tab_groups_menu_->GetWeakPtr()),
+-              [](AppMenuBuilder& sub) {
+-                sub.AddAction(
+-                    kActionCreateNewTabGroup,
+-                    {.element_id =
+-                         tab_groups::STGEverythingMenu::kCreateNewTabGroup});
+-              },
+-              {.element_id = AppMenuModel::kTabGroupsMenuItem});
+-        }
++        // aetherium: no saved tab groups submenu.
+ 
+         section.AddSubmenu(
+             kActionSkillsAndExtensionsSubmenu,
+diff --git a/chrome/browser/ui/views/app_menu/action_app_menu_manager.h b/chrome/browser/ui/views/app_menu/action_app_menu_manager.h
+index a97ae4bbc92e9..e0dfb8cbf77b7 100644
+--- a/chrome/browser/ui/views/app_menu/action_app_menu_manager.h
++++ b/chrome/browser/ui/views/app_menu/action_app_menu_manager.h
+@@ -25,7 +25,6 @@
+ 
+ class RecentTabsDynamicMenu;
+ class BookmarksDynamicMenu;
+-class TabGroupDynamicMenu;
+ class SendTabToSelfDynamicMenu;
+ class ProfileDynamicMenu;
+ 
+@@ -65,7 +64,6 @@ class ActionAppMenuManager {
+   raw_ptr<BrowserWindowInterface> browser_window_interface_;
+   std::unique_ptr<RecentTabsDynamicMenu> recent_tabs_menu_;
+   std::unique_ptr<BookmarksDynamicMenu> bookmarks_menu_;
+-  std::unique_ptr<TabGroupDynamicMenu> tab_groups_menu_;
+   std::unique_ptr<SendTabToSelfDynamicMenu> send_tab_to_self_menu_;
+   std::unique_ptr<ProfileDynamicMenu> profile_menu_;
+   base::ElapsedTimer app_menu_timer_;
+diff --git a/chrome/browser/ui/views/bookmarks/bookmark_bar_view.cc b/chrome/browser/ui/views/bookmarks/bookmark_bar_view.cc
+index 18a885d04da10..2963a495d977b 100644
+--- a/chrome/browser/ui/views/bookmarks/bookmark_bar_view.cc
++++ b/chrome/browser/ui/views/bookmarks/bookmark_bar_view.cc
+@@ -1521,7 +1521,9 @@ void BookmarkBarView::Init() {
+   // Also re-enabled when the model is loaded.
+   managed_bookmarks_button_->SetEnabled(false);
+ 
+-  if (tab_groups::SavedTabGroupUtils::IsEnabledForProfile(
++  // aetherium: no tab group model means the saved-group strip must not exist.
++  if (browser_->GetTabStripModel()->SupportsTabGroups() &&
++      tab_groups::SavedTabGroupUtils::IsEnabledForProfile(
+           browser_->GetProfile())) {
+     saved_tab_group_bar_ =
+         AddChildView(std::make_unique<tab_groups::SavedTabGroupBar>(
+diff --git a/chrome/browser/ui/views/tabs/shared/new_tab_button_menu_model.cc b/chrome/browser/ui/views/tabs/shared/new_tab_button_menu_model.cc
+index 89836863bbcb8..c05c4f0c7a964 100644
+--- a/chrome/browser/ui/views/tabs/shared/new_tab_button_menu_model.cc
++++ b/chrome/browser/ui/views/tabs/shared/new_tab_button_menu_model.cc
+@@ -36,13 +36,18 @@ NewTabButtonMenuModel::NewTabButtonMenuModel(BrowserWindowInterface* browser)
+   // Build the menu.
+   AddItemWithStringId(IDC_NEW_TAB, IDS_NEW_TAB_BUTTON_CXMENU_NEW_TAB);
+   SetElementIdentifierAt(GetIndexOfCommandId(IDC_NEW_TAB).value(), kNewTab);
+-  AddNewTabInGroupItem();
+ 
+-  AddSeparator(ui::NORMAL_SEPARATOR);
++  // aetherium: tab groups are removed, so do not offer "new tab in group" or
++  // "new tab group" entries at all.
++  if (browser_->GetTabStripModel()->SupportsTabGroups()) {
++    AddNewTabInGroupItem();
++
++    AddSeparator(ui::NORMAL_SEPARATOR);
+ 
+-  AddItemWithStringId(IDC_CREATE_NEW_TAB_GROUP, IDS_NEW_TAB_GROUP);
+-  SetElementIdentifierAt(GetIndexOfCommandId(IDC_CREATE_NEW_TAB_GROUP).value(),
+-                         kCreateNewTabGroup);
++    AddItemWithStringId(IDC_CREATE_NEW_TAB_GROUP, IDS_NEW_TAB_GROUP);
++    SetElementIdentifierAt(GetIndexOfCommandId(IDC_CREATE_NEW_TAB_GROUP).value(),
++                           kCreateNewTabGroup);
++  }
+ 
+   AddSeparator(ui::NORMAL_SEPARATOR);
+   AddNewSplitTabItem();
+@@ -102,7 +107,9 @@ void NewTabButtonMenuModel::AddNewTabInGroupItem() {
+   CHECK(tab_strip_model);
+ 
+   TabGroupModel* tab_group_model = tab_strip_model->group_model();
+-  CHECK(tab_group_model);
++  if (!tab_group_model) {
++    return;
++  }
+ 
+   std::optional<tab_groups::TabGroupId> group_id =
+       tab_group_model->GetMostRecentTabGroupId();
+diff --git a/chrome/browser/ui/views/tabs/shared/tab_strip_combo_button.cc b/chrome/browser/ui/views/tabs/shared/tab_strip_combo_button.cc
+index 4760aa030544e..4b03c19223504 100644
+--- a/chrome/browser/ui/views/tabs/shared/tab_strip_combo_button.cc
++++ b/chrome/browser/ui/views/tabs/shared/tab_strip_combo_button.cc
+@@ -19,6 +19,7 @@
+ #include "chrome/browser/ui/layout_constants.h"
+ #include "chrome/browser/ui/tabs/organizer/organizer_panel_utils.h"
+ #include "chrome/browser/ui/tabs/saved_tab_groups/saved_tab_group_utils.h"
++#include "chrome/browser/ui/tabs/tab_strip_model.h"
+ #include "chrome/browser/ui/tabs/vertical_tab_strip_state_controller.h"
+ #include "chrome/browser/ui/views/bookmarks/saved_tab_groups/saved_tab_group_everything_menu.h"
+ #include "chrome/browser/ui/views/frame/browser_view.h"
+@@ -69,7 +70,8 @@ TabStripComboButton::TabStripComboButton(BrowserWindowInterface* browser,
+ 
+   std::unique_ptr<TabStripFlatEdgeButton> start_button;
+   if (context_ == Context::kVerticalTabStrip) {
+-    if (tab_groups::SavedTabGroupUtils::IsEnabledForProfile(
++    if (browser_->GetTabStripModel()->SupportsTabGroups() &&
++        tab_groups::SavedTabGroupUtils::IsEnabledForProfile(
+             browser_->GetProfile()) &&
+         !organizer_panel::IsOrganizerPanelFeatureEnabled()) {
+       start_button = CreateFlatEdgeButtonFor(kActionTabGroupsMenu,
+diff --git a/chrome/browser/ui/views/user_education/browser_user_education_service.cc b/chrome/browser/ui/views/user_education/browser_user_education_service.cc
+index b8bf6a8eaa2e8..78c6962da93cf 100644
+--- a/chrome/browser/ui/views/user_education/browser_user_education_service.cc
++++ b/chrome/browser/ui/views/user_education/browser_user_education_service.cc
+@@ -262,11 +262,9 @@ class ConditionalStep : public IfView {
+ };
+ 
+ bool HasTabGroups(const BrowserView* browser_view) {
+-  return !browser_view->browser()
+-              ->GetTabStripModel()
+-              ->group_model()
+-              ->ListTabGroups()
+-              .empty();
++  TabGroupModel* group_model =
++      browser_view->browser()->GetTabStripModel()->group_model();
++  return group_model && !group_model->ListTabGroups().empty();
+ }
+ 
+ bool IsInVerticalTabsMode(const BrowserView* browser_view) {
+diff --git a/chrome/browser/ui/webui/history_clusters/history_clusters_handler.cc b/chrome/browser/ui/webui/history_clusters/history_clusters_handler.cc
+index f5050e25f983c..818425844a930 100644
+--- a/chrome/browser/ui/webui/history_clusters/history_clusters_handler.cc
++++ b/chrome/browser/ui/webui/history_clusters/history_clusters_handler.cc
+@@ -500,7 +500,7 @@ void HistoryClustersHandler::OpenVisitUrlsInTabGroup(
+   }
+   // Sometimes tab_indices is empty, and TabStripModel::AddToNewGroup
+   // requires a non-empty vector (Fixes https://crbug.com/40060062)
+-  if (tab_indices.empty()) {
++  if (tab_indices.empty() || !model->SupportsTabGroups()) {
+     return;
+   }
+   auto new_group_id = model->AddToNewGroup(tab_indices);

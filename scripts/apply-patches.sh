@@ -76,9 +76,49 @@ for i in "${!patches[@]}"; do
       applied+=("$patch")
     fi
   else
-    # 既不在樹上、也套不下去 ⇒ 補丁與上游現況衝突，必須修補丁，不可繞過。
-    printf '::error::補丁套用失敗（與上游衝突）：%s\n' "$patch"
-    failed+=("$patch")
+    # 2026-10-28：補丁之間會互相重疊（後面的補丁又在同一檔案追加東西、或後續手動編輯過），
+    # 這種情況「整支反向檢查」不會綠，但內容其實都在樹上。改成逐檔判定：
+    # 每個檔案要嘛反向能過（已在樹上）、要嘛正向能過（本輪可套），全部都不衝突才算正常；
+    # 只有真的衝突（兩邊都不過）才報錯。dry-run 只統計不動樹。
+    _tmpd=$(mktemp -d)
+    python3 - "$target" "$_tmpd" <<'PYEOF' >/dev/null
+import os, re, sys
+src, outdir = sys.argv[1], sys.argv[2]
+data = open(src, encoding='utf-8', errors='surrogateescape').read()
+parts = re.split(r'(?m)^(?=diff --git )', data)
+n = 0
+for p in parts:
+    if not p.startswith('diff --git '):
+        continue
+    n += 1
+    with open(os.path.join(outdir, f'{n:04d}.patch'), 'w',
+              encoding='utf-8', errors='surrogateescape') as fh:
+        fh.write(p)
+PYEOF
+    _dup=0; _todo=0; _conflict=0
+    for _f in "$_tmpd"/*.patch; do
+      [ -e "$_f" ] || continue
+      if git apply --reverse --check --ignore-space-change --ignore-whitespace "$_f" 2>/dev/null; then
+        _dup=$((_dup + 1))
+      elif git apply --check --ignore-space-change --ignore-whitespace "$_f" 2>/dev/null; then
+        _todo=$((_todo + 1))
+        if [ "$dry_run" -eq 0 ]; then
+          git apply --index --ignore-space-change --ignore-whitespace "$_f" 2>/dev/null || _conflict=$((_conflict + 1))
+        fi
+      else
+        _conflict=$((_conflict + 1))
+        printf '  衝突檔案：%s\n' "$(sed -n 's|^+++ b/||p' "$_f" | head -n1)"
+      fi
+    done
+    rm -rf "$_tmpd"
+    if [ "$_conflict" -eq 0 ]; then
+      printf '  狀態：逐檔判定通過（已在樹上 %d 檔、本輪套 %d 檔）\n' "$_dup" "$_todo"
+      applied+=("$patch")
+    else
+      # 既不在樹上、也套不下去 ⇒ 補丁與上游現況衝突，必須修補丁，不可繞過。
+      printf '::error::補丁套用失敗（與上游衝突）：%s\n' "$patch"
+      failed+=("$patch")
+    fi
   fi
 done
 cleanup
