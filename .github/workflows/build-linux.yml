@@ -53,7 +53,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.1
 
       - name: Install host dependencies
         run: |
@@ -221,7 +221,7 @@ jobs:
 
       - name: Restore ccache
         if: ${{ github.event_name == 'workflow_dispatch'  && github.event.inputs.full_build == 'true' }}
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6.1.0
         with:
           path: ${{ github.workspace }}/.ccache
           key: ccache-linux-${{ github.ref_name }}-${{ github.run_id }}-${{ github.run_attempt }}
@@ -248,14 +248,14 @@ jobs:
         if: ${{ github.event_name == 'workflow_dispatch'  && github.event.inputs.full_build == 'true' && always() }}
         env:
           TAR_OPTIONS: "--warning=no-file-changed"
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6.1.0
         with:
           path: ${{ github.workspace }}/.ccache
           key: ccache-linux-${{ github.ref_name }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Upload chrome_version.h
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: gn-config
           path: |
