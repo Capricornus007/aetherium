@@ -1,0 +1,139 @@
+# =============================================================================
+# aetherium Android 建構參數（首稿 2026-10-24；待 gn gen 逐條驗證後定稿）
+#
+# 源碼樹：/opt/chromium-src/src（與桌面同樹，靠 target_os 切換）
+# 對照：~/Downloads/chromium-patches/args.gn.2026-10-24（Linux 定稿 327 行）
+# 素材：TRIM-NOTES.md 各「args-android 備忘」段（用戶歷次裁定）
+#
+# ⚠️ 本檔尚未在 Android 目標上跑過 `gn gen`——GN 對打錯的 arg 只 WARN 不報錯，
+#    值會被靜默忽略。定稿前必跑：
+#      gn gen out/Aetherium-Android --args='target_os="android" target_cpu="arm64"'
+#      gn args --list --short out/Aetherium-Android > /tmp/android-args.txt
+#    逐條比對本檔 key 是否都在清單裡；不在的一律拿掉或改真開關。
+# =============================================================================
+
+# ── 一、目標與架構 ────────────────────────────────────────────────────────
+target_os = "android"
+# 手機主力是 arm64；要出 arm32/x64 就另開 out 目錄，不改本檔。
+target_cpu = "arm64"
+
+# ── 二、建構模式（與桌面同哲學：release 行為、靜態鏈、符號歸零）──────────────
+# is_debug=false：不要 debug 版（慢、佔碟、DCHECK 全開）。
+is_debug = false
+# is_component_build=false：靜態鏈。Android 雖有 split APK，但組件模式會讓
+# ThinLTO/CFI 打折，且體積反而更難控。
+is_component_build = false
+# 用戶 2026-10-24 裁定：symbol 三件套歸零（手機端崩潰堆疊靠 logcat 符號化，
+# 不需要把符號塞進 APK；體積優先）。
+symbol_level = 0
+blink_symbol_level = 0
+v8_symbol_level = 0
+dcheck_always_on = false
+# Android 的靜態分析（errorprone/lint）在 CI 上又慢又常誤報；本專案以自建為準，
+# 關掉換編譯時間（用戶 2026-10-24 交接備忘明列）。
+android_static_analysis = "off"
+
+# ── 三、最佳化三件套（沿用桌面定案，但 PGO 相位不同）───────────────────────
+is_official_build = false
+use_thin_lto = true
+is_cfi = true
+# Android 沒有隨樹下載的 PGO profile（桌面那份是 linux profile，不能用）。
+# 相位 1＝插樁產 profile；要等手機實機跑一輪才有自己的 profile 可升相位 2。
+chrome_pgo_phase = 1
+optimize_for_size = true
+
+# ── 四、功能裁剪（用戶「不需要就是不帶」的立場，與桌面一致）─────────────────
+# 端側 AI 全清場（桌面第五批裁定的 Android 對應）。
+enable_screen_ai_service = false
+enable_on_device_translation = false
+build_tflite_with_xnnpack = false
+build_litert_with_xnnpack = false
+# 列印 / PDF 全關（2026-10-28 實測：gn gen 與 ninja -n chrome_public_apk 皆 rc=0，
+# target 數 64569→64423；尚未做完整編譯驗證）。Android 的 enable_printing 預設是 true
+# （列印走系統 Print Spooler），關掉等於手機端也不帶列印入口。
+enable_printing = false
+enable_print_preview = false
+use_cups = false
+enable_pdf = false
+# 離線頁面（用戶：「刪除，手機不要任何離線頁面選項」）——UI 走 trim 補丁刪。
+enable_offline_pages = false
+enable_offline_pages_harness = false
+# 投放／裝置探索（Cast 那半）：Android 上 Cast 是系統投屏，瀏覽器不帶。
+enable_service_discovery = false
+enable_mdns = false
+enable_cast_receiver = false
+enable_reporting = false
+enable_background_mode = false
+# 企業族（桌面第六批全關）。
+enterprise_cloud_content_analysis = false
+enterprise_local_content_analysis = false
+enterprise_content_analysis = false
+enterprise_data_controls = false
+enterprise_watermark = false
+enterprise_cache_encryption = false
+enterprise_proxy = false
+
+# ── 五、明確要開的（用戶裁定／Android 產品線必需）──────────────────────────
+enable_rust = true
+proprietary_codecs = true
+ffmpeg_branding = "Chrome"
+# microG 提供 GCM 相容（用戶 2026-10-24 裁定：Android 側可開）。
+use_gcm_from_platform = true
+# 長按識圖＋長按文字搜尋（用戶 2026-10-24：「兩個都要」）。
+enable_android_lens_overlay = true
+build_contextual_search = true
+# AAudio（低延遲音訊；用戶裁定留）。
+rtc_enable_android_aaudio = true
+# 無障礙（用戶裁定 has_platform_accessibility_support=true）。
+has_platform_accessibility_support = true
+# 除錯友好：v8 的 stdout log 在 Android 上要走 logcat。
+v8_android_log_stdout = true
+# 用戶要安卓菜單內識圖；microG 下 Lens 服務可用性待實機驗證
+#（備忘：enable_android_lens_overlay=true 已列，這條是前提不是開關）。
+# MLKit for aicore 關（不依賴 Google 端側模型）。
+use_mlkit_for_aicore = false
+# Android 語音服務不帶（與桌面 speech 全關一致）。
+# 2026-10-28 實測：上游沒有 enable_speech_synthesis 與 enable_speech_recognition
+# 這兩個 arg（設了只會 WARN 被忽略）；真正存在的是 enable_speech_service 與
+# enable_browser_speech_service。
+enable_speech_service = false
+enable_browser_speech_service = false
+
+# ── 六、去 Google 化與建置寬容度（與桌面同）────────────────────────────────
+disable_fieldtrial_testing_config = true
+treat_warnings_as_errors = false
+clang_use_chrome_plugins = false
+use_lld = true
+# ccache 在 Android 上要另外接；先留空，CI 端用 sccache 或 ccache 前綴再填。
+# cc_wrapper = "/usr/bin/ccache"
+
+# ── 七、品牌（product 層改名已落地，照桌面同一條）──────────────────────────
+branding_path_component = "aetherium"
+# 2026-10-28 實測：Android 一樣要設 product。沒設時 gn gen 會過，但
+# ninja -n chrome_public_apk 會找 chrome/app/chromium_strings.grd（品牌補丁已把它
+# 改名為 aetherium_strings.grd）而報「missing and no known rule」。
+branding_path_product = "aetherium"
+use_dummy_lastchange = false
+
+# ── 八、待驗證／待裁定（gn gen 後逐條核）──────────────────────────────────
+# · enable_printing / enable_print_preview：Android 的打印是 Print Spooler
+#   （enable_printing 在 Android 可能不存在或另有名字），核對後再決定。
+# · enable_pdf：Android 的 PDF 是下載後外部開啟，沒有內建 viewer 的開關語義，
+#   核對 args 清單。
+# · enable_extensions：Android 不支援桌面擴充；不要照抄桌面的 true。
+# · use_ozone / ozone_platform_*：Android 用自己的 platform，桌面那組不適用。
+# · enable_widevine：Android 的 Widevine 由系統提供（L3），GN 開關可能不同名。
+# · use_profi：Android 工具鏈沒有對應的 profi 包裝，先不設。
+
+# ── Android 迭代暫緩區（deep-trim 待辦；Linux 生產版已全裁，Android 引用面 864 點留專項輪）──
+enterprise_data_controls = true
+enterprise_watermark = false  # 桌面專屬功能，Android 引用點改走 gate
+enterprise_content_analysis = true
+# webrtc 死碼組合（aaudio=true+internal=false 觸發 else 重賦 defines）——Android 首版放行
+rtc_include_internal_audio_device = true
+enterprise_cache_encryption = true
+enterprise_cloud_content_analysis = true
+enterprise_local_content_analysis = true
+# 擴充：上游 Android 結構性禁止（apps/BUILD.gn assert(!is_android) 等一串）——
+# 用戶想要的「安卓擴充支援」記爲專項移植工程（Bromite 級），不是翻開關。
+enable_extensions = false

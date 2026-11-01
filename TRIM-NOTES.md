@@ -571,3 +571,28 @@ grep -n 'PRODUCT_FULLNAME_STRING' out/Aetherium/gen/chrome/common/chrome_version
 head -c 80 /proc/$(pgrep -x aetherium | head -1)/environ
 ```
 
+
+## 2026-10-24 複查（zcode 會話；對 158.0.8118.0 / HEAD 6ac1da15572a0 的 `gn args --list --short out/Aetherium` 實查）
+
+上輪「157/158 查無此 arg」的結論部分過期了——樹往前走了，當年被移出清單的 VR 族 **arg 回來了且默認全開**。以下爲本次實查到、且**未被既有裁定覆蓋**的新候選（既有裁定——擴充/Rust/SwiftShader/Ozone 三件套/最佳化三件套/compose 與 Glic 走補丁層——全部尊重不動）：
+
+| arg | 現值 | 建議 | 理由 |
+|---|---|---|---|
+| `enable_vr` | true | **false** | VR/WebXR 全家（device/vr、openxr、cardboard 前置）。桌機 i3＋手機 webview 均無 VR 場景；本輪實測 arg 已存在（舊「查無」結論只對舊樹成立）。這是本批最大單項 |
+| `enable_vrp_flags` | true | **false** | VR 相關 flags，跟著上一條走 |
+| `enable_screen_ai_browsertests` | true | **false** | 給 `enable_screen_ai_service=false` 的服務編 browsertest——純浪費，與上輪裁剪直接矛盾 |
+| `enable_pseudolocales` | true | **false** | 僞翻譯（調試用假語系），正式產物無用 |
+| `enable_memory_coordinator_internals` | true | **false** | internals 調試 WebUI 頁 |
+| `enable_webui_contextual_tasks_composebox` | true | **false** | 與上輪「compose 框預設關」的補丁裁定同向：補丁封 UI，arg 封代碼，兩層一致 |
+| `enable_glic_internal_resources` | true | **false** | 同上——Glic 上輪已裁定封（設定頁 AI 頁鎖 false），資源包跟著不編 |
+
+**列出不動、等裁定的**（動了會碰到功能面）：
+- `enable_bound_session_credentials=true`（Google 帳號綁定 session；`enable_device_bound_sessions` 是通用 web 標準建議留）
+- `enable_vectorized_html_scanning=true`（Safe Browsing 釣魚掃描的本地向量匹配）
+- `enable_hevc_parser_and_hw_decoder`／`enable_platform_hevc`（NVIDIA 在 Linux 不走 VA-API 硬解，純軟解吃 CPU；但用戶對編解碼有既定偏好，不代裁）
+- `rtc_link_pipewire=false`（Wayland 屏幕共享——**這是反向項**：用戶留了 Wayland 平臺，若要 WebRTC 屏幕共享需開；現 false 省體積但功能缺，提請注意）
+
+**Android 側缺口**：本樹尚無 Android 的 args.gn 權威檔（out/ 只有 Aetherium 一個 Linux 目錄；
+aetherium 倉的 build-android.yml 仍是舊 arg 名＋未套 patches 的必然紅狀態——見上節結論）。
+待辦：按本檔 Linux 定稿同格式寫 `args-android.gn`（target_os="android"＋android_static_analysis="off"
+＋symbol 三件套歸零＋本表裁剪集），並同步修兩支 workflow 的 arg 名＋補 patches 套用步驟。

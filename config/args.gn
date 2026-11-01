@@ -93,6 +93,10 @@ enable_on_device_translation = false
 # enable_service_discovery=false：DIAL/mDNS 裝置探索（chromecast 投放找裝置）
 # 整包關掉；補丁 0001 把 //chrome/browser/local_discovery 的 deps 改成條件式。
 enable_service_discovery = false
+# enable_cast_receiver=false：Chromecast 接收端建置（build/config/cast.gni:29）。
+# 上游預設本來就是 false；明寫出來是自證「不編 Cast receiver」，
+# 也避免日後有人把 args.gn 當模板時誤開。遠端投放的探索端已由上一條關掉。
+enable_cast_receiver = false
 # enable_mdns=false：網路層的 mDNS（net/dns 裡那條 MulticastDNS 路徑，
 # 也是 casting 與 print-discovery 的底層）。上游宣告在 net/features.gni:32。
 enable_mdns = false
@@ -164,7 +168,13 @@ use_lld = true
 # use_glib=true：Linux 桌面整合（glib main loop、檔案對話框）照上游預設留著。
 use_glib = true
 
-# ── 九、品牌與版本號（aetherium 的關鍵兩條）───────────────────────────────
+# ── 九、品牌與版本號（aetherium 的關鍵三條）───────────────────────────────
+# branding_path_product="aetherium"：決定 components/strings 這類「產品字串」
+# 要讀哪個 .grd（components_${branding_path_product}_strings.grd）。
+# 實測：patches/branding/0002 已把 components/components_chromium_strings.grd
+# 改名為 components_aetherium_strings.grd；這條沒設的話 GN 仍會找
+# components_chromium_strings.grd，ninja -n 直接報「missing and no known rule」。
+branding_path_product = "aetherium"
 # branding_path_component="aetherium"：指到 chrome/app/theme/aetherium/BRANDING，
 # 那個檔實測寫著 PRODUCT_FULLNAME=aetherium（全小寫，用戶指定的產品名）。
 # 前提：chrome/app/theme/aetherium/ 必頇存在——由
