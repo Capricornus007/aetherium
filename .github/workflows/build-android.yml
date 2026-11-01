@@ -87,7 +87,25 @@ jobs:
       - name: Sync dependencies (shallow, parallel)
         run: |
           cd "$CHROMIUM_DIR/src"
-          gclient sync --shallow --no-history --nohooks -j16
+          # 同 build-linux.yml：chromium.googlesource.com 對單 IP 限流，實測
+          # mid-fetch 吐「RPC failed; HTTP 429」＋「expected flush after ref listing」。
+          # gclient sync 可重入（已抓到的倉不重抓），所以退避重跑；第二次起降併發。
+          for attempt in 1 2 3 4 5; do
+            jobs=16; [ "$attempt" -gt 1 ] && jobs=6
+            echo ">> gclient sync（第 $attempt 次嘗試，-j$jobs）"
+            if gclient sync --shallow --no-history --nohooks -j"$jobs"; then
+              echo ">> 同步完成"
+              exit 0
+            fi
+            rc=$?
+            if [ "$attempt" = 5 ]; then
+              echo "::error::gclient sync 五輪都失敗（最後回傳 $rc）"
+              exit "$rc"
+            fi
+            wait_s=$((attempt * 60))
+            echo "::warning::第 $attempt 次同步失敗（rc=$rc），退避 ${wait_s}s 後重試"
+            sleep "$wait_s"
+          done
 
       - name: Run hooks
         run: |

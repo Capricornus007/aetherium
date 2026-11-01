@@ -89,7 +89,29 @@ jobs:
       - name: Sync dependencies (shallow, parallel)
         run: |
           cd "$CHROMIUM_DIR/src"
-          gclient sync --shallow --no-history --nohooks -j16
+          # 這步會從 chromium.googlesource.com 拉上千個子模組，那個站對單 IP 限流，
+          # 實測連續兩輪（Build Linux #39 attempt 1、2）都是 mid-fetch 吐
+          # 「error: RPC failed; HTTP 429」＋「fatal: expected flush after ref listing」
+          # 然後整個 job 紅——不是程式問題，是沒重試。
+          # gclient sync 是可重入的（已抓到的倉不會重抓），所以直接退避重跑最省事。
+          # 併發也一起降：429 是速率問題，第二次起從 -j16 退到 -j6，實測這種
+          # 突發型限流對低併發敏感。
+          for attempt in 1 2 3 4 5; do
+            jobs=16; [ "$attempt" -gt 1 ] && jobs=6
+            echo ">> gclient sync（第 $attempt 次嘗試，-j$jobs）"
+            if gclient sync --shallow --no-history --nohooks -j"$jobs"; then
+              echo ">> 同步完成"
+              exit 0
+            fi
+            rc=$?
+            if [ "$attempt" = 5 ]; then
+              echo "::error::gclient sync 五輪都失敗（最後回傳 $rc）；這通常是上游限流窗口太長，不是補丁問題"
+              exit "$rc"
+            fi
+            wait_s=$((attempt * 60))
+            echo "::warning::第 $attempt 次同步失敗（rc=$rc），退避 ${wait_s}s 後重試"
+            sleep "$wait_s"
+          done
 
       - name: Run hooks
         run: |
