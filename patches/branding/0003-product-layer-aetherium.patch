@@ -1,6 +1,6 @@
 diff --git a/chrome/app/aetherium_strings.grd b/chrome/app/aetherium_strings.grd
 new file mode 100644
-index 0000000000000..1ba47aeeccda2
+index 0000000000000000000000000000000000000000..1ba47aeeccda2581ee05338153e5fac1faf7a369
 --- /dev/null
 +++ b/chrome/app/aetherium_strings.grd
 @@ -0,0 +1,3702 @@
@@ -3707,7 +3707,7 @@ index 0000000000000..1ba47aeeccda2
 +  </release>
 +</grit>
 diff --git a/chrome/app/generated_resources.grd b/chrome/app/generated_resources.grd
-index 26b002130338b..eac1271caa709 100644
+index 5e8694d3bd221f7fc02a442cb243a8353ec104e5..eac1271caa709761deb217d58b87ca0c7fb9545e 100644
 --- a/chrome/app/generated_resources.grd
 +++ b/chrome/app/generated_resources.grd
 @@ -813,14 +813,14 @@ are declared in tools/grit/grit_args.gni.
@@ -3744,27 +3744,9 @@ index 26b002130338b..eac1271caa709 100644
            <message name="IDS_CONTENT_CONTEXT_OPENLINKOFFTHERECORD" desc="In Title Case: The name of the open a link in Incognito window command">
              Open Link in Inco&amp;gnito Window
            </message>
-@@ -5224,7 +5224,7 @@ are declared in tools/grit/grit_args.gni.
-       </message>
- 
-       <!-- Critical Notification bubble -->
--      <message name="IDS_CRITICAL_NOTIFICATION_RESTART" desc="Button label a button on the bubble that appears when there is a critical update and Chrome/Chromium must restart to install it. Pressing the button will cause Chrome/Chromium to restart.">
-+      <message name="IDS_CRITICAL_NOTIFICATION_RESTART" desc="Button label a button on the bubble that appears when there is a critical update and Chrome/aetherium must restart to install it. Pressing the button will cause Chrome/aetherium to restart.">
-         Restart now
-       </message>
- 
-@@ -7338,7 +7338,7 @@ Keep your key file in a safe place. You will need it to create new versions of y
-           Reason: The inverted rule <ph name="REVERT_RULE">$1<ex>!example.com</ex></ph> was found in the "Force open in" list.
-         </message>
-         <message name="IDS_ABOUT_BROWSER_SWITCH_INTERNALS_OPEN_BROWSER_DEFAULT_REASON" desc="about:browser-switch/internals, section URL Checker, the explaination reason for check result, displayed when the entered URL did not match any listed rule and default browser will not get switched">
--          Reason: LBS stays in <ph name="DEFAULT_OPEN_BROWSER">$1<ex>Chromium</ex></ph> by default.
-+          Reason: LBS stays in <ph name="DEFAULT_OPEN_BROWSER">$1<ex>aetherium</ex></ph> by default.
-         </message>
-         <message name="IDS_ABOUT_BROWSER_SWITCH_INTERNALS_INVALID_URL" desc="about:browser-switch/internals, section URL Checker, specific error message when the url is invalid">
-           Invalid URL. Make sure it is formatted properly.
 diff --git a/chrome/app/resources/aetherium_strings_af.xtb b/chrome/app/resources/aetherium_strings_af.xtb
 new file mode 100644
-index 0000000000000..b24eed4fed9d3
+index 0000000000000000000000000000000000000000..b24eed4fed9d3ca39c767e77266c9f2077b9d7c9
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_af.xtb
 @@ -0,0 +1,844 @@
@@ -4615,7 +4597,7 @@ index 0000000000000..b24eed4fed9d3
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_am.xtb b/chrome/app/resources/aetherium_strings_am.xtb
 new file mode 100644
-index 0000000000000..84c4c4156c718
+index 0000000000000000000000000000000000000000..84c4c4156c718d53f48caeebab5099bf7eb8c979
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_am.xtb
 @@ -0,0 +1,844 @@
@@ -5466,7 +5448,7 @@ index 0000000000000..84c4c4156c718
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_ar.xtb b/chrome/app/resources/aetherium_strings_ar.xtb
 new file mode 100644
-index 0000000000000..284dd9ccf8b86
+index 0000000000000000000000000000000000000000..284dd9ccf8b861f48e723713d246d372f4620a3d
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_ar.xtb
 @@ -0,0 +1,842 @@
@@ -6315,7 +6297,7 @@ index 0000000000000..284dd9ccf8b86
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_as.xtb b/chrome/app/resources/aetherium_strings_as.xtb
 new file mode 100644
-index 0000000000000..9a7710eebf109
+index 0000000000000000000000000000000000000000..9a7710eebf109b293af22e483502b5b52b6132bf
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_as.xtb
 @@ -0,0 +1,844 @@
@@ -7166,7 +7148,7 @@ index 0000000000000..9a7710eebf109
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_az.xtb b/chrome/app/resources/aetherium_strings_az.xtb
 new file mode 100644
-index 0000000000000..d0e6ddbba5bdb
+index 0000000000000000000000000000000000000000..d0e6ddbba5bdb66ffe05ce00f0ce12fab03a8183
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_az.xtb
 @@ -0,0 +1,840 @@
@@ -8013,7 +7995,7 @@ index 0000000000000..d0e6ddbba5bdb
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_be.xtb b/chrome/app/resources/aetherium_strings_be.xtb
 new file mode 100644
-index 0000000000000..aa7297fe909e2
+index 0000000000000000000000000000000000000000..aa7297fe909e2565d7d8d2e79bc64ae48f12a5d5
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_be.xtb
 @@ -0,0 +1,843 @@
@@ -8863,7 +8845,7 @@ index 0000000000000..aa7297fe909e2
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_bg.xtb b/chrome/app/resources/aetherium_strings_bg.xtb
 new file mode 100644
-index 0000000000000..4d9d08e4f6013
+index 0000000000000000000000000000000000000000..4d9d08e4f6013b096f3c80d09932aad53555b73d
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_bg.xtb
 @@ -0,0 +1,836 @@
@@ -9706,7 +9688,7 @@ index 0000000000000..4d9d08e4f6013
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_bn.xtb b/chrome/app/resources/aetherium_strings_bn.xtb
 new file mode 100644
-index 0000000000000..b93918e3c4414
+index 0000000000000000000000000000000000000000..b93918e3c44145846c0253e7ce618c8844ac0fdc
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_bn.xtb
 @@ -0,0 +1,839 @@
@@ -10552,7 +10534,7 @@ index 0000000000000..b93918e3c4414
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_bs.xtb b/chrome/app/resources/aetherium_strings_bs.xtb
 new file mode 100644
-index 0000000000000..25cd0ecd906be
+index 0000000000000000000000000000000000000000..25cd0ecd906be7e44cc2e2891dbb91e5635e20a0
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_bs.xtb
 @@ -0,0 +1,844 @@
@@ -11403,7 +11385,7 @@ index 0000000000000..25cd0ecd906be
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_ca.xtb b/chrome/app/resources/aetherium_strings_ca.xtb
 new file mode 100644
-index 0000000000000..88dbac6e7e33f
+index 0000000000000000000000000000000000000000..88dbac6e7e33f5cf844be95450cd5c27a3976fd2
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_ca.xtb
 @@ -0,0 +1,842 @@
@@ -12252,7 +12234,7 @@ index 0000000000000..88dbac6e7e33f
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_cs.xtb b/chrome/app/resources/aetherium_strings_cs.xtb
 new file mode 100644
-index 0000000000000..bb301093d5702
+index 0000000000000000000000000000000000000000..bb301093d5702c1e72dacb0b462c3797aab34ee0
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_cs.xtb
 @@ -0,0 +1,843 @@
@@ -13102,7 +13084,7 @@ index 0000000000000..bb301093d5702
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_cy.xtb b/chrome/app/resources/aetherium_strings_cy.xtb
 new file mode 100644
-index 0000000000000..803fd2592015e
+index 0000000000000000000000000000000000000000..803fd2592015e7fa15b6e483c3af00e32039ecc6
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_cy.xtb
 @@ -0,0 +1,844 @@
@@ -13953,7 +13935,7 @@ index 0000000000000..803fd2592015e
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_da.xtb b/chrome/app/resources/aetherium_strings_da.xtb
 new file mode 100644
-index 0000000000000..cf5e7c4d46a97
+index 0000000000000000000000000000000000000000..cf5e7c4d46a97f17aec69ccfd569c35141605017
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_da.xtb
 @@ -0,0 +1,842 @@
@@ -14802,7 +14784,7 @@ index 0000000000000..cf5e7c4d46a97
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_de.xtb b/chrome/app/resources/aetherium_strings_de.xtb
 new file mode 100644
-index 0000000000000..9c772951db1a4
+index 0000000000000000000000000000000000000000..9c772951db1a4494efcabd9ecad554e9c299743e
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_de.xtb
 @@ -0,0 +1,841 @@
@@ -15650,7 +15632,7 @@ index 0000000000000..9c772951db1a4
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_el.xtb b/chrome/app/resources/aetherium_strings_el.xtb
 new file mode 100644
-index 0000000000000..e4e56d7b9bae6
+index 0000000000000000000000000000000000000000..e4e56d7b9bae6a200b6803e62305d0320ce98942
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_el.xtb
 @@ -0,0 +1,842 @@
@@ -16499,7 +16481,7 @@ index 0000000000000..e4e56d7b9bae6
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_en-GB.xtb b/chrome/app/resources/aetherium_strings_en-GB.xtb
 new file mode 100644
-index 0000000000000..2b12059976492
+index 0000000000000000000000000000000000000000..2b12059976492c9cb3e6a8b25e04b6f7b2b5a51e
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_en-GB.xtb
 @@ -0,0 +1,844 @@
@@ -17350,7 +17332,7 @@ index 0000000000000..2b12059976492
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_es-419.xtb b/chrome/app/resources/aetherium_strings_es-419.xtb
 new file mode 100644
-index 0000000000000..4f4e1b75f5474
+index 0000000000000000000000000000000000000000..4f4e1b75f54743b54e07f529b3b443e942f052a5
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_es-419.xtb
 @@ -0,0 +1,836 @@
@@ -18193,7 +18175,7 @@ index 0000000000000..4f4e1b75f5474
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_es.xtb b/chrome/app/resources/aetherium_strings_es.xtb
 new file mode 100644
-index 0000000000000..d6260f0fdbb46
+index 0000000000000000000000000000000000000000..d6260f0fdbb468d6d3194f2027357be64a9e32c1
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_es.xtb
 @@ -0,0 +1,844 @@
@@ -19044,7 +19026,7 @@ index 0000000000000..d6260f0fdbb46
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_et.xtb b/chrome/app/resources/aetherium_strings_et.xtb
 new file mode 100644
-index 0000000000000..0f1a6c2ed4311
+index 0000000000000000000000000000000000000000..0f1a6c2ed4311ef742b16163acb6a7628a1758b0
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_et.xtb
 @@ -0,0 +1,842 @@
@@ -19893,7 +19875,7 @@ index 0000000000000..0f1a6c2ed4311
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_eu.xtb b/chrome/app/resources/aetherium_strings_eu.xtb
 new file mode 100644
-index 0000000000000..7d64d96a7d867
+index 0000000000000000000000000000000000000000..7d64d96a7d86706a16b3653fbab745ceec438634
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_eu.xtb
 @@ -0,0 +1,843 @@
@@ -20743,7 +20725,7 @@ index 0000000000000..7d64d96a7d867
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_fa.xtb b/chrome/app/resources/aetherium_strings_fa.xtb
 new file mode 100644
-index 0000000000000..79315d6429f10
+index 0000000000000000000000000000000000000000..79315d6429f10412ffb63c74991c3b87af41e44b
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_fa.xtb
 @@ -0,0 +1,840 @@
@@ -21590,7 +21572,7 @@ index 0000000000000..79315d6429f10
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_fi.xtb b/chrome/app/resources/aetherium_strings_fi.xtb
 new file mode 100644
-index 0000000000000..5c2d0837ba561
+index 0000000000000000000000000000000000000000..5c2d0837ba561ae4193068ebe43f1280ed11d62f
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_fi.xtb
 @@ -0,0 +1,842 @@
@@ -22439,7 +22421,7 @@ index 0000000000000..5c2d0837ba561
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_fil.xtb b/chrome/app/resources/aetherium_strings_fil.xtb
 new file mode 100644
-index 0000000000000..f24f86771039d
+index 0000000000000000000000000000000000000000..f24f86771039d77902b33393fbe90363834b27c3
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_fil.xtb
 @@ -0,0 +1,844 @@
@@ -23290,7 +23272,7 @@ index 0000000000000..f24f86771039d
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_fr-CA.xtb b/chrome/app/resources/aetherium_strings_fr-CA.xtb
 new file mode 100644
-index 0000000000000..1538fa1e1c5e2
+index 0000000000000000000000000000000000000000..1538fa1e1c5e278bf1b268aa755b82fe271967c2
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_fr-CA.xtb
 @@ -0,0 +1,843 @@
@@ -24140,7 +24122,7 @@ index 0000000000000..1538fa1e1c5e2
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_fr.xtb b/chrome/app/resources/aetherium_strings_fr.xtb
 new file mode 100644
-index 0000000000000..ce1f89f749d6c
+index 0000000000000000000000000000000000000000..ce1f89f749d6c5068309f78ad93aa4233a096409
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_fr.xtb
 @@ -0,0 +1,842 @@
@@ -24989,7 +24971,7 @@ index 0000000000000..ce1f89f749d6c
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_gl.xtb b/chrome/app/resources/aetherium_strings_gl.xtb
 new file mode 100644
-index 0000000000000..fb1c842db5fc7
+index 0000000000000000000000000000000000000000..fb1c842db5fc751d20308cf3b4b4d4f03eb80c12
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_gl.xtb
 @@ -0,0 +1,844 @@
@@ -25840,7 +25822,7 @@ index 0000000000000..fb1c842db5fc7
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_gu.xtb b/chrome/app/resources/aetherium_strings_gu.xtb
 new file mode 100644
-index 0000000000000..d7ad7a19ec4ba
+index 0000000000000000000000000000000000000000..d7ad7a19ec4bae9d779f70c77468e31aed39e1ca
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_gu.xtb
 @@ -0,0 +1,844 @@
@@ -26691,7 +26673,7 @@ index 0000000000000..d7ad7a19ec4ba
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_hi.xtb b/chrome/app/resources/aetherium_strings_hi.xtb
 new file mode 100644
-index 0000000000000..eea9c181ba4c3
+index 0000000000000000000000000000000000000000..eea9c181ba4c35613e8357c370d392ce1d1f75a4
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_hi.xtb
 @@ -0,0 +1,841 @@
@@ -27539,7 +27521,7 @@ index 0000000000000..eea9c181ba4c3
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_hr.xtb b/chrome/app/resources/aetherium_strings_hr.xtb
 new file mode 100644
-index 0000000000000..28ac39d584446
+index 0000000000000000000000000000000000000000..28ac39d584446c3b3370dc3e3bf4534342a3c018
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_hr.xtb
 @@ -0,0 +1,842 @@
@@ -28388,7 +28370,7 @@ index 0000000000000..28ac39d584446
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_hu.xtb b/chrome/app/resources/aetherium_strings_hu.xtb
 new file mode 100644
-index 0000000000000..2c581f3b9cb15
+index 0000000000000000000000000000000000000000..2c581f3b9cb15f9cf8a05645e6b618e8c55247f9
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_hu.xtb
 @@ -0,0 +1,840 @@
@@ -29235,7 +29217,7 @@ index 0000000000000..2c581f3b9cb15
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_hy.xtb b/chrome/app/resources/aetherium_strings_hy.xtb
 new file mode 100644
-index 0000000000000..56d7eefac021c
+index 0000000000000000000000000000000000000000..56d7eefac021cda15c31d9babbdc84031b823d80
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_hy.xtb
 @@ -0,0 +1,844 @@
@@ -30086,7 +30068,7 @@ index 0000000000000..56d7eefac021c
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_id.xtb b/chrome/app/resources/aetherium_strings_id.xtb
 new file mode 100644
-index 0000000000000..88d91a167adc1
+index 0000000000000000000000000000000000000000..88d91a167adc1e56814b31f64e3599bd86129cd5
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_id.xtb
 @@ -0,0 +1,840 @@
@@ -30933,7 +30915,7 @@ index 0000000000000..88d91a167adc1
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_is.xtb b/chrome/app/resources/aetherium_strings_is.xtb
 new file mode 100644
-index 0000000000000..0b62bde3a46b9
+index 0000000000000000000000000000000000000000..0b62bde3a46b985b0d2d33d49e03e9e87651137d
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_is.xtb
 @@ -0,0 +1,843 @@
@@ -31783,7 +31765,7 @@ index 0000000000000..0b62bde3a46b9
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_it.xtb b/chrome/app/resources/aetherium_strings_it.xtb
 new file mode 100644
-index 0000000000000..3ee425d1620fc
+index 0000000000000000000000000000000000000000..3ee425d1620fc855b64958fa8bded82a8c623a33
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_it.xtb
 @@ -0,0 +1,840 @@
@@ -32630,7 +32612,7 @@ index 0000000000000..3ee425d1620fc
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_iw.xtb b/chrome/app/resources/aetherium_strings_iw.xtb
 new file mode 100644
-index 0000000000000..d0fad3280c2b4
+index 0000000000000000000000000000000000000000..d0fad3280c2b40877cb1846930e740b8224ebc73
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_iw.xtb
 @@ -0,0 +1,840 @@
@@ -33477,7 +33459,7 @@ index 0000000000000..d0fad3280c2b4
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_ja.xtb b/chrome/app/resources/aetherium_strings_ja.xtb
 new file mode 100644
-index 0000000000000..cc4bf0c038221
+index 0000000000000000000000000000000000000000..cc4bf0c038221370d9de3e18e4947f18d90cceb3
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_ja.xtb
 @@ -0,0 +1,839 @@
@@ -34323,7 +34305,7 @@ index 0000000000000..cc4bf0c038221
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_ka.xtb b/chrome/app/resources/aetherium_strings_ka.xtb
 new file mode 100644
-index 0000000000000..3bbcbd26bf66d
+index 0000000000000000000000000000000000000000..3bbcbd26bf66d4b882a8bfa16d1619e92f0fa1af
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_ka.xtb
 @@ -0,0 +1,844 @@
@@ -35174,7 +35156,7 @@ index 0000000000000..3bbcbd26bf66d
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_kk.xtb b/chrome/app/resources/aetherium_strings_kk.xtb
 new file mode 100644
-index 0000000000000..cb8ba9c212bba
+index 0000000000000000000000000000000000000000..cb8ba9c212bba006f95d48182d8d1c96de296baa
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_kk.xtb
 @@ -0,0 +1,843 @@
@@ -36024,7 +36006,7 @@ index 0000000000000..cb8ba9c212bba
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_km.xtb b/chrome/app/resources/aetherium_strings_km.xtb
 new file mode 100644
-index 0000000000000..d36678c37ee79
+index 0000000000000000000000000000000000000000..d36678c37ee7956a5a2bda80eaf33e437997fdbc
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_km.xtb
 @@ -0,0 +1,844 @@
@@ -36875,7 +36857,7 @@ index 0000000000000..d36678c37ee79
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_kn.xtb b/chrome/app/resources/aetherium_strings_kn.xtb
 new file mode 100644
-index 0000000000000..ffea5a711c44a
+index 0000000000000000000000000000000000000000..ffea5a711c44a1a59af2ac65ddae7dbbdcb82641
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_kn.xtb
 @@ -0,0 +1,836 @@
@@ -37718,7 +37700,7 @@ index 0000000000000..ffea5a711c44a
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_ko.xtb b/chrome/app/resources/aetherium_strings_ko.xtb
 new file mode 100644
-index 0000000000000..9883150086e69
+index 0000000000000000000000000000000000000000..9883150086e69252b2df94dddbc49b3b5341f6a5
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_ko.xtb
 @@ -0,0 +1,843 @@
@@ -38568,7 +38550,7 @@ index 0000000000000..9883150086e69
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_ky.xtb b/chrome/app/resources/aetherium_strings_ky.xtb
 new file mode 100644
-index 0000000000000..4c38df4fbc4cf
+index 0000000000000000000000000000000000000000..4c38df4fbc4cf7e86b22fdec287a7091f22bae84
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_ky.xtb
 @@ -0,0 +1,844 @@
@@ -39419,7 +39401,7 @@ index 0000000000000..4c38df4fbc4cf
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_lo.xtb b/chrome/app/resources/aetherium_strings_lo.xtb
 new file mode 100644
-index 0000000000000..c24012c0d84e5
+index 0000000000000000000000000000000000000000..c24012c0d84e54100b965b0c9dbd0197f15d91d7
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_lo.xtb
 @@ -0,0 +1,844 @@
@@ -40270,7 +40252,7 @@ index 0000000000000..c24012c0d84e5
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_lt.xtb b/chrome/app/resources/aetherium_strings_lt.xtb
 new file mode 100644
-index 0000000000000..03c0da95e790d
+index 0000000000000000000000000000000000000000..03c0da95e790d87f0e20d8d2590a8e42b9452d76
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_lt.xtb
 @@ -0,0 +1,844 @@
@@ -41121,7 +41103,7 @@ index 0000000000000..03c0da95e790d
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_lv.xtb b/chrome/app/resources/aetherium_strings_lv.xtb
 new file mode 100644
-index 0000000000000..fc43f285cdef8
+index 0000000000000000000000000000000000000000..fc43f285cdef8d299c60fb8800cd5841d66e0231
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_lv.xtb
 @@ -0,0 +1,839 @@
@@ -41967,7 +41949,7 @@ index 0000000000000..fc43f285cdef8
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_mk.xtb b/chrome/app/resources/aetherium_strings_mk.xtb
 new file mode 100644
-index 0000000000000..4a654994749fa
+index 0000000000000000000000000000000000000000..4a654994749fa4979161a8dcd3b9f2bf85d486fb
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_mk.xtb
 @@ -0,0 +1,843 @@
@@ -42817,7 +42799,7 @@ index 0000000000000..4a654994749fa
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_ml.xtb b/chrome/app/resources/aetherium_strings_ml.xtb
 new file mode 100644
-index 0000000000000..c7d3ab960bd94
+index 0000000000000000000000000000000000000000..c7d3ab960bd94b59fd0daf420fc3b4e9e3f52bdf
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_ml.xtb
 @@ -0,0 +1,843 @@
@@ -43667,7 +43649,7 @@ index 0000000000000..c7d3ab960bd94
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_mn.xtb b/chrome/app/resources/aetherium_strings_mn.xtb
 new file mode 100644
-index 0000000000000..84093a81dd69e
+index 0000000000000000000000000000000000000000..84093a81dd69e8d382ef4806177da71e9f4fcb07
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_mn.xtb
 @@ -0,0 +1,838 @@
@@ -44512,7 +44494,7 @@ index 0000000000000..84093a81dd69e
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_mr.xtb b/chrome/app/resources/aetherium_strings_mr.xtb
 new file mode 100644
-index 0000000000000..72730c5f6395e
+index 0000000000000000000000000000000000000000..72730c5f6395e7258c9ba26d709cbf0dea766723
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_mr.xtb
 @@ -0,0 +1,843 @@
@@ -45362,7 +45344,7 @@ index 0000000000000..72730c5f6395e
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_ms.xtb b/chrome/app/resources/aetherium_strings_ms.xtb
 new file mode 100644
-index 0000000000000..3ce5f0ce5dd31
+index 0000000000000000000000000000000000000000..3ce5f0ce5dd3167febf439ddee1d28d77c0f3435
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_ms.xtb
 @@ -0,0 +1,842 @@
@@ -46211,7 +46193,7 @@ index 0000000000000..3ce5f0ce5dd31
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_my.xtb b/chrome/app/resources/aetherium_strings_my.xtb
 new file mode 100644
-index 0000000000000..8e14a92dc0af5
+index 0000000000000000000000000000000000000000..8e14a92dc0af5cd3b7f221989c764ebb836af205
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_my.xtb
 @@ -0,0 +1,845 @@
@@ -47063,7 +47045,7 @@ index 0000000000000..8e14a92dc0af5
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_ne.xtb b/chrome/app/resources/aetherium_strings_ne.xtb
 new file mode 100644
-index 0000000000000..473ca38e6678b
+index 0000000000000000000000000000000000000000..473ca38e6678b8bdc0e4ef304c1676d0475825cd
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_ne.xtb
 @@ -0,0 +1,841 @@
@@ -47911,7 +47893,7 @@ index 0000000000000..473ca38e6678b
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_nl.xtb b/chrome/app/resources/aetherium_strings_nl.xtb
 new file mode 100644
-index 0000000000000..b399745f61b65
+index 0000000000000000000000000000000000000000..b399745f61b657dab67ea088ae095b0f912b788a
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_nl.xtb
 @@ -0,0 +1,843 @@
@@ -48761,7 +48743,7 @@ index 0000000000000..b399745f61b65
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_no.xtb b/chrome/app/resources/aetherium_strings_no.xtb
 new file mode 100644
-index 0000000000000..32f9b362ad274
+index 0000000000000000000000000000000000000000..32f9b362ad2747ef908852823b2457d82f2da6a9
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_no.xtb
 @@ -0,0 +1,842 @@
@@ -49610,7 +49592,7 @@ index 0000000000000..32f9b362ad274
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_or.xtb b/chrome/app/resources/aetherium_strings_or.xtb
 new file mode 100644
-index 0000000000000..719da6d1d79dd
+index 0000000000000000000000000000000000000000..719da6d1d79ddb3e95d573e91f507c408dc3a812
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_or.xtb
 @@ -0,0 +1,843 @@
@@ -50460,7 +50442,7 @@ index 0000000000000..719da6d1d79dd
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_pa.xtb b/chrome/app/resources/aetherium_strings_pa.xtb
 new file mode 100644
-index 0000000000000..f1fce28d0fa7a
+index 0000000000000000000000000000000000000000..f1fce28d0fa7a2cc18d87e0f6a1804f9eb148628
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_pa.xtb
 @@ -0,0 +1,844 @@
@@ -51311,7 +51293,7 @@ index 0000000000000..f1fce28d0fa7a
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_pl.xtb b/chrome/app/resources/aetherium_strings_pl.xtb
 new file mode 100644
-index 0000000000000..46a0c73043da1
+index 0000000000000000000000000000000000000000..46a0c73043da16e2e6e66c7a220c60dbbb8a1469
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_pl.xtb
 @@ -0,0 +1,839 @@
@@ -52157,7 +52139,7 @@ index 0000000000000..46a0c73043da1
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_pt-BR.xtb b/chrome/app/resources/aetherium_strings_pt-BR.xtb
 new file mode 100644
-index 0000000000000..b9a513b4ab3a8
+index 0000000000000000000000000000000000000000..b9a513b4ab3a84ec0d13f712536b93193bcfea47
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_pt-BR.xtb
 @@ -0,0 +1,836 @@
@@ -53000,7 +52982,7 @@ index 0000000000000..b9a513b4ab3a8
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_pt-PT.xtb b/chrome/app/resources/aetherium_strings_pt-PT.xtb
 new file mode 100644
-index 0000000000000..ef03907ab9efd
+index 0000000000000000000000000000000000000000..ef03907ab9efd945cbf054280c17ab5fb2861101
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_pt-PT.xtb
 @@ -0,0 +1,842 @@
@@ -53849,7 +53831,7 @@ index 0000000000000..ef03907ab9efd
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_ro.xtb b/chrome/app/resources/aetherium_strings_ro.xtb
 new file mode 100644
-index 0000000000000..305b236c90ea1
+index 0000000000000000000000000000000000000000..305b236c90ea15bd235c312c8bba3243f6658626
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_ro.xtb
 @@ -0,0 +1,842 @@
@@ -54698,7 +54680,7 @@ index 0000000000000..305b236c90ea1
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_ru.xtb b/chrome/app/resources/aetherium_strings_ru.xtb
 new file mode 100644
-index 0000000000000..b27710f47618a
+index 0000000000000000000000000000000000000000..b27710f47618abadd224c393fd3b9e3bc5f20503
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_ru.xtb
 @@ -0,0 +1,837 @@
@@ -55542,7 +55524,7 @@ index 0000000000000..b27710f47618a
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_si.xtb b/chrome/app/resources/aetherium_strings_si.xtb
 new file mode 100644
-index 0000000000000..0dd2611c11a73
+index 0000000000000000000000000000000000000000..0dd2611c11a738b5072865bc552fe7b2140aec29
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_si.xtb
 @@ -0,0 +1,842 @@
@@ -56391,7 +56373,7 @@ index 0000000000000..0dd2611c11a73
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_sk.xtb b/chrome/app/resources/aetherium_strings_sk.xtb
 new file mode 100644
-index 0000000000000..46e173170fdd3
+index 0000000000000000000000000000000000000000..46e173170fdd3c8f762a5f8db558ef1a2033edd4
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_sk.xtb
 @@ -0,0 +1,843 @@
@@ -57241,7 +57223,7 @@ index 0000000000000..46e173170fdd3
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_sl.xtb b/chrome/app/resources/aetherium_strings_sl.xtb
 new file mode 100644
-index 0000000000000..ae2a9ae8566f8
+index 0000000000000000000000000000000000000000..ae2a9ae8566f8c97b172dc32a35259b5901144d4
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_sl.xtb
 @@ -0,0 +1,844 @@
@@ -58092,7 +58074,7 @@ index 0000000000000..ae2a9ae8566f8
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_sq.xtb b/chrome/app/resources/aetherium_strings_sq.xtb
 new file mode 100644
-index 0000000000000..3071fb41761af
+index 0000000000000000000000000000000000000000..3071fb41761af8b5d751d22d6da081cc53f81a7f
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_sq.xtb
 @@ -0,0 +1,841 @@
@@ -58940,7 +58922,7 @@ index 0000000000000..3071fb41761af
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_sr-Latn.xtb b/chrome/app/resources/aetherium_strings_sr-Latn.xtb
 new file mode 100644
-index 0000000000000..d84e8237dd5e9
+index 0000000000000000000000000000000000000000..d84e8237dd5e9c35b1ab2a43eea065b42981dd9a
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_sr-Latn.xtb
 @@ -0,0 +1,844 @@
@@ -59791,7 +59773,7 @@ index 0000000000000..d84e8237dd5e9
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_sr.xtb b/chrome/app/resources/aetherium_strings_sr.xtb
 new file mode 100644
-index 0000000000000..9debc9b0a577e
+index 0000000000000000000000000000000000000000..9debc9b0a577e5078ef4f043d3a1557ede9ad3b8
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_sr.xtb
 @@ -0,0 +1,844 @@
@@ -60642,7 +60624,7 @@ index 0000000000000..9debc9b0a577e
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_sv.xtb b/chrome/app/resources/aetherium_strings_sv.xtb
 new file mode 100644
-index 0000000000000..572325d9ecb5e
+index 0000000000000000000000000000000000000000..572325d9ecb5e556c4167ed4eb78927d594e1ddd
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_sv.xtb
 @@ -0,0 +1,844 @@
@@ -61493,7 +61475,7 @@ index 0000000000000..572325d9ecb5e
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_sw.xtb b/chrome/app/resources/aetherium_strings_sw.xtb
 new file mode 100644
-index 0000000000000..bb14ff02d0838
+index 0000000000000000000000000000000000000000..bb14ff02d08381432332c1e2a9b8c7e0e15796c3
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_sw.xtb
 @@ -0,0 +1,844 @@
@@ -62344,7 +62326,7 @@ index 0000000000000..bb14ff02d0838
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_ta.xtb b/chrome/app/resources/aetherium_strings_ta.xtb
 new file mode 100644
-index 0000000000000..75146c8b04adb
+index 0000000000000000000000000000000000000000..75146c8b04adba74533ec201e4a3b3cd3f549128
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_ta.xtb
 @@ -0,0 +1,842 @@
@@ -63193,7 +63175,7 @@ index 0000000000000..75146c8b04adb
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_te.xtb b/chrome/app/resources/aetherium_strings_te.xtb
 new file mode 100644
-index 0000000000000..47559a5bbb3d5
+index 0000000000000000000000000000000000000000..47559a5bbb3d5e55d74bfd91dd2bbc9e8f9f31d5
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_te.xtb
 @@ -0,0 +1,838 @@
@@ -64038,7 +64020,7 @@ index 0000000000000..47559a5bbb3d5
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_th.xtb b/chrome/app/resources/aetherium_strings_th.xtb
 new file mode 100644
-index 0000000000000..7931ca71da17a
+index 0000000000000000000000000000000000000000..7931ca71da17a18707035e8ade894f82fd0d7441
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_th.xtb
 @@ -0,0 +1,841 @@
@@ -64886,7 +64868,7 @@ index 0000000000000..7931ca71da17a
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_tr.xtb b/chrome/app/resources/aetherium_strings_tr.xtb
 new file mode 100644
-index 0000000000000..8c31308eccd36
+index 0000000000000000000000000000000000000000..8c31308eccd368e4b5a7be67a5781d221632758c
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_tr.xtb
 @@ -0,0 +1,839 @@
@@ -65732,7 +65714,7 @@ index 0000000000000..8c31308eccd36
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_uk.xtb b/chrome/app/resources/aetherium_strings_uk.xtb
 new file mode 100644
-index 0000000000000..ebb54b569c016
+index 0000000000000000000000000000000000000000..ebb54b569c016f47a810a725f8087bc98f79ed9d
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_uk.xtb
 @@ -0,0 +1,842 @@
@@ -66581,7 +66563,7 @@ index 0000000000000..ebb54b569c016
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_ur.xtb b/chrome/app/resources/aetherium_strings_ur.xtb
 new file mode 100644
-index 0000000000000..d436521021cde
+index 0000000000000000000000000000000000000000..d436521021cde26cc25c6bf7ff24764a3da47c9c
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_ur.xtb
 @@ -0,0 +1,843 @@
@@ -67431,7 +67413,7 @@ index 0000000000000..d436521021cde
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_uz.xtb b/chrome/app/resources/aetherium_strings_uz.xtb
 new file mode 100644
-index 0000000000000..f822279e6f043
+index 0000000000000000000000000000000000000000..f822279e6f0431137058db80fd3f0ac23e2d9427
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_uz.xtb
 @@ -0,0 +1,839 @@
@@ -68277,7 +68259,7 @@ index 0000000000000..f822279e6f043
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_vi.xtb b/chrome/app/resources/aetherium_strings_vi.xtb
 new file mode 100644
-index 0000000000000..d0d5dd33cd3bf
+index 0000000000000000000000000000000000000000..d0d5dd33cd3bfff29234f816d9263a04343dfd15
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_vi.xtb
 @@ -0,0 +1,842 @@
@@ -69126,7 +69108,7 @@ index 0000000000000..d0d5dd33cd3bf
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_zh-CN.xtb b/chrome/app/resources/aetherium_strings_zh-CN.xtb
 new file mode 100644
-index 0000000000000..06d19589aa8d5
+index 0000000000000000000000000000000000000000..06d19589aa8d5af2bdbf74725502ada36437663c
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_zh-CN.xtb
 @@ -0,0 +1,842 @@
@@ -69975,7 +69957,7 @@ index 0000000000000..06d19589aa8d5
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_zh-HK.xtb b/chrome/app/resources/aetherium_strings_zh-HK.xtb
 new file mode 100644
-index 0000000000000..d77936a04b897
+index 0000000000000000000000000000000000000000..d77936a04b897f704778b9f7ff1805770308dfb8
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_zh-HK.xtb
 @@ -0,0 +1,843 @@
@@ -70825,7 +70807,7 @@ index 0000000000000..d77936a04b897
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_zh-TW.xtb b/chrome/app/resources/aetherium_strings_zh-TW.xtb
 new file mode 100644
-index 0000000000000..1393b9cd15796
+index 0000000000000000000000000000000000000000..1393b9cd15796a3c2b1813d1607ac328063ba2d1
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_zh-TW.xtb
 @@ -0,0 +1,839 @@
@@ -71671,7 +71653,7 @@ index 0000000000000..1393b9cd15796
 \ No newline at end of file
 diff --git a/chrome/app/resources/aetherium_strings_zu.xtb b/chrome/app/resources/aetherium_strings_zu.xtb
 new file mode 100644
-index 0000000000000..6fec8705cfcab
+index 0000000000000000000000000000000000000000..6fec8705cfcabfeeec6d9e03d490989b9a9d7a7a
 --- /dev/null
 +++ b/chrome/app/resources/aetherium_strings_zu.xtb
 @@ -0,0 +1,843 @@
@@ -72521,7 +72503,7 @@ index 0000000000000..6fec8705cfcab
 \ No newline at end of file
 diff --git a/chrome/app/settings_aetherium_strings.grdp b/chrome/app/settings_aetherium_strings.grdp
 new file mode 100644
-index 0000000000000..68fb2aa6cda94
+index 0000000000000000000000000000000000000000..68fb2aa6cda94ea78ee1152165cdc262c26f6fcd
 --- /dev/null
 +++ b/chrome/app/settings_aetherium_strings.grdp
 @@ -0,0 +1,466 @@
@@ -72992,27 +72974,30 @@ index 0000000000000..68fb2aa6cda94
 +  </message>
 +</grit-part>
 diff --git a/chrome/app/theme/aetherium/BRANDING b/chrome/app/theme/aetherium/BRANDING
-new file mode 100644
-index 0000000000000..73a98986a2a9b
---- /dev/null
+index cf76ce79b9d2a52f8694e55eded3c6790b9d7bb0..73a98986a2a9b66594636e878a5fa65f882b94a4 100644
+--- a/chrome/app/theme/aetherium/BRANDING
 +++ b/chrome/app/theme/aetherium/BRANDING
-@@ -0,0 +1,10 @@
+@@ -1,10 +1,10 @@
+-COMPANY_FULLNAME=The Chromium Authors
+-COMPANY_SHORTNAME=The Chromium Authors
 +COMPANY_FULLNAME=The aetherium Authors
 +COMPANY_SHORTNAME=The aetherium Authors
-+PRODUCT_FULLNAME=aetherium
-+PRODUCT_SHORTNAME=aetherium
-+PRODUCT_INSTALLER_FULLNAME=aetherium Installer
-+PRODUCT_INSTALLER_SHORTNAME=aetherium Installer
+ PRODUCT_FULLNAME=aetherium
+ PRODUCT_SHORTNAME=aetherium
+ PRODUCT_INSTALLER_FULLNAME=aetherium Installer
+ PRODUCT_INSTALLER_SHORTNAME=aetherium Installer
+-COPYRIGHT=Copyright @LASTCHANGE_YEAR@ The Chromium Authors. All rights reserved.
+-MAC_BUNDLE_ID=org.chromium.Chromium
 +COPYRIGHT=Copyright @LASTCHANGE_YEAR@ The aetherium Authors. All rights reserved.
 +MAC_BUNDLE_ID=org.aetherium.aetherium
-+MAC_CREATOR_CODE=Cr24
-+MAC_TEAM_ID=
+ MAC_CREATOR_CODE=Cr24
+ MAC_TEAM_ID=
 diff --git a/chrome/installer/setup/chromium_behaviors.cc b/chrome/installer/setup/aetherium_behaviors.cc
 similarity index 100%
 rename from chrome/installer/setup/chromium_behaviors.cc
 rename to chrome/installer/setup/aetherium_behaviors.cc
 diff --git a/chrome/updater/branding.gni b/chrome/updater/branding.gni
-index 2b6f9e23b21e3..f6f14501026fb 100644
+index 2b6f9e23b21e320440b34e9d7d31f14b625cccb6..f6f14501026fb1505212b6ccec8b812be08cc7d5 100644
 --- a/chrome/updater/branding.gni
 +++ b/chrome/updater/branding.gni
 @@ -39,7 +39,7 @@ if (is_chrome_branded) {
@@ -73026,7 +73011,7 @@ index 2b6f9e23b21e3..f6f14501026fb 100644
    updater_event_logging_url = "https://play.googleapis.com/staging/log/"
 diff --git a/components/components_aetherium_strings.grd b/components/components_aetherium_strings.grd
 new file mode 100644
-index 0000000000000..02294e5c9597e
+index 0000000000000000000000000000000000000000..02294e5c9597eb6a4137ea54bc8932eca56013af
 --- /dev/null
 +++ b/components/components_aetherium_strings.grd
 @@ -0,0 +1,335 @@
@@ -73367,7 +73352,7 @@ index 0000000000000..02294e5c9597e
 +</grit>
 diff --git a/components/strings/components_aetherium_strings_af.xtb b/components/strings/components_aetherium_strings_af.xtb
 new file mode 100644
-index 0000000000000..2ef8721cbae14
+index 0000000000000000000000000000000000000000..2ef8721cbae14445c6b32d089bd70c2eb65550cc
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_af.xtb
 @@ -0,0 +1,54 @@
@@ -73428,7 +73413,7 @@ index 0000000000000..2ef8721cbae14
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_am.xtb b/components/strings/components_aetherium_strings_am.xtb
 new file mode 100644
-index 0000000000000..919c1e1d57306
+index 0000000000000000000000000000000000000000..919c1e1d57306322e2d1f86ae1b35b7e6ff9dcc3
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_am.xtb
 @@ -0,0 +1,52 @@
@@ -73487,7 +73472,7 @@ index 0000000000000..919c1e1d57306
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_ar.xtb b/components/strings/components_aetherium_strings_ar.xtb
 new file mode 100644
-index 0000000000000..e3f182cfe669a
+index 0000000000000000000000000000000000000000..e3f182cfe669a42b332dbee17334366193b90962
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_ar.xtb
 @@ -0,0 +1,54 @@
@@ -73548,7 +73533,7 @@ index 0000000000000..e3f182cfe669a
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_as.xtb b/components/strings/components_aetherium_strings_as.xtb
 new file mode 100644
-index 0000000000000..0c8963dc05485
+index 0000000000000000000000000000000000000000..0c8963dc05485d1505d7f910a1aead54fe931a05
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_as.xtb
 @@ -0,0 +1,51 @@
@@ -73606,7 +73591,7 @@ index 0000000000000..0c8963dc05485
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_az.xtb b/components/strings/components_aetherium_strings_az.xtb
 new file mode 100644
-index 0000000000000..7fdb9d2133f9a
+index 0000000000000000000000000000000000000000..7fdb9d2133f9a15a1065dd8b0884c47012f2ed01
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_az.xtb
 @@ -0,0 +1,49 @@
@@ -73662,7 +73647,7 @@ index 0000000000000..7fdb9d2133f9a
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_be.xtb b/components/strings/components_aetherium_strings_be.xtb
 new file mode 100644
-index 0000000000000..d4f492708ee3c
+index 0000000000000000000000000000000000000000..d4f492708ee3c7dbf3dbc6d6667fabb5c99d4141
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_be.xtb
 @@ -0,0 +1,35 @@
@@ -73704,7 +73689,7 @@ index 0000000000000..d4f492708ee3c
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_bg.xtb b/components/strings/components_aetherium_strings_bg.xtb
 new file mode 100644
-index 0000000000000..72c3679154544
+index 0000000000000000000000000000000000000000..72c36791545446e4c8b9641a0e4ee9e5978a89bc
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_bg.xtb
 @@ -0,0 +1,52 @@
@@ -73763,7 +73748,7 @@ index 0000000000000..72c3679154544
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_bn.xtb b/components/strings/components_aetherium_strings_bn.xtb
 new file mode 100644
-index 0000000000000..7660152452191
+index 0000000000000000000000000000000000000000..7660152452191e4399654a5057a989106ec884be
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_bn.xtb
 @@ -0,0 +1,53 @@
@@ -73823,7 +73808,7 @@ index 0000000000000..7660152452191
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_bs.xtb b/components/strings/components_aetherium_strings_bs.xtb
 new file mode 100644
-index 0000000000000..de3fcbd582e46
+index 0000000000000000000000000000000000000000..de3fcbd582e469f347487eda8d1192d1b4807ec1
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_bs.xtb
 @@ -0,0 +1,54 @@
@@ -73884,7 +73869,7 @@ index 0000000000000..de3fcbd582e46
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_ca.xtb b/components/strings/components_aetherium_strings_ca.xtb
 new file mode 100644
-index 0000000000000..07b6a29a088f4
+index 0000000000000000000000000000000000000000..07b6a29a088f4b9ffd2c3ebc5cf92e8d74d0a312
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_ca.xtb
 @@ -0,0 +1,36 @@
@@ -73927,7 +73912,7 @@ index 0000000000000..07b6a29a088f4
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_cs.xtb b/components/strings/components_aetherium_strings_cs.xtb
 new file mode 100644
-index 0000000000000..78053ca98dbe8
+index 0000000000000000000000000000000000000000..78053ca98dbe8fbbeba5aa486eb9c62ff08f06de
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_cs.xtb
 @@ -0,0 +1,28 @@
@@ -73962,7 +73947,7 @@ index 0000000000000..78053ca98dbe8
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_cy.xtb b/components/strings/components_aetherium_strings_cy.xtb
 new file mode 100644
-index 0000000000000..08ef1bc23c97e
+index 0000000000000000000000000000000000000000..08ef1bc23c97e5fefeb214f0937f372095d040b0
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_cy.xtb
 @@ -0,0 +1,54 @@
@@ -74023,7 +74008,7 @@ index 0000000000000..08ef1bc23c97e
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_da.xtb b/components/strings/components_aetherium_strings_da.xtb
 new file mode 100644
-index 0000000000000..4ab0bc032a6fd
+index 0000000000000000000000000000000000000000..4ab0bc032a6fd2a464ed5e1b1b7281355363bf61
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_da.xtb
 @@ -0,0 +1,52 @@
@@ -74082,7 +74067,7 @@ index 0000000000000..4ab0bc032a6fd
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_de.xtb b/components/strings/components_aetherium_strings_de.xtb
 new file mode 100644
-index 0000000000000..d8e557eff0e18
+index 0000000000000000000000000000000000000000..d8e557eff0e188386cc27acd161193021e489b04
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_de.xtb
 @@ -0,0 +1,34 @@
@@ -74123,7 +74108,7 @@ index 0000000000000..d8e557eff0e18
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_el.xtb b/components/strings/components_aetherium_strings_el.xtb
 new file mode 100644
-index 0000000000000..c00e2d941a959
+index 0000000000000000000000000000000000000000..c00e2d941a959b7b2b9aeeeee044167ec5788b76
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_el.xtb
 @@ -0,0 +1,54 @@
@@ -74184,7 +74169,7 @@ index 0000000000000..c00e2d941a959
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_en-GB.xtb b/components/strings/components_aetherium_strings_en-GB.xtb
 new file mode 100644
-index 0000000000000..2560b821c1f1b
+index 0000000000000000000000000000000000000000..2560b821c1f1bc52ad73b0c818e000d11c0fe15f
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_en-GB.xtb
 @@ -0,0 +1,53 @@
@@ -74244,7 +74229,7 @@ index 0000000000000..2560b821c1f1b
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_es-419.xtb b/components/strings/components_aetherium_strings_es-419.xtb
 new file mode 100644
-index 0000000000000..49f0ad63c728a
+index 0000000000000000000000000000000000000000..49f0ad63c728ae67dd21696e3196eae316a5c476
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_es-419.xtb
 @@ -0,0 +1,54 @@
@@ -74305,7 +74290,7 @@ index 0000000000000..49f0ad63c728a
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_es.xtb b/components/strings/components_aetherium_strings_es.xtb
 new file mode 100644
-index 0000000000000..c4e941989ca20
+index 0000000000000000000000000000000000000000..c4e941989ca20f5e147ad41dc0308db5de522009
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_es.xtb
 @@ -0,0 +1,36 @@
@@ -74348,7 +74333,7 @@ index 0000000000000..c4e941989ca20
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_et.xtb b/components/strings/components_aetherium_strings_et.xtb
 new file mode 100644
-index 0000000000000..e80b4b1d67160
+index 0000000000000000000000000000000000000000..e80b4b1d67160950575b5ee80c5a6cf340022467
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_et.xtb
 @@ -0,0 +1,53 @@
@@ -74408,7 +74393,7 @@ index 0000000000000..e80b4b1d67160
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_eu.xtb b/components/strings/components_aetherium_strings_eu.xtb
 new file mode 100644
-index 0000000000000..d3bdd256f0be9
+index 0000000000000000000000000000000000000000..d3bdd256f0be95be73ff96db699f8e7000eee47b
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_eu.xtb
 @@ -0,0 +1,51 @@
@@ -74466,7 +74451,7 @@ index 0000000000000..d3bdd256f0be9
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_fa.xtb b/components/strings/components_aetherium_strings_fa.xtb
 new file mode 100644
-index 0000000000000..1733600094516
+index 0000000000000000000000000000000000000000..1733600094516430b11a3f0bf40e7367109e5c02
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_fa.xtb
 @@ -0,0 +1,54 @@
@@ -74527,7 +74512,7 @@ index 0000000000000..1733600094516
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_fi.xtb b/components/strings/components_aetherium_strings_fi.xtb
 new file mode 100644
-index 0000000000000..0422b93f6f057
+index 0000000000000000000000000000000000000000..0422b93f6f057cd47556f6a76b5507d71c6229a6
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_fi.xtb
 @@ -0,0 +1,54 @@
@@ -74588,7 +74573,7 @@ index 0000000000000..0422b93f6f057
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_fil.xtb b/components/strings/components_aetherium_strings_fil.xtb
 new file mode 100644
-index 0000000000000..24b134ed10ed5
+index 0000000000000000000000000000000000000000..24b134ed10ed5c1a356682a34e5fc284b2dc5688
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_fil.xtb
 @@ -0,0 +1,54 @@
@@ -74649,7 +74634,7 @@ index 0000000000000..24b134ed10ed5
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_fr-CA.xtb b/components/strings/components_aetherium_strings_fr-CA.xtb
 new file mode 100644
-index 0000000000000..49578c7c7831f
+index 0000000000000000000000000000000000000000..49578c7c7831f7944f9e2f76849ceb0a8867e981
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_fr-CA.xtb
 @@ -0,0 +1,35 @@
@@ -74691,7 +74676,7 @@ index 0000000000000..49578c7c7831f
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_fr.xtb b/components/strings/components_aetherium_strings_fr.xtb
 new file mode 100644
-index 0000000000000..792540745360a
+index 0000000000000000000000000000000000000000..792540745360ad225a8632d9aa744e0eae4a3391
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_fr.xtb
 @@ -0,0 +1,50 @@
@@ -74748,7 +74733,7 @@ index 0000000000000..792540745360a
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_gl.xtb b/components/strings/components_aetherium_strings_gl.xtb
 new file mode 100644
-index 0000000000000..3887445954780
+index 0000000000000000000000000000000000000000..38874459547807398bc3d0f78bdcdbe6f81c8dd8
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_gl.xtb
 @@ -0,0 +1,53 @@
@@ -74808,7 +74793,7 @@ index 0000000000000..3887445954780
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_gu.xtb b/components/strings/components_aetherium_strings_gu.xtb
 new file mode 100644
-index 0000000000000..982b51b0ab5d2
+index 0000000000000000000000000000000000000000..982b51b0ab5d2d1c82ba36314b452c18f2fc3024
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_gu.xtb
 @@ -0,0 +1,53 @@
@@ -74868,7 +74853,7 @@ index 0000000000000..982b51b0ab5d2
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_hi.xtb b/components/strings/components_aetherium_strings_hi.xtb
 new file mode 100644
-index 0000000000000..c965416630d5b
+index 0000000000000000000000000000000000000000..c965416630d5b78ccdd4851d354a54a526bef25b
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_hi.xtb
 @@ -0,0 +1,49 @@
@@ -74924,7 +74909,7 @@ index 0000000000000..c965416630d5b
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_hr.xtb b/components/strings/components_aetherium_strings_hr.xtb
 new file mode 100644
-index 0000000000000..63c146ea1f68b
+index 0000000000000000000000000000000000000000..63c146ea1f68b66aade29b40d1121b31e47ee668
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_hr.xtb
 @@ -0,0 +1,50 @@
@@ -74981,7 +74966,7 @@ index 0000000000000..63c146ea1f68b
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_hu.xtb b/components/strings/components_aetherium_strings_hu.xtb
 new file mode 100644
-index 0000000000000..2d1205c1886c3
+index 0000000000000000000000000000000000000000..2d1205c1886c30ed0804b8631cf995ac95fd7a38
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_hu.xtb
 @@ -0,0 +1,53 @@
@@ -75041,7 +75026,7 @@ index 0000000000000..2d1205c1886c3
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_hy.xtb b/components/strings/components_aetherium_strings_hy.xtb
 new file mode 100644
-index 0000000000000..5760570df8781
+index 0000000000000000000000000000000000000000..5760570df878151ceb068d097014dfd0ca52f68f
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_hy.xtb
 @@ -0,0 +1,52 @@
@@ -75100,7 +75085,7 @@ index 0000000000000..5760570df8781
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_id.xtb b/components/strings/components_aetherium_strings_id.xtb
 new file mode 100644
-index 0000000000000..8aae6593b9a38
+index 0000000000000000000000000000000000000000..8aae6593b9a386792e33343d6e0317cb2e34335e
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_id.xtb
 @@ -0,0 +1,54 @@
@@ -75161,7 +75146,7 @@ index 0000000000000..8aae6593b9a38
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_is.xtb b/components/strings/components_aetherium_strings_is.xtb
 new file mode 100644
-index 0000000000000..d1feab5bcb473
+index 0000000000000000000000000000000000000000..d1feab5bcb4734b8223e7108635248d1c51f39e5
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_is.xtb
 @@ -0,0 +1,54 @@
@@ -75222,7 +75207,7 @@ index 0000000000000..d1feab5bcb473
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_it.xtb b/components/strings/components_aetherium_strings_it.xtb
 new file mode 100644
-index 0000000000000..67b13965e0ccf
+index 0000000000000000000000000000000000000000..67b13965e0ccfa7dd6eecbfdcadfe81315d38a75
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_it.xtb
 @@ -0,0 +1,45 @@
@@ -75274,7 +75259,7 @@ index 0000000000000..67b13965e0ccf
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_iw.xtb b/components/strings/components_aetherium_strings_iw.xtb
 new file mode 100644
-index 0000000000000..74c7c8816161f
+index 0000000000000000000000000000000000000000..74c7c8816161f49e89183447937ade074b37ec66
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_iw.xtb
 @@ -0,0 +1,54 @@
@@ -75335,7 +75320,7 @@ index 0000000000000..74c7c8816161f
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_ja.xtb b/components/strings/components_aetherium_strings_ja.xtb
 new file mode 100644
-index 0000000000000..010cfa151e582
+index 0000000000000000000000000000000000000000..010cfa151e58262d58b37ad1f2f49b36797871d8
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_ja.xtb
 @@ -0,0 +1,48 @@
@@ -75390,7 +75375,7 @@ index 0000000000000..010cfa151e582
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_ka.xtb b/components/strings/components_aetherium_strings_ka.xtb
 new file mode 100644
-index 0000000000000..bdbd03aa13365
+index 0000000000000000000000000000000000000000..bdbd03aa133653ebfde447ebc31d261f064c9d39
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_ka.xtb
 @@ -0,0 +1,53 @@
@@ -75450,7 +75435,7 @@ index 0000000000000..bdbd03aa13365
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_kk.xtb b/components/strings/components_aetherium_strings_kk.xtb
 new file mode 100644
-index 0000000000000..64f60d6216eab
+index 0000000000000000000000000000000000000000..64f60d6216eab53fa3a78f5c4c7b4fb9d5d0b3bc
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_kk.xtb
 @@ -0,0 +1,48 @@
@@ -75505,7 +75490,7 @@ index 0000000000000..64f60d6216eab
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_km.xtb b/components/strings/components_aetherium_strings_km.xtb
 new file mode 100644
-index 0000000000000..8b256a8d77467
+index 0000000000000000000000000000000000000000..8b256a8d77467ce2fe4a9529cb12765c7ae74a67
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_km.xtb
 @@ -0,0 +1,50 @@
@@ -75562,7 +75547,7 @@ index 0000000000000..8b256a8d77467
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_kn.xtb b/components/strings/components_aetherium_strings_kn.xtb
 new file mode 100644
-index 0000000000000..2a37d5c9d2e93
+index 0000000000000000000000000000000000000000..2a37d5c9d2e9344050a5da6d74c671e1fa6624a9
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_kn.xtb
 @@ -0,0 +1,49 @@
@@ -75618,7 +75603,7 @@ index 0000000000000..2a37d5c9d2e93
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_ko.xtb b/components/strings/components_aetherium_strings_ko.xtb
 new file mode 100644
-index 0000000000000..d34a44bc77716
+index 0000000000000000000000000000000000000000..d34a44bc7771693490c644f8d25dd9866362eeaa
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_ko.xtb
 @@ -0,0 +1,53 @@
@@ -75678,7 +75663,7 @@ index 0000000000000..d34a44bc77716
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_ky.xtb b/components/strings/components_aetherium_strings_ky.xtb
 new file mode 100644
-index 0000000000000..11226b63b5486
+index 0000000000000000000000000000000000000000..11226b63b54869bb2a8f162aa8474b978e853e8d
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_ky.xtb
 @@ -0,0 +1,53 @@
@@ -75738,7 +75723,7 @@ index 0000000000000..11226b63b5486
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_lo.xtb b/components/strings/components_aetherium_strings_lo.xtb
 new file mode 100644
-index 0000000000000..589f3b6c38d95
+index 0000000000000000000000000000000000000000..589f3b6c38d95126b9d1c9f05c9358aef3ac9447
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_lo.xtb
 @@ -0,0 +1,54 @@
@@ -75799,7 +75784,7 @@ index 0000000000000..589f3b6c38d95
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_lt.xtb b/components/strings/components_aetherium_strings_lt.xtb
 new file mode 100644
-index 0000000000000..603f55322b6d6
+index 0000000000000000000000000000000000000000..603f55322b6d66be388097af1c951b9c427c001d
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_lt.xtb
 @@ -0,0 +1,54 @@
@@ -75860,7 +75845,7 @@ index 0000000000000..603f55322b6d6
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_lv.xtb b/components/strings/components_aetherium_strings_lv.xtb
 new file mode 100644
-index 0000000000000..a5f2fd71ff6cb
+index 0000000000000000000000000000000000000000..a5f2fd71ff6cb00a17c111713caf8c0e0d390417
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_lv.xtb
 @@ -0,0 +1,34 @@
@@ -75901,7 +75886,7 @@ index 0000000000000..a5f2fd71ff6cb
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_mk.xtb b/components/strings/components_aetherium_strings_mk.xtb
 new file mode 100644
-index 0000000000000..5bbbf0ad66514
+index 0000000000000000000000000000000000000000..5bbbf0ad66514e87866e7b92bb693cb2e66852b6
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_mk.xtb
 @@ -0,0 +1,54 @@
@@ -75962,7 +75947,7 @@ index 0000000000000..5bbbf0ad66514
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_ml.xtb b/components/strings/components_aetherium_strings_ml.xtb
 new file mode 100644
-index 0000000000000..9753ba5e05106
+index 0000000000000000000000000000000000000000..9753ba5e05106fb925cf7a186098cdb5baf39839
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_ml.xtb
 @@ -0,0 +1,50 @@
@@ -76019,7 +76004,7 @@ index 0000000000000..9753ba5e05106
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_mn.xtb b/components/strings/components_aetherium_strings_mn.xtb
 new file mode 100644
-index 0000000000000..d7e2d875dcbc9
+index 0000000000000000000000000000000000000000..d7e2d875dcbc982390850dcc7207a83cd5ec56e3
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_mn.xtb
 @@ -0,0 +1,52 @@
@@ -76078,7 +76063,7 @@ index 0000000000000..d7e2d875dcbc9
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_mr.xtb b/components/strings/components_aetherium_strings_mr.xtb
 new file mode 100644
-index 0000000000000..440a1ecb716d8
+index 0000000000000000000000000000000000000000..440a1ecb716d809053eaeaa3b1024a208f91260b
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_mr.xtb
 @@ -0,0 +1,54 @@
@@ -76139,7 +76124,7 @@ index 0000000000000..440a1ecb716d8
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_ms.xtb b/components/strings/components_aetherium_strings_ms.xtb
 new file mode 100644
-index 0000000000000..a58f7a92ff955
+index 0000000000000000000000000000000000000000..a58f7a92ff9555a91b7a0e2e1898dbb89e935bb8
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_ms.xtb
 @@ -0,0 +1,54 @@
@@ -76200,7 +76185,7 @@ index 0000000000000..a58f7a92ff955
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_my.xtb b/components/strings/components_aetherium_strings_my.xtb
 new file mode 100644
-index 0000000000000..28b019180d93d
+index 0000000000000000000000000000000000000000..28b019180d93d0698834646cc558ca75856ec71d
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_my.xtb
 @@ -0,0 +1,51 @@
@@ -76258,7 +76243,7 @@ index 0000000000000..28b019180d93d
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_ne.xtb b/components/strings/components_aetherium_strings_ne.xtb
 new file mode 100644
-index 0000000000000..dead754114eee
+index 0000000000000000000000000000000000000000..dead754114eee07e1f0adc302f1346ff9644ee55
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_ne.xtb
 @@ -0,0 +1,51 @@
@@ -76316,7 +76301,7 @@ index 0000000000000..dead754114eee
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_nl.xtb b/components/strings/components_aetherium_strings_nl.xtb
 new file mode 100644
-index 0000000000000..20233947fafc8
+index 0000000000000000000000000000000000000000..20233947fafc8ef8bdc5c7fc8b6cfbbe2e2ec368
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_nl.xtb
 @@ -0,0 +1,34 @@
@@ -76357,7 +76342,7 @@ index 0000000000000..20233947fafc8
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_no.xtb b/components/strings/components_aetherium_strings_no.xtb
 new file mode 100644
-index 0000000000000..baf764ea14da6
+index 0000000000000000000000000000000000000000..baf764ea14da6f3813ffcc36366dffa3d6247478
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_no.xtb
 @@ -0,0 +1,51 @@
@@ -76415,7 +76400,7 @@ index 0000000000000..baf764ea14da6
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_or.xtb b/components/strings/components_aetherium_strings_or.xtb
 new file mode 100644
-index 0000000000000..c2f04202edfea
+index 0000000000000000000000000000000000000000..c2f04202edfea4b9780582c26db1e20149a75eeb
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_or.xtb
 @@ -0,0 +1,49 @@
@@ -76471,7 +76456,7 @@ index 0000000000000..c2f04202edfea
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_pa.xtb b/components/strings/components_aetherium_strings_pa.xtb
 new file mode 100644
-index 0000000000000..9aba2babb3b1f
+index 0000000000000000000000000000000000000000..9aba2babb3b1f31b824f9e245fe36cf0e9ca007b
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_pa.xtb
 @@ -0,0 +1,50 @@
@@ -76528,7 +76513,7 @@ index 0000000000000..9aba2babb3b1f
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_pl.xtb b/components/strings/components_aetherium_strings_pl.xtb
 new file mode 100644
-index 0000000000000..cdd214ae1bdcf
+index 0000000000000000000000000000000000000000..cdd214ae1bdcf2948aa7aebcdaa5fe2e4d27622a
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_pl.xtb
 @@ -0,0 +1,35 @@
@@ -76570,7 +76555,7 @@ index 0000000000000..cdd214ae1bdcf
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_pt-BR.xtb b/components/strings/components_aetherium_strings_pt-BR.xtb
 new file mode 100644
-index 0000000000000..83ca42042bd86
+index 0000000000000000000000000000000000000000..83ca42042bd86e50633e8daeaab9ab32d4cf387a
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_pt-BR.xtb
 @@ -0,0 +1,54 @@
@@ -76631,7 +76616,7 @@ index 0000000000000..83ca42042bd86
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_pt-PT.xtb b/components/strings/components_aetherium_strings_pt-PT.xtb
 new file mode 100644
-index 0000000000000..6554d09554ec3
+index 0000000000000000000000000000000000000000..6554d09554ec3477f2cb442976b3ccb4b1911507
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_pt-PT.xtb
 @@ -0,0 +1,54 @@
@@ -76692,7 +76677,7 @@ index 0000000000000..6554d09554ec3
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_ro.xtb b/components/strings/components_aetherium_strings_ro.xtb
 new file mode 100644
-index 0000000000000..c25d0150b8b62
+index 0000000000000000000000000000000000000000..c25d0150b8b6243a8514c14c21347464c583e52c
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_ro.xtb
 @@ -0,0 +1,53 @@
@@ -76752,7 +76737,7 @@ index 0000000000000..c25d0150b8b62
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_ru.xtb b/components/strings/components_aetherium_strings_ru.xtb
 new file mode 100644
-index 0000000000000..c95944d827141
+index 0000000000000000000000000000000000000000..c95944d82714141974114ab8499cae5c75116c4e
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_ru.xtb
 @@ -0,0 +1,44 @@
@@ -76803,7 +76788,7 @@ index 0000000000000..c95944d827141
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_si.xtb b/components/strings/components_aetherium_strings_si.xtb
 new file mode 100644
-index 0000000000000..ca79cdfb8f519
+index 0000000000000000000000000000000000000000..ca79cdfb8f519dddbf52d3d9e59991ae714dc5ae
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_si.xtb
 @@ -0,0 +1,52 @@
@@ -76862,7 +76847,7 @@ index 0000000000000..ca79cdfb8f519
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_sk.xtb b/components/strings/components_aetherium_strings_sk.xtb
 new file mode 100644
-index 0000000000000..6a9f09dc71a78
+index 0000000000000000000000000000000000000000..6a9f09dc71a78e49d763f89a6404a2918e9ea733
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_sk.xtb
 @@ -0,0 +1,50 @@
@@ -76919,7 +76904,7 @@ index 0000000000000..6a9f09dc71a78
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_sl.xtb b/components/strings/components_aetherium_strings_sl.xtb
 new file mode 100644
-index 0000000000000..7d03887309b8a
+index 0000000000000000000000000000000000000000..7d03887309b8abd7c0d08c25dda6017f342e840a
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_sl.xtb
 @@ -0,0 +1,54 @@
@@ -76980,7 +76965,7 @@ index 0000000000000..7d03887309b8a
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_sq.xtb b/components/strings/components_aetherium_strings_sq.xtb
 new file mode 100644
-index 0000000000000..96498b74dc0a0
+index 0000000000000000000000000000000000000000..96498b74dc0a022432a7e45b063f0a874289a481
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_sq.xtb
 @@ -0,0 +1,53 @@
@@ -77040,7 +77025,7 @@ index 0000000000000..96498b74dc0a0
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_sr-Latn.xtb b/components/strings/components_aetherium_strings_sr-Latn.xtb
 new file mode 100644
-index 0000000000000..08169ba0eee52
+index 0000000000000000000000000000000000000000..08169ba0eee525fd86a7646200fa8ade052b4b26
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_sr-Latn.xtb
 @@ -0,0 +1,54 @@
@@ -77101,7 +77086,7 @@ index 0000000000000..08169ba0eee52
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_sr.xtb b/components/strings/components_aetherium_strings_sr.xtb
 new file mode 100644
-index 0000000000000..3f0e64d5e9c22
+index 0000000000000000000000000000000000000000..3f0e64d5e9c2253e9ff6799a9f82951c77359026
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_sr.xtb
 @@ -0,0 +1,54 @@
@@ -77162,7 +77147,7 @@ index 0000000000000..3f0e64d5e9c22
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_sv.xtb b/components/strings/components_aetherium_strings_sv.xtb
 new file mode 100644
-index 0000000000000..48f34074d7cb1
+index 0000000000000000000000000000000000000000..48f34074d7cb1ac70f50a7d4d4dc2d096b6be351
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_sv.xtb
 @@ -0,0 +1,53 @@
@@ -77222,7 +77207,7 @@ index 0000000000000..48f34074d7cb1
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_sw.xtb b/components/strings/components_aetherium_strings_sw.xtb
 new file mode 100644
-index 0000000000000..19902e3f2136d
+index 0000000000000000000000000000000000000000..19902e3f2136d8beff24c4cf4713c5b922ce4fd4
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_sw.xtb
 @@ -0,0 +1,50 @@
@@ -77279,7 +77264,7 @@ index 0000000000000..19902e3f2136d
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_ta.xtb b/components/strings/components_aetherium_strings_ta.xtb
 new file mode 100644
-index 0000000000000..72201d6278b80
+index 0000000000000000000000000000000000000000..72201d6278b80aa095d8d0b3009f50bb9f5153b2
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_ta.xtb
 @@ -0,0 +1,50 @@
@@ -77336,7 +77321,7 @@ index 0000000000000..72201d6278b80
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_te.xtb b/components/strings/components_aetherium_strings_te.xtb
 new file mode 100644
-index 0000000000000..4a070ad72d46a
+index 0000000000000000000000000000000000000000..4a070ad72d46a02f84372f28205d68317c667512
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_te.xtb
 @@ -0,0 +1,53 @@
@@ -77396,7 +77381,7 @@ index 0000000000000..4a070ad72d46a
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_th.xtb b/components/strings/components_aetherium_strings_th.xtb
 new file mode 100644
-index 0000000000000..c2442e292c58d
+index 0000000000000000000000000000000000000000..c2442e292c58dd3243e0ca2b38aa73b23e50441d
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_th.xtb
 @@ -0,0 +1,51 @@
@@ -77454,7 +77439,7 @@ index 0000000000000..c2442e292c58d
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_tr.xtb b/components/strings/components_aetherium_strings_tr.xtb
 new file mode 100644
-index 0000000000000..4cdd549720404
+index 0000000000000000000000000000000000000000..4cdd5497204049cff4ea58540cf1603f4afd4911
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_tr.xtb
 @@ -0,0 +1,40 @@
@@ -77501,7 +77486,7 @@ index 0000000000000..4cdd549720404
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_uk.xtb b/components/strings/components_aetherium_strings_uk.xtb
 new file mode 100644
-index 0000000000000..4609c6fe782bd
+index 0000000000000000000000000000000000000000..4609c6fe782bdb6e47a5cdf12b8bd3d4e8ec8a1a
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_uk.xtb
 @@ -0,0 +1,52 @@
@@ -77560,7 +77545,7 @@ index 0000000000000..4609c6fe782bd
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_ur.xtb b/components/strings/components_aetherium_strings_ur.xtb
 new file mode 100644
-index 0000000000000..1cd8f1f4c855b
+index 0000000000000000000000000000000000000000..1cd8f1f4c855ba69cb4355bb23fd6c3832855e68
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_ur.xtb
 @@ -0,0 +1,49 @@
@@ -77616,7 +77601,7 @@ index 0000000000000..1cd8f1f4c855b
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_uz.xtb b/components/strings/components_aetherium_strings_uz.xtb
 new file mode 100644
-index 0000000000000..05dc2d6f5f83e
+index 0000000000000000000000000000000000000000..05dc2d6f5f83e58091f6b1248b8dfa33feb9d42c
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_uz.xtb
 @@ -0,0 +1,54 @@
@@ -77677,7 +77662,7 @@ index 0000000000000..05dc2d6f5f83e
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_vi.xtb b/components/strings/components_aetherium_strings_vi.xtb
 new file mode 100644
-index 0000000000000..8a638f18a08c5
+index 0000000000000000000000000000000000000000..8a638f18a08c53bcb75a53f8ce9509ce99ac2504
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_vi.xtb
 @@ -0,0 +1,54 @@
@@ -77738,7 +77723,7 @@ index 0000000000000..8a638f18a08c5
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_zh-CN.xtb b/components/strings/components_aetherium_strings_zh-CN.xtb
 new file mode 100644
-index 0000000000000..d5b8252c5dc31
+index 0000000000000000000000000000000000000000..d5b8252c5dc312b58e65a0b49734529597649a87
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_zh-CN.xtb
 @@ -0,0 +1,27 @@
@@ -77772,7 +77757,7 @@ index 0000000000000..d5b8252c5dc31
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_zh-HK.xtb b/components/strings/components_aetherium_strings_zh-HK.xtb
 new file mode 100644
-index 0000000000000..ea8c347c69943
+index 0000000000000000000000000000000000000000..ea8c347c69943810d4a017a9a6848cb7f1d6ef48
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_zh-HK.xtb
 @@ -0,0 +1,52 @@
@@ -77831,7 +77816,7 @@ index 0000000000000..ea8c347c69943
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_zh-TW.xtb b/components/strings/components_aetherium_strings_zh-TW.xtb
 new file mode 100644
-index 0000000000000..866d25237977d
+index 0000000000000000000000000000000000000000..866d25237977d662f800c3178fb505df9b6bee7e
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_zh-TW.xtb
 @@ -0,0 +1,35 @@
@@ -77873,7 +77858,7 @@ index 0000000000000..866d25237977d
 \ No newline at end of file
 diff --git a/components/strings/components_aetherium_strings_zu.xtb b/components/strings/components_aetherium_strings_zu.xtb
 new file mode 100644
-index 0000000000000..3d03ff3cc961d
+index 0000000000000000000000000000000000000000..3d03ff3cc961de97aeaff848fc14c5701e88ee3a
 --- /dev/null
 +++ b/components/strings/components_aetherium_strings_zu.xtb
 @@ -0,0 +1,52 @@
@@ -77931,7 +77916,7 @@ index 0000000000000..3d03ff3cc961d
 +</translationbundle>
 \ No newline at end of file
 diff --git a/extensions/strings/BUILD.gn b/extensions/strings/BUILD.gn
-index 9fb23a9622401..11ef9aceb5a73 100644
+index 9fb23a962240180984114f340d275b4462a58487..11ef9aceb5a734056de763b80f5aaee9c640b7d7 100644
 --- a/extensions/strings/BUILD.gn
 +++ b/extensions/strings/BUILD.gn
 @@ -11,7 +11,7 @@ assert(enable_extensions_core)
@@ -77945,7 +77930,7 @@ index 9fb23a9622401..11ef9aceb5a73 100644
    inputs +=
 diff --git a/extensions/strings/extensions_aetherium_strings.grdp b/extensions/strings/extensions_aetherium_strings.grdp
 new file mode 100644
-index 0000000000000..8a785102461a3
+index 0000000000000000000000000000000000000000..8a785102461a355ac3f85b9a7bdfb927ce060bb0
 --- /dev/null
 +++ b/extensions/strings/extensions_aetherium_strings.grdp
 @@ -0,0 +1,27 @@
@@ -77977,7 +77962,7 @@ index 0000000000000..8a785102461a3
 +  </message>
 +</grit-part>
 diff --git a/extensions/strings/extensions_strings.grd b/extensions/strings/extensions_strings.grd
-index f9b2679ff7d18..ba64aa3a15ce5 100644
+index f9b2679ff7d189f5c678946d391308ad9af412f6..ba64aa3a15ce569ce3138c1fa3913f04c8d585a6 100644
 --- a/extensions/strings/extensions_strings.grd
 +++ b/extensions/strings/extensions_strings.grd
 @@ -202,7 +202,7 @@
@@ -77989,16 +77974,3 @@ index f9b2679ff7d18..ba64aa3a15ce5 100644
        </if>
  
        <!-- Document Scan API strings. Please keep alphabetized. -->
-
-════════════════════════════════════════════════════════════
-補丁說明（0003，2026-10-24，zcode 會話生成）
-· 本補丁＝product 層完整 aetherium 化：branding_path_product="aetherium"
-  的全套配套（主字符串 grd 改名＋162 xtb 改名＋settings/extensions grdp＋
-  aetherium_behaviors.cc＋updater branding.gni＋BRANDING 去 Chromium＋grd 描述）。
-· ⚠️ 本補丁**取代** 0001 中對上述檔案的 hunks——應用順序：0001（跳過與本補丁
-  重疊的 strings 檔 hunks）→ 0002 → 0003；下輪補丁整理時把 0001 重新生成為
-  不含這些檔案的版本（args.gn 同步：branding_path_product="aetherium"，
-  權威副本 ~/Downloads/chromium-patches/args.gn.2026-10-24）。
-· 翻譯完整性：162 個 xtb 全數改名且內容原樣保留（zh-TW/zh-CN/zh-HK 抽查
-  為 aetherium 身份文本）。
-════════════════════════════════════════════════════════════
