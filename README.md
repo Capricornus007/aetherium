@@ -3,25 +3,22 @@
 你自己编的 Chromium 浏览器的产品名（一律全小写 aetherium）。这个仓库放的是「打算往源代码里打的补丁」
 和「这些补丁该不该打的清查报告」，不放浏览器源代码。
 
-源代码树在 `/opt/chromium-src/src`，版本 157.0.8095.0（读的是 `chrome/VERSION`）。
+源代码树在 `/opt/chromium-src/src`，补丁基准由 `patches/UPSTREAM_BASE` 固定为 Chromium 158.0.8118.0。
 本仓库与那棵树是分开两回事：**这里只有补丁文字档和说明，动到源码要靠你（或代理）主动执行套用步骤。**
 
 ---
 
-## 一、现况（2026-10-12 这一轮做完的事）
+## 一、现况（2026-11-03）
 
-- `docs/patch-inventory.md`：把别家（ungoogled-chromium、Iridium、Supermium、Bromite、Cromite、
-  Vanadium、Thorium、Zen、LibreWolf）为自家 Chromium 分支写的补丁全部盘了一遍，
-  每一条都写了三行判定（改什么 / 在 157 需不需要 + 实测证据 / 套下去要动几个档案、日后跟上游同步痛不痛）。
-  ungoogled 的 108 条（series 档案 110 行）是**逐条**用只读方式在你的源码树上试过套的，通过与否都记进报告。
-- `patches/` 下面这次真的放了 8 个补丁档（其余分类目录维持空，理由写在报告第 5.4 节）：
-  - `patches/adblock/` 4 条：MV2 扩展救回、去掉搜索 URL 的追踪参数、关内网探测、关 DIAL 周期性广播
-  - `patches/security/` 3 条：电池指纹、Safe Browsing 事件回报、Safe Browsing 钓鱼页二次上报
-  - `patches/performance/` 1 条：内存节省模式默认打开
-  - `patches/android/` 空
-- 这 8 条全部做过三种检查：个别 `patch --dry-run`、个别 `git apply --check`、
-  以及在 `/tmp` 的稀疏副本里依序真套一遍（证明它们可以同时存在、不互相冲突）。
-  详细结果在报告第 9 节。
+- `patches/series` 是 21 支补丁的唯一顺序来源；`scripts/apply-patches.sh` 会拒绝重复、漏列、
+  不存在或不能整支套用的补丁，不再按目录扫描，也不会把冲突补丁拆成逐档套用。
+- 分类：adblock 4、branding 4、performance 1、privacy 2、security 3、trim 7。
+- branding 的产品层补丁以 rename 补丁为前置重新产生；繁体中文产品字串
+  `chrome/app/resources/aetherium_strings_zh-TW.xtb` 会进入 Linux 与 Android 建置图。
+- trim 的 deep-trim 补丁以先前裁剪为前置重新产生；Compose 的依赖直接写入
+  `public_deps`，旧的事后修补补丁已经删除。
+- Linux 使用 `config/args.gn`；Android 使用 `args-android.gn`。两个 workflow 都调用同一套
+  补丁入口，Android 不再维护 inline 参数副本。
 
 有一条需要你先知道，因为它跟你原本的认知不同（证据在报告第 0.1 节，都带档案与行号）：
 
@@ -218,3 +215,12 @@
 - 全部結論、邊數實測、檔案:行號、以及「還剩什麼（含品牌化 0004 補丁衝突）」寫在
   **`~/Downloads/aetherium/TRIM-NOTES.md`**，那份才是裁剪這條線的權威紀錄。
 
+
+## 七、2026-11-03 补丁整理
+
+- `patches/series` 固定完整顺序，补丁必须原子套用。
+- `trim/0005` 与 `branding/0003` 已按前置补丁状态重生，移除重叠 hunk；
+  `trim/0006-compose-build-fix.patch` 的正确内容已并入 `trim/0005`。
+- Android 参数移除互相覆盖的暂缓区，workflow 直接复制权威参数并检查全部 GN key。
+- tab group 三支补丁关闭建立、恢复、菜单和同步注册，并删除 dynamic-menu 源档；
+  workflow 同时检查 aetherium 的繁体中文资源确实在 build graph 中。

@@ -123,7 +123,7 @@ jobs:
           cd "$CHROMIUM_DIR/src"
           ./build/install-build-deps.sh --no-prompt
 
-      # ── 與本機完全同一個補丁入口（13 支，見 patches/）──────────────────
+      # ── 與本機完全同一個補丁入口（21 支，順序見 patches/series）──────────
       - name: Apply aetherium patch series
         run: |
           cd "$CHROMIUM_DIR/src"
@@ -183,8 +183,11 @@ jobs:
             echo '::error::上面這些行的出廠品牌值還是 upstream 的 chromium（改名沒改完）'
             exit 1
           fi
-          # grit 產品名字串
-          grep -A1 'name="IDS_PRODUCT_NAME" desc="The Chrome application name"' chrome/app/chromium_strings.grd | grep -q '^\s*aetherium\s*$'
+          # grit 產品名字串與繁體中文資源都必須是產品層的真實輸入。
+          grep -A1 'name="IDS_PRODUCT_NAME" desc="The Chrome application name"' chrome/app/aetherium_strings.grd | grep -q '^\s*aetherium\s*$'
+          grep -q '<translationbundle lang="zh-TW">' chrome/app/resources/aetherium_strings_zh-TW.xtb
+          grep -q '關於 aetherium' chrome/app/resources/aetherium_strings_zh-TW.xtb
+          ninja -C "$OUT" -t targets all | grep -q 'branded_strings_zh-TW.pak'
           # 兩個源檔真的有進建置圖（不是只改了檔）
           ninja -C "$OUT" -t targets all | grep -q 'channel_info_posix.o'
           ninja -C "$OUT" -t targets all | grep -q 'chrome_paths_linux.o'
@@ -203,7 +206,6 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
-      # ── 裁剪驗收：關掉的東西真的不在圖裡 ──────────────────────────────
       # ── 裁剪驗收：關掉的東西真的不在「瀏覽器產物」的依賴圖裡 ────────────
       # ⚠️ 口徑很重要：`gn ls` / `ninja -t targets all` 會把 test／fuzzing 目標
       # 也算進去（那些目標本來就無條件引用 remoting、printing、pdf），拿那個口徑
@@ -233,11 +235,17 @@ jobs:
           grep -q 'safebrowsing-disabled' components/safe_browsing/core/browser/db/sb_protocol_manager_util.cc
           grep -q 'std::array<RawPrepopulatedPage, 0> kRawPrepopulatedPages' chrome/browser/history/top_sites_factory.cc
           grep -q 'kSpellCheckEnable, false' chrome/browser/spellchecker/spellcheck_factory.cc
+          # tab group 刪除不是只藏 UI：dynamic menu 源檔不存在，同步 controller 也不註冊。
+          test ! -e chrome/browser/ui/views/app_menu/tab_group_dynamic_menu.cc
+          test ! -e chrome/browser/ui/views/app_menu/tab_group_dynamic_menu.h
+          ! grep -q 'add_controller(CreateSavedTabGroupDataTypeController' components/browser_sync/common_controller_builder.cc
+          ! grep -q 'add_controller(CreateSharedTabGroupDataTypeController' components/browser_sync/common_controller_builder.cc
           if [ "$fail" != "0" ]; then exit 1; fi
           {
             echo '### 裁剪驗收（口徑＝`ninja -t graph chrome`，只有進產物的才算）'
             echo "- pdf／remoting／chrome printing／screen_ai／local_discovery／on_device_translation：全部 0 檔"
             echo "- printing 殘留 $n 檔＝upstream 的 dummy backend＋mojom 介面（設計如此）"
+            echo "- tab groups：dynamic menu 源檔已刪，saved/shared sync controller 未註冊"
             echo "- 目標數 $(gn ls "$OUT" | wc -l)｜build.ninja 邊 $(grep -c '^build ' "$OUT/build.ninja")"
           } >> "$GITHUB_STEP_SUMMARY"
 
