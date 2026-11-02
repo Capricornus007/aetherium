@@ -33,17 +33,16 @@ ninja -C /home/avatar/chromium-out/AndroidCheck -n chrome_public_apk
 | 品牌字串 | `branding_path_product="aetherium"`、`branding_path_component="aetherium"` | 只設 component 時 `gn gen` 會過，但 `ninja -n` 會找已被改名的 `chrome/app/chromium_strings.grd` 而報 missing | Android 檔已補 product |
 | 語音 | 無 | `enable_speech_synthesis`、`enable_speech_recognition` 這棵樹根本沒有宣告（設了只 WARN） | 改成 `enable_speech_service=false`、`enable_browser_speech_service=false` |
 
-## 這次改了什麼
+## 2026-11-03 整理結果
 
-- `~/Downloads/aetherium/args-android.gn`
-  - 補 `branding_path_product = "aetherium"`。
-  - 補列印四條：`enable_printing / enable_print_preview / use_cups / enable_pdf = false`。
-  - 補 `enable_cast_receiver = false`。
-  - 把不存在的兩個語音 arg 換成真的 `enable_speech_service` / `enable_browser_speech_service`。
-- `~/Downloads/aetherium/config/args.gn`（Linux 權威版）
-  - 補 `branding_path_product = "aetherium"`、`enable_cast_receiver = false`。
-- `~/Downloads/aetherium-args/linux/args.gn`
-  - 補同一組 trim args 與 branding product/component 註記。
+- `args-android.gn` 是唯一 Android 參數來源；刪除檔尾會把 enterprise 裁剪重新覆寫為
+  `true` 的暫緩區，55 個 key 現在每個只宣告一次。
+- `.github/workflows/build-android.yml` 的 full-build 路線直接複製這份檔案，`gn gen` 後逐一
+  對照 `gn args --list --short`，不再維護另一串 inline args。
+- workflow 會確認 `aetherium_strings_zh-TW.xtb` 與
+  `branded_strings_zh-TW.pak` target 都存在，再開始編譯 `chrome_public_apk`。
+- Linux 與 Android 共用 `patches/series` 的 21 支固定順序；補丁只能整支套用，任何衝突
+  都會直接失敗，不會逐檔拼出部分狀態。
 
 ## 還沒驗證 / 風險
 

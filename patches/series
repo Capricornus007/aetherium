@@ -1,0 +1,22 @@
+# Ordered relative to patches/. Keep dependencies before their consumers.
+adblock/0001-mv2-restore-ungoogled-155.patch
+adblock/0002-remove-navigation-source-param-ungoogled-155.patch
+adblock/0003-disable-intranet-redirect-detector-ungoogled-155.patch
+adblock/0004-disable-dial-periodic-discovery-ungoogled-155.patch
+branding/0001-theme-aetherium-icons.patch
+branding/0002-branding-rename-aetherium.patch.gz
+branding/0003-product-layer-aetherium.patch
+branding/0004-grit-resource-ids-aetherium.patch
+performance/0001-default-memory-saver-on.patch
+privacy/0001-local-privacy-and-ai-surface-trims.patch
+privacy/0002-remove-api-keys-infobar-deadcode.patch
+security/0001-disable-battery-status-service-inox-ungoogled-155.patch
+security/0002-disable-sb-incident-reporting-iridium-ungoogled-155.patch
+security/0003-disable-sb-client-side-phishing-report-iridium-ungoogled-155.patch
+trim/0001-disable-printing-pdf-screenai-cast.patch
+trim/0002-headless-ozone-autodetect.patch
+trim/0003-disable-on-device-translation.patch
+trim/0005-deep-trim-asserts-and-deps.patch
+trim/0007-remove-tab-groups-desktop.patch
+trim/0008-remove-tab-groups-sync.patch
+trim/0009-remove-tab-group-dynamic-menu.patch

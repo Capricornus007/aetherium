@@ -24,15 +24,12 @@ concurrency:
 # safe_browsing_mode…），而且完全沒套 `patches/`（跟本倉庫的補丁系列互不相認），
 # 還在用 perl 大範圍擦 BUILD.gn 裡 `assert(enable_vr…)` 那種舊時代的做法。
 #
-# 現在 push 只做一件一定有意義的事：抓最新 upstream → 確認 `patches/` 14 支
-# 還套得乾淨（套不上就紅，並列出是哪一支、哪些沒套到）。Android 的 `gn gen`
-# 需要 android SDK／NDK（install-build-deps --android 要抓幾 GB），加上完整
-# APK 在 2 核 7GB 的免費 runner 上不可能在 6 小時上限內編完，所以那些一律
-# 只在手動 workflow_dispatch 勾 full_build 時才跑。
+# Push／PR 依 `patches/series` 的固定順序檢查完整補丁系列。手動勾
+# `full_build` 時，同一個 job 會使用倉庫的 `args-android.gn` 產生 Android
+# build graph 並編譯 APK；不再維護第二份 inline 參數。
 #
-# ⚠️ 注意：本倉庫的補丁系列是「Linux 桌面」取向（trim/ 與 config/args.gn 都是）。
-#     Android 那條線目前只驗證「補丁能乾淨套上 upstream」，不保證 Android 的
-#     gn gen／編譯可用；要真的做 Android 版，得另外出一份 Android 用的 args。
+# Android SDK／NDK 依賴很大，完整 APK 在免費 runner 上可能超過六小時，
+# 所以 push／PR 只跑補丁適用性，完整建置仍由 workflow_dispatch 明確觸發。
 jobs:
   android:
     name: Android 補丁適用性檢查
@@ -134,11 +131,26 @@ jobs:
         if: ${{ github.event_name == 'workflow_dispatch'  && github.event.inputs.full_build == 'true' }}
         run: |
           cd "$CHROMIUM_DIR/src"
-          # 只留 158 實際存在的 arg（`gn args --list` 核對）；舊清單裡的
-          # enable_vr／enable_plugins／enable_nacl／enable_media_router／enable_feed／
-          # enable_reading_list／build_with_tflite_lib／safe_browsing_mode=0 已移除或改名，
-          # 留著只會讓 gn gen 報「Invalid configuration value」。
-          gn gen out/Default --args='target_os="android" target_cpu="arm64" is_official_build=false is_component_build=false is_debug=false symbol_level=0 blink_symbol_level=0 v8_symbol_level=0 enable_remoting=false enable_widevine=false enable_hangout_services_extension=false enable_mdns=false use_thin_lto=false is_java_debug=true treat_warnings_as_errors=false android_static_analysis="off" disable_fieldtrial_testing_config=true enable_cdm_host_verification=false enable_web_tests=false blink_enable_generated_code_formatting=false cc_wrapper="ccache" optimize_webui=false clang_use_chrome_plugins=false enable_pdf=false enable_print_preview=false enable_spellcheck=false enable_webrtc=false rtc_include_tests=false'
+          mkdir -p out/Default
+          cp "$GITHUB_WORKSPACE/args-android.gn" out/Default/args.gn
+          gn gen out/Default
+          python3 - out/Default <<'PY'
+          import os, re, subprocess, sys
+          out = sys.argv[1]
+          listed = subprocess.run(
+              ['gn', 'args', '--list', '--short', out], capture_output=True,
+              text=True, check=True).stdout
+          real = {line.split()[0] for line in listed.splitlines()
+                  if line.strip() and not line.startswith(' ')}
+          keys = [line.split('=')[0].strip()
+                  for line in open(os.path.join(out, 'args.gn'), encoding='utf-8')
+                  if re.match(r'^[A-Za-z_0-9]+ *=', line)]
+          missing = [key for key in keys if key not in real]
+          if missing:
+              raise SystemExit(f'unknown Android GN args: {missing}')
+          PY
+          grep -q '<translationbundle lang="zh-TW">' chrome/app/resources/aetherium_strings_zh-TW.xtb
+          ninja -C out/Default -t targets all | grep -q 'branded_strings_zh-TW.pak'
 
       - name: Build Android APK
         if: ${{ github.event_name == 'workflow_dispatch'  && github.event.inputs.full_build == 'true' }}

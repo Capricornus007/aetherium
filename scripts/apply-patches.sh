@@ -6,14 +6,9 @@
 #     ~/Downloads/aetherium/scripts/apply-patches.sh           # 套用
 #     ~/Downloads/aetherium/scripts/apply-patches.sh --dry-run # 只回報狀態，不動樹
 #
-# 2026-10-22 修正：舊版某支補丁失敗時只印一行就 exit，後面的補丁整批被跳過卻看不出來
-# （adblock/0003 過時那次，trim/ 兩支整個沒套）。現在會印「已套／新套／未套」三張清單，
-# 並用 ::error:: 讓 GitHub Actions 標紅。
-#
-# 2026-10-23 修正：補丁「已經在樹上」時原本會報「套用失敗」（因為 git apply --check
-# 看的是「能不能再套一次」，重複套用必然衝突），導致第二輪跑一定不綠。
-# 現在先用 git apply --reverse --check 判别「已套用」，這類補丁直接跳過、不算錯誤，
-# 所以本腳本可重複執行（冪等）。真套不上去的才失敗。
+# `patches/series` 是唯一順序來源。每支補丁都必須整支通過 `git apply --check`；
+# 不拆檔、不猜測「部分已套」，避免產生不屬於任何已知版本的混合樹。
+# 請在 `patches/UPSTREAM_BASE` 的乾淨 checkout 執行；重複執行會明確失敗。
 #
 # 2026-10-23（同日第二版）：支援 .patch.gz。品牌改名那支原文 30MB，超過 GitHub
 # 單一檔 25MB 軟上限，改存 gzip（5.1MB）；套用前先解到暫存檔，結束一定刪。
@@ -38,12 +33,44 @@ if ! git rev-parse --show-toplevel >/dev/null 2>&1; then
 fi
 printf '目標倉庫：%s\n' "$(git rev-parse --show-toplevel)"
 
-mapfile -t patches < <(find "$patch_dir" -type f \
-                       \( -name '*.patch' -o -name '*.patch.gz' \) | sort)
+series_file="$patch_dir/series"
+if [ ! -f "$series_file" ]; then
+  echo "Patch series not found: $series_file"
+  exit 1
+fi
 
-already=()   # 樹上已有這支的內容（跳過）
+patches=()
+declare -A listed=()
+while IFS= read -r entry; do
+  entry="${entry%$'\r'}"
+  case "$entry" in
+    ""|'#'*) continue ;;
+    /*|../*|*/../*|*/..) echo "Invalid patch path in series: $entry"; exit 1 ;;
+    *.patch|*.patch.gz) ;;
+    *) echo "Invalid patch suffix in series: $entry"; exit 1 ;;
+  esac
+  if [ -n "${listed[$entry]:-}" ]; then
+    echo "Duplicate patch in series: $entry"
+    exit 1
+  fi
+  if [ ! -f "$patch_dir/$entry" ]; then
+    echo "Listed patch not found: $entry"
+    exit 1
+  fi
+  listed[$entry]=1
+  patches+=("$patch_dir/$entry")
+done < "$series_file"
+
+while IFS= read -r entry; do
+  if [ -z "${listed[$entry]:-}" ]; then
+    echo "Patch is not listed in series: $entry"
+    exit 1
+  fi
+done < <(find "$patch_dir" -type f \( -name '*.patch' -o -name '*.patch.gz' \) \
+           -printf '%P\n' | sort)
+
 applied=()   # 這輪新套上去的
-failed=()    # 套不下去（與上游衝突）
+failed=()    # 套不下去（與上游衝突或樹不乾淨）
 total="${#patches[@]}"
 
 tmp_patch=""
@@ -63,10 +90,7 @@ for i in "${!patches[@]}"; do
   fi
 
   printf '\n檢查補丁：%s\n' "$patch"
-  if git apply --reverse --check --ignore-space-change --ignore-whitespace "$target" 2>/dev/null; then
-    printf '  狀態：已在樹上（跳過，不重複套用）\n'
-    already+=("$patch")
-  elif git apply --check --ignore-space-change --ignore-whitespace "$target" 2>/dev/null; then
+  if git apply --check --ignore-space-change --ignore-whitespace "$target" 2>/dev/null; then
     if [ "$dry_run" -eq 1 ]; then
       printf '  狀態：可乾淨套用（dry-run，未實際寫入）\n'
       applied+=("$patch")
@@ -76,56 +100,16 @@ for i in "${!patches[@]}"; do
       applied+=("$patch")
     fi
   else
-    # 2026-10-28：補丁之間會互相重疊（後面的補丁又在同一檔案追加東西、或後續手動編輯過），
-    # 這種情況「整支反向檢查」不會綠，但內容其實都在樹上。改成逐檔判定：
-    # 每個檔案要嘛反向能過（已在樹上）、要嘛正向能過（本輪可套），全部都不衝突才算正常；
-    # 只有真的衝突（兩邊都不過）才報錯。dry-run 只統計不動樹。
-    _tmpd=$(mktemp -d)
-    python3 - "$target" "$_tmpd" <<'PYEOF' >/dev/null
-import os, re, sys
-src, outdir = sys.argv[1], sys.argv[2]
-data = open(src, encoding='utf-8', errors='surrogateescape').read()
-parts = re.split(r'(?m)^(?=diff --git )', data)
-n = 0
-for p in parts:
-    if not p.startswith('diff --git '):
-        continue
-    n += 1
-    with open(os.path.join(outdir, f'{n:04d}.patch'), 'w',
-              encoding='utf-8', errors='surrogateescape') as fh:
-        fh.write(p)
-PYEOF
-    _dup=0; _todo=0; _conflict=0
-    for _f in "$_tmpd"/*.patch; do
-      [ -e "$_f" ] || continue
-      if git apply --reverse --check --ignore-space-change --ignore-whitespace "$_f" 2>/dev/null; then
-        _dup=$((_dup + 1))
-      elif git apply --check --ignore-space-change --ignore-whitespace "$_f" 2>/dev/null; then
-        _todo=$((_todo + 1))
-        if [ "$dry_run" -eq 0 ]; then
-          git apply --index --ignore-space-change --ignore-whitespace "$_f" 2>/dev/null || _conflict=$((_conflict + 1))
-        fi
-      else
-        _conflict=$((_conflict + 1))
-        printf '  衝突檔案：%s\n' "$(sed -n 's|^+++ b/||p' "$_f" | head -n1)"
-      fi
-    done
-    rm -rf "$_tmpd"
-    if [ "$_conflict" -eq 0 ]; then
-      printf '  狀態：逐檔判定通過（已在樹上 %d 檔、本輪套 %d 檔）\n' "$_dup" "$_todo"
-      applied+=("$patch")
-    else
-      # 既不在樹上、也套不下去 ⇒ 補丁與上游現況衝突，必須修補丁，不可繞過。
-      printf '::error::補丁套用失敗（與上游衝突）：%s\n' "$patch"
-      failed+=("$patch")
-    fi
+    # A listed patch is an atomic unit. Never split it by file: doing so can
+    # silently create a tree that corresponds to neither side of the patch.
+    printf '::error::補丁套用失敗（與上游衝突）：%s\n' "$patch"
+    failed+=("$patch")
   fi
 done
 cleanup
 
-printf '\n總結：補丁共 %d 支｜本輪新套 %d 支｜原本已在樹上 %d 支｜失敗 %d 支\n' \
-       "$total" "${#applied[@]}" "${#already[@]}" "${#failed[@]}"
-printf '已在樹上（跳過）：%s\n' "${already[*]:-（無）}"
+printf '\n總結：補丁共 %d 支｜本輪新套 %d 支｜失敗 %d 支\n' \
+       "$total" "${#applied[@]}" "${#failed[@]}"
 printf '本輪新套：%s\n' "${applied[*]:-（無）}"
 if [ "${#failed[@]}" -gt 0 ]; then
   printf '套用失敗：%s\n' "${failed[*]}"
