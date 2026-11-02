@@ -45,6 +45,9 @@ ninja -C /home/avatar/chromium-out/AndroidCheck -n chrome_public_apk
 - WebRTC 在 Chromium 的 `rtc_include_internal_audio_device=false` 路線會先加入 AAudio define，
   再用 `defines =` 寫 dummy define；GN 禁止非空 list 被另一個非空 list 覆蓋。固定補丁
   `deps/webrtc/0001-append-dummy-audio-define.patch` 改成 `+=`，兩個 build intent 都保留。
+- `branding_path_product="aetherium"` 會讓 vector icon 產生器讀
+  `components/vector_icons/aetherium/{product,product_refresh}.icon`；品牌補丁原本只改引用、漏帶檔案，
+  `branding/0005-product-vector-icons.patch` 現在明確加入兩份 Chromium 基準圖示，避免建置圖可生但 APK 排程缺檔。
 - workflow 會確認 `aetherium_strings_zh-TW.xtb` 與
   `branded_strings_zh-TW.pak` target 都存在，再開始編譯 `chrome_public_apk`。
 - Linux 與 Android 共用 `patches/series` 的 21 支固定順序；補丁只能整支套用，任何衝突

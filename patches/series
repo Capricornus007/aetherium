@@ -7,6 +7,7 @@ branding/0001-theme-aetherium-icons.patch
 branding/0002-branding-rename-aetherium.patch.gz
 branding/0003-product-layer-aetherium.patch
 branding/0004-grit-resource-ids-aetherium.patch
+branding/0005-product-vector-icons.patch
 performance/0001-default-memory-saver-on.patch
 privacy/0001-local-privacy-and-ai-surface-trims.patch
 privacy/0002-remove-api-keys-infobar-deadcode.patch

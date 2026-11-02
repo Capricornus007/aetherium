@@ -152,6 +152,8 @@ jobs:
           if missing:
               raise SystemExit(f'unknown Android GN args: {missing}')
           PY
+          test -s components/vector_icons/aetherium/product.icon
+          test -s components/vector_icons/aetherium/product_refresh.icon
           grep -q '<translationbundle lang="zh-TW">' chrome/app/resources/aetherium_strings_zh-TW.xtb
           ninja -C out/Default -t targets all | grep -q 'branded_strings_zh-TW.pak'
 
