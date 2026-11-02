@@ -39,6 +39,9 @@ ninja -C /home/avatar/chromium-out/AndroidCheck -n chrome_public_apk
   `true` 的暫緩區，55 個 key 現在每個只宣告一次。
 - `.github/workflows/build-android.yml` 的 full-build 路線直接複製這份檔案，`gn gen` 後逐一
   對照 `gn args --list --short`，不再維護另一串 inline args。
+- full-build checkout 在 `gclient sync` 前把 `target_os = ["android"]` 寫進 `.gclient`；這和
+  `args-android.gn` 裡的 `target_os="android"` 是兩層不同設定。前者決定要不要同步 Android
+  toolchain，缺少時 `checkout_android=false`，GN 會在 `build/config/android/config.gni` 直接拒絕。
 - workflow 會確認 `aetherium_strings_zh-TW.xtb` 與
   `branded_strings_zh-TW.pak` target 都存在，再開始編譯 `chrome_public_apk`。
 - Linux 與 Android 共用 `patches/series` 的 21 支固定順序；補丁只能整支套用，任何衝突

@@ -65,6 +65,9 @@ jobs:
           mkdir -p "$CHROMIUM_DIR"
           cd "$CHROMIUM_DIR"
           fetch --nohooks --no-history chromium
+          # `target_os` 是 gclient 的依賴選擇，不是 args.gn：缺它時 checkout_android=false，
+          # GN 會在 build/config/android/config.gni 直接拒絕，SDK/NDK 也不會同步下來。
+          printf '\ntarget_os = ["android"]\n' >> .gclient
 
       - name: 釘到補丁的生成基準（patches/UPSTREAM_BASE）
         run: |
