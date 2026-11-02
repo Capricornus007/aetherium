@@ -1,0 +1,12 @@
+diff --git a/modules/audio_device/BUILD.gn b/modules/audio_device/BUILD.gn
+--- a/modules/audio_device/BUILD.gn
++++ b/modules/audio_device/BUILD.gn
+@@ -386,7 +386,7 @@ rtc_library("audio_device_impl") {
+       configs += [ ":audio_device_warnings_config" ]
+     }
+   } else {
+-    defines = [ "WEBRTC_DUMMY_AUDIO_BUILD" ]
++    defines += [ "WEBRTC_DUMMY_AUDIO_BUILD" ]
+   }
+ 
+   if (!build_with_chromium) {

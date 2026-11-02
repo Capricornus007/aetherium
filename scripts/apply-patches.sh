@@ -6,9 +6,9 @@
 #     ~/Downloads/aetherium/scripts/apply-patches.sh           # 套用
 #     ~/Downloads/aetherium/scripts/apply-patches.sh --dry-run # 只回報狀態，不動樹
 #
-# `patches/series` 是唯一順序來源。每支補丁都必須整支通過 `git apply --check`；
-# 不拆檔、不猜測「部分已套」，避免產生不屬於任何已知版本的混合樹。
-# 請在 `patches/UPSTREAM_BASE` 的乾淨 checkout 執行；重複執行會明確失敗。
+# `patches/series` 是唯一順序來源。一般補丁對 Chromium 根倉套用；`deps/webrtc/`
+# 補丁對 `third_party/webrtc` 的 DEPS checkout 套用。每支都必須整支通過
+# `git apply --check`，不拆檔、不猜測「部分已套」，避免產生未知混合樹。
 #
 # 2026-10-23（同日第二版）：支援 .patch.gz。品牌改名那支原文 30MB，超過 GitHub
 # 單一檔 25MB 軟上限，改存 gzip（5.1MB）；套用前先解到暫存檔，結束一定刪。
@@ -89,13 +89,24 @@ for i in "${!patches[@]}"; do
     target="$patch"
   fi
 
-  printf '\n檢查補丁：%s\n' "$patch"
-  if git apply --check --ignore-space-change --ignore-whitespace "$target" 2>/dev/null; then
+  entry="${patch#"$patch_dir/"}"
+  target_repo="$PWD"
+  case "$entry" in
+    deps/webrtc/*) target_repo="$PWD/third_party/webrtc" ;;
+  esac
+  if ! git -C "$target_repo" rev-parse --show-toplevel >/dev/null 2>&1; then
+    printf '::error::補丁目標倉庫不存在：%s（補丁 %s）\n' "$target_repo" "$patch"
+    failed+=("$patch")
+    continue
+  fi
+
+  printf '\n檢查補丁：%s（目標 %s）\n' "$patch" "$target_repo"
+  if git -C "$target_repo" apply --check --ignore-space-change --ignore-whitespace "$target" 2>/dev/null; then
     if [ "$dry_run" -eq 1 ]; then
       printf '  狀態：可乾淨套用（dry-run，未實際寫入）\n'
       applied+=("$patch")
     else
-      git apply --index --ignore-space-change --ignore-whitespace "$target"
+      git -C "$target_repo" apply --index --ignore-space-change --ignore-whitespace "$target"
       printf '  狀態：已套用\n'
       applied+=("$patch")
     fi

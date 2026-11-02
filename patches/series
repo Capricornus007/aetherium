@@ -13,6 +13,7 @@ privacy/0002-remove-api-keys-infobar-deadcode.patch
 security/0001-disable-battery-status-service-inox-ungoogled-155.patch
 security/0002-disable-sb-incident-reporting-iridium-ungoogled-155.patch
 security/0003-disable-sb-client-side-phishing-report-iridium-ungoogled-155.patch
+deps/webrtc/0001-append-dummy-audio-define.patch
 trim/0001-disable-printing-pdf-screenai-cast.patch
 trim/0002-headless-ozone-autodetect.patch
 trim/0003-disable-on-device-translation.patch
