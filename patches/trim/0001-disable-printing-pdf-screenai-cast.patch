@@ -1,16 +1,17 @@
 diff --git a/chrome/browser/BUILD.gn b/chrome/browser/BUILD.gn
-index 5fe5834d51ba7..22d3d08dcaccb 100644
+index 5fe5834d51ba7530b1cca32fcd0552c21ed4d538..27ecec28f519411e41c632985cd46d7e968841ab 100644
 --- a/chrome/browser/BUILD.gn
 +++ b/chrome/browser/BUILD.gn
-@@ -1556,7 +1556,6 @@ source_set("core") {
+@@ -1555,8 +1555,6 @@ source_set("core") {
+       "//chrome/browser/captive_portal",
        "//chrome/browser/headless:headless_extra_parts",
        "//chrome/browser/indigo/onboarding",
-       "//chrome/browser/media/router/discovery/access_code:access_code_sink_service",
+-      "//chrome/browser/media/router/discovery/access_code:access_code_sink_service",
 -      "//chrome/browser/printing",
        "//chrome/browser/record_replay:impl",
        "//chrome/browser/sensor",
        "//chrome/browser/sharing_hub",
-@@ -1579,6 +1578,10 @@ source_set("core") {
+@@ -1579,6 +1577,14 @@ source_set("core") {
        "//chrome/browser/ui/web_applications:impl",
        "//chrome/browser/ui/webui/util",
      ]
@@ -18,10 +19,14 @@ index 5fe5834d51ba7..22d3d08dcaccb 100644
 +    if (enable_printing) {
 +      deps += [ "//chrome/browser/printing" ]
 +    }
++
++    if (enable_service_discovery) {
++      deps += [ "//chrome/browser/media/router/discovery/access_code:access_code_sink_service" ]
++    }
    }
  
    if (!is_android || is_desktop_android) {
-@@ -3034,7 +3037,6 @@ source_set("browser") {
+@@ -3034,7 +3040,6 @@ source_set("browser") {
        "//chrome/browser/profile_resetter:impl",
        "//chrome/browser/record_replay",
        "//chrome/browser/record_replay:impl",
@@ -29,7 +34,7 @@ index 5fe5834d51ba7..22d3d08dcaccb 100644
        "//chrome/browser/sharing_hub",
        "//chrome/browser/sharing_hub:impl",
        "//chrome/browser/smart_card",
-@@ -3318,6 +3320,10 @@ source_set("browser") {
+@@ -3318,6 +3323,10 @@ source_set("browser") {
        "//ui/views",
        "//ui/web_dialogs",
      ]
@@ -41,7 +46,7 @@ index 5fe5834d51ba7..22d3d08dcaccb 100644
        deps += [ "//chrome/browser/safe_browsing/suspicious_site_warnings" ]
      }
 diff --git a/chrome/browser/accessibility/BUILD.gn b/chrome/browser/accessibility/BUILD.gn
-index b0d565ae9a2c1..2c644f240d4d0 100644
+index b0d565ae9a2c1ca531a2d597c5cf337ce66d209e..2c644f240d4d0c227dd6e986e8bbe2fb8091fc36 100644
 --- a/chrome/browser/accessibility/BUILD.gn
 +++ b/chrome/browser/accessibility/BUILD.gn
 @@ -2,6 +2,7 @@
@@ -120,7 +125,7 @@ index b0d565ae9a2c1..2c644f240d4d0 100644
        data_deps += [ "//third_party/screen-ai:screen_ai" ]
      }
 diff --git a/chrome/browser/accessibility/live_caption/BUILD.gn b/chrome/browser/accessibility/live_caption/BUILD.gn
-index 1a2783a70208c..668792aa9aef1 100644
+index 1a2783a70208c1aae0bf31769b02958f13998c65..668792aa9aef18b80ac98189604f9b27074ba373 100644
 --- a/chrome/browser/accessibility/live_caption/BUILD.gn
 +++ b/chrome/browser/accessibility/live_caption/BUILD.gn
 @@ -2,6 +2,8 @@
@@ -184,7 +189,7 @@ index 1a2783a70208c..668792aa9aef1 100644
  
  source_set("test_support") {
 diff --git a/chrome/browser/accessibility/tree_fixing/BUILD.gn b/chrome/browser/accessibility/tree_fixing/BUILD.gn
-index 77e43c52fd9b9..24e9e85074fc7 100644
+index 77e43c52fd9b9eb3323b3bc593660ce28b9feb80..24e9e85074fc741770c27892e40619175bd1fb54 100644
 --- a/chrome/browser/accessibility/tree_fixing/BUILD.gn
 +++ b/chrome/browser/accessibility/tree_fixing/BUILD.gn
 @@ -3,6 +3,7 @@
@@ -216,7 +221,7 @@ index 77e43c52fd9b9..24e9e85074fc7 100644
 +  }
  }
 diff --git a/chrome/browser/back_forward_cache/BUILD.gn b/chrome/browser/back_forward_cache/BUILD.gn
-index 0c5ab3048ba8b..56262af17f5a1 100644
+index 0c5ab3048ba8b523a15d527ec4b0bdec0a78f14c..56262af17f5a153c0d07d2fc6b4f8a53734f8057 100644
 --- a/chrome/browser/back_forward_cache/BUILD.gn
 +++ b/chrome/browser/back_forward_cache/BUILD.gn
 @@ -32,7 +32,6 @@ if (!is_android) {
@@ -239,7 +244,7 @@ index 0c5ab3048ba8b..56262af17f5a1 100644
        deps += [
          "//chrome/browser/pdf:pdf_extension_test_utils",
 diff --git a/chrome/browser/component_updater/BUILD.gn b/chrome/browser/component_updater/BUILD.gn
-index d006b9e17ed11..b2b9301c41a2c 100644
+index d006b9e17ed118832da59949097d7889af96a50b..b2b9301c41a2c46afa79d3fa7dfb9f7569731f66 100644
 --- a/chrome/browser/component_updater/BUILD.gn
 +++ b/chrome/browser/component_updater/BUILD.gn
 @@ -12,6 +12,7 @@ import("//net/features.gni")
@@ -269,7 +274,7 @@ index d006b9e17ed11..b2b9301c41a2c 100644
  
    if (use_minikin_hyphenation) {
 diff --git a/chrome/browser/contextual_tasks/BUILD.gn b/chrome/browser/contextual_tasks/BUILD.gn
-index 8317e057a4799..9879a786dac58 100644
+index 8317e057a479906227ac59b54b31fc54f725993c..9879a786dac5888cd118e1d72ebf35963d27957b 100644
 --- a/chrome/browser/contextual_tasks/BUILD.gn
 +++ b/chrome/browser/contextual_tasks/BUILD.gn
 @@ -524,7 +524,6 @@ source_set("ui_impl") {
@@ -292,7 +297,7 @@ index 8317e057a4799..9879a786dac58 100644
  
    if (enable_dice_support) {
 diff --git a/chrome/browser/enterprise/data_protection/BUILD.gn b/chrome/browser/enterprise/data_protection/BUILD.gn
-index ca865c84a294c..cda2000bacc7e 100644
+index ca865c84a294c5c47c0be4e2689b1253613e8856..cda2000bacc7eba57ae2435dfa199232806c1085 100644
 --- a/chrome/browser/enterprise/data_protection/BUILD.gn
 +++ b/chrome/browser/enterprise/data_protection/BUILD.gn
 @@ -56,7 +56,9 @@ source_set("unit_tests") {
@@ -307,7 +312,7 @@ index ca865c84a294c..cda2000bacc7e 100644
  
    if (enterprise_data_controls) {
 diff --git a/chrome/browser/extensions/BUILD.gn b/chrome/browser/extensions/BUILD.gn
-index 3a5f0df845a78..1aa8470fa270c 100644
+index 3a5f0df845a7899b58f7a828bacf54ac475539e1..1aa8470fa270c402561b6d7822c96f352acbfd7f 100644
 --- a/chrome/browser/extensions/BUILD.gn
 +++ b/chrome/browser/extensions/BUILD.gn
 @@ -3177,11 +3177,9 @@ source_set("browser_tests") {
@@ -348,7 +353,7 @@ index 3a5f0df845a78..1aa8470fa270c 100644
  
      if (enable_background_mode) {
 diff --git a/chrome/browser/guest_view/BUILD.gn b/chrome/browser/guest_view/BUILD.gn
-index b4e94778b3f9d..9b00ae5d8b5fe 100644
+index b4e94778b3f9d926719f506bc931eb7160095f69..9b00ae5d8b5fee48bac8da50c42752e174ca08d5 100644
 --- a/chrome/browser/guest_view/BUILD.gn
 +++ b/chrome/browser/guest_view/BUILD.gn
 @@ -5,6 +5,7 @@
@@ -385,7 +390,7 @@ index b4e94778b3f9d..9b00ae5d8b5fe 100644
  
    source_set("interactive_ui_tests") {
 diff --git a/chrome/browser/prefs/BUILD.gn b/chrome/browser/prefs/BUILD.gn
-index 66f9c0d285f33..cc98017fd187e 100644
+index 66f9c0d285f331355dd808c821307c0467933a4f..cc98017fd187e5432eb553621b9f11307e0bb77d 100644
 --- a/chrome/browser/prefs/BUILD.gn
 +++ b/chrome/browser/prefs/BUILD.gn
 @@ -10,6 +10,8 @@ import("//components/safe_browsing/buildflags.gni")
@@ -417,7 +422,7 @@ index 66f9c0d285f33..cc98017fd187e 100644
        "persistent_renderer_prefs_manager.cc",
        "persistent_renderer_prefs_manager_factory.cc",
 diff --git a/chrome/browser/profiles/BUILD.gn b/chrome/browser/profiles/BUILD.gn
-index 31fbd9556e19b..d64878fe7fd34 100644
+index 31fbd9556e19b62ff9e1019091d8edc9b0b53aee..d64878fe7fd34e892bd5ed1e49b2330b8b5a2760 100644
 --- a/chrome/browser/profiles/BUILD.gn
 +++ b/chrome/browser/profiles/BUILD.gn
 @@ -12,6 +12,7 @@ import("//components/on_device_translation/buildflags/features.gni")
@@ -448,7 +453,7 @@ index 31fbd9556e19b..d64878fe7fd34 100644
    if (!is_android && !is_chromeos) {
      deps += [ "//chrome/browser/download/bubble" ]
 diff --git a/chrome/browser/renderer_context_menu/BUILD.gn b/chrome/browser/renderer_context_menu/BUILD.gn
-index ffaa00e6e9127..80d294f7fc7f1 100644
+index ffaa00e6e91275a1e690ad2a0e1a4dd00ea51dc1..80d294f7fc7f145a0f10820fb4d3cf4291470216 100644
 --- a/chrome/browser/renderer_context_menu/BUILD.gn
 +++ b/chrome/browser/renderer_context_menu/BUILD.gn
 @@ -137,7 +137,6 @@ source_set("impl") {
@@ -490,7 +495,7 @@ index ffaa00e6e9127..80d294f7fc7f1 100644
        sources += [
          # This test is for the spelling options submenu that's only for
 diff --git a/chrome/browser/ui/BUILD.gn b/chrome/browser/ui/BUILD.gn
-index 23af05c2737c2..02bf4274095f6 100644
+index 23af05c2737c2f7fef49e5ab58ad8cbb3a675c63..02bf4274095f6c1678ec3160ed202ae69e4521e9 100644
 --- a/chrome/browser/ui/BUILD.gn
 +++ b/chrome/browser/ui/BUILD.gn
 @@ -155,12 +155,15 @@ if (!is_android) {
@@ -557,7 +562,7 @@ index 23af05c2737c2..02bf4274095f6 100644
        deps += [
          "//ash/constants",
 diff --git a/chrome/browser/ui/blocked_content/BUILD.gn b/chrome/browser/ui/blocked_content/BUILD.gn
-index b831198f1eb1b..a65b597bbb8bd 100644
+index b831198f1eb1bdd116842b5a96143576ca118ddc..a65b597bbb8bd955ee436d829f7f7c0050e3fff8 100644
 --- a/chrome/browser/ui/blocked_content/BUILD.gn
 +++ b/chrome/browser/ui/blocked_content/BUILD.gn
 @@ -5,6 +5,7 @@
@@ -588,7 +593,7 @@ index b831198f1eb1b..a65b597bbb8bd 100644
  }
  
 diff --git a/chrome/browser/ui/lens/BUILD.gn b/chrome/browser/ui/lens/BUILD.gn
-index ea9719f8dcecb..840430848ac36 100644
+index ea9719f8dcecb55038bf5690b216f942a73bac3e..840430848ac36de579a94f364554bd2da3f09e1b 100644
 --- a/chrome/browser/ui/lens/BUILD.gn
 +++ b/chrome/browser/ui/lens/BUILD.gn
 @@ -383,7 +383,6 @@ if (!is_android) {
@@ -611,7 +616,7 @@ index ea9719f8dcecb..840430848ac36 100644
        deps += [ "//chrome/browser/pdf" ]
      }
 diff --git a/chrome/browser/ui/read_anything/BUILD.gn b/chrome/browser/ui/read_anything/BUILD.gn
-index 0b6886a28ba7c..1a2ea2b4a6b9b 100644
+index 0b6886a28ba7ca6cb5db6622d7388657b68a09af..1a2ea2b4a6b9beacc4f0de7f67b69619279dada2 100644
 --- a/chrome/browser/ui/read_anything/BUILD.gn
 +++ b/chrome/browser/ui/read_anything/BUILD.gn
 @@ -179,7 +179,6 @@ source_set("browser_tests") {
@@ -634,7 +639,7 @@ index 0b6886a28ba7c..1a2ea2b4a6b9b 100644
      sources += [ "read_anything_printing_browsertest.cc" ]
      deps += [
 diff --git a/chrome/browser/ui/webui/settings/BUILD.gn b/chrome/browser/ui/webui/settings/BUILD.gn
-index 55cffbc5c87da..3c51d2221a149 100644
+index 55cffbc5c87da6eb434a3fe947f08ab22ce5376a..3c51d2221a149cd9afe139fa468760c1dedb58e1 100644
 --- a/chrome/browser/ui/webui/settings/BUILD.gn
 +++ b/chrome/browser/ui/webui/settings/BUILD.gn
 @@ -5,6 +5,7 @@
@@ -679,7 +684,7 @@ index 55cffbc5c87da..3c51d2221a149 100644
  
      if (is_chrome_branded) {
 diff --git a/chrome/browser/ui/webui/side_panel/read_anything/BUILD.gn b/chrome/browser/ui/webui/side_panel/read_anything/BUILD.gn
-index c502b2acc5b68..79fbb81231ae4 100644
+index c502b2acc5b682c63575ddbc50f0c7f6340b499c..79fbb81231ae4e2dd60ed6162da1fcb6b139370c 100644
 --- a/chrome/browser/ui/webui/side_panel/read_anything/BUILD.gn
 +++ b/chrome/browser/ui/webui/side_panel/read_anything/BUILD.gn
 @@ -2,6 +2,8 @@
@@ -728,7 +733,7 @@ index c502b2acc5b68..79fbb81231ae4 100644
 +  }
  }
 diff --git a/chrome/renderer/BUILD.gn b/chrome/renderer/BUILD.gn
-index a28d0ae008cf3..0ee905b06059f 100644
+index a28d0ae008cf35d02510ae381863bd835d3bf058..0ee905b06059f2b518e1e98e1beb5faefa1a89dc 100644
 --- a/chrome/renderer/BUILD.gn
 +++ b/chrome/renderer/BUILD.gn
 @@ -18,6 +18,8 @@ import("//testing/libfuzzer/fuzzer_test.gni")
@@ -760,7 +765,7 @@ index a28d0ae008cf3..0ee905b06059f 100644
  
    if (is_chromeos) {
 diff --git a/chrome/test/BUILD.gn b/chrome/test/BUILD.gn
-index 9d0a9385a94e3..b10284c0e9df7 100644
+index 9d0a9385a94e3d3826a6858c663d1956c1c64fc6..b10284c0e9df74564c4180080a896b86c2ee9d80 100644
 --- a/chrome/test/BUILD.gn
 +++ b/chrome/test/BUILD.gn
 @@ -1292,7 +1292,6 @@ if (!is_android) {
@@ -854,7 +859,7 @@ index 9d0a9385a94e3..b10284c0e9df7 100644
        deps += [ "//ui/linux:display_server_utils" ]
      }
 diff --git a/chrome/tools/service_discovery_sniffer/BUILD.gn b/chrome/tools/service_discovery_sniffer/BUILD.gn
-index d11ed6eed68aa..9d48703859392 100644
+index d11ed6eed68aa369e921c667d6d34e74a0e65722..9d48703859392f8604fd6d0efa8b7a1a6e7a2da4 100644
 --- a/chrome/tools/service_discovery_sniffer/BUILD.gn
 +++ b/chrome/tools/service_discovery_sniffer/BUILD.gn
 @@ -2,6 +2,7 @@
@@ -884,7 +889,7 @@ index d11ed6eed68aa..9d48703859392 100644
 +  }
  }
 diff --git a/chrome/utility/BUILD.gn b/chrome/utility/BUILD.gn
-index e5b851a44d644..f260cabc14f33 100644
+index e5b851a44d644dfd5144ea8e661b546d8c8149a0..f260cabc14f336c90f8048bbd67edb032ae07883 100644
 --- a/chrome/utility/BUILD.gn
 +++ b/chrome/utility/BUILD.gn
 @@ -150,8 +150,11 @@ static_library("utility") {
@@ -901,7 +906,7 @@ index e5b851a44d644..f260cabc14f33 100644
  
    if (enable_extensions) {
 diff --git a/components/printing/browser/BUILD.gn b/components/printing/browser/BUILD.gn
-index 478121da0b45b..8853f1307c20f 100644
+index 478121da0b45b85ca7b2070c6a02895c05045406..8853f1307c20f41358777b7e7e6396c1b4964287 100644
 --- a/components/printing/browser/BUILD.gn
 +++ b/components/printing/browser/BUILD.gn
 @@ -3,6 +3,7 @@
@@ -945,7 +950,7 @@ index 478121da0b45b..8853f1307c20f 100644
      deps += [ "//components/enterprise/watermarking/content" ]
    }
 diff --git a/printing/backend/BUILD.gn b/printing/backend/BUILD.gn
-index 165da663e05ba..179dd4d075262 100644
+index 165da663e05ba64b93a9f89372c998c93c35eea1..179dd4d075262d87ff0f88482cf3372a92b95ee3 100644
 --- a/printing/backend/BUILD.gn
 +++ b/printing/backend/BUILD.gn
 @@ -32,7 +32,9 @@ component("backend") {
@@ -987,7 +992,7 @@ index 165da663e05ba..179dd4d075262 100644
      sources += [
        "cups_deleters.cc",
 diff --git a/printing/common/BUILD.gn b/printing/common/BUILD.gn
-index 3707ef0219cf7..49ac76e68fae5 100644
+index 3707ef0219cf7057f547ebfda0333aed3ea578cb..49ac76e68fae592b38b7adb399a086c6651c102a 100644
 --- a/printing/common/BUILD.gn
 +++ b/printing/common/BUILD.gn
 @@ -2,13 +2,16 @@
