@@ -20,6 +20,22 @@
 - Linux 使用 `config/args.gn`；Android 使用 `args-android.gn`。两个 workflow 都调用同一套
   补丁入口，Android 不再维护 inline 参数副本。
 
+### CI 的 clang-format 鏡像信任界線
+
+Chromium 的 root DEPS 與 WebPageReplay nested DEPS 都會抓
+`chromium.googlesource.com/.../clang-format.git`；該端點持續回 HTTP 500 時，單純重跑
+`gclient sync` 不會恢復。Linux／Android workflow 會先由
+`scripts/clang-format-mirror.sh` 完整複製 GitHub 的 `chromium-full-mirror`，保留既有的
+transient retry，再用 Git `url.*.insteadOf` 把 canonical URL 改寫成本機 bare cache。
+DEPS 文字與 `allowed_hosts` 不變，但後續 root／nested fetch 都不會連到故障端點。
+
+信任不是建立在鏡像分支名稱或「下載成功」上：腳本釘住每個可接受的 commit SHA-1 與其
+content tree SHA-1，setup、root checkout、nested checkout 三處都必須完全一致，且工作樹
+不得有修改；DEPS 若出現未列入信任清單的新 revision，CI 會 fail closed，必須先查證並更新
+commit／tree 對。Git commit 身分包含 tree，因此相同的 commit 與 tree 代表 checkout 的版本
+及內容都與釘選物件相同。`scripts/test-clang-format-mirror.sh` 以不可連線的假 canonical URL
+與固定本機 fixture，無網路地驗證改寫、兩層 checkout 與精確內容檢查。
+
 有一条需要你先知道，因为它跟你原本的认知不同（证据在报告第 0.1 节，都带档案与行号）：
 
 > 你以为「157 里 MV2 扩展不用补丁就能用」。实际上 `extensions/common/extension.cc:60` 那个

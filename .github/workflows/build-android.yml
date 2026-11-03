@@ -60,6 +60,12 @@ jobs:
           git clone --depth=1 https://chromium.googlesource.com/chromium/tools/depot_tools.git "$DEPOT_TOOLS"
           echo "$DEPOT_TOOLS" >> $GITHUB_PATH
 
+      - name: Prepare trusted clang-format mirror
+        run: |
+          "$GITHUB_WORKSPACE/scripts/test-clang-format-mirror.sh"
+          "$GITHUB_WORKSPACE/scripts/clang-format-mirror.sh" setup \
+            "$RUNNER_TEMP/clang-format-mirror.git"
+
       - name: Create Chromium checkout
         run: |
           mkdir -p "$CHROMIUM_DIR"
@@ -126,6 +132,11 @@ jobs:
             echo "::warning::第 $attempt 次同步失敗（rc=$rc），退避 ${wait_s}s 後重試"
             sleep "$wait_s"
           done
+
+      - name: Verify root and nested clang-format checkouts
+        run: |
+          "$GITHUB_WORKSPACE/scripts/clang-format-mirror.sh" verify \
+            "$CHROMIUM_DIR/src" "$RUNNER_TEMP/clang-format-mirror.git"
 
       - name: Run hooks
         run: |
