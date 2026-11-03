@@ -6,8 +6,8 @@
 # 素材：TRIM-NOTES.md 各「args-android 備忘」段（用戶歷次裁定）
 #
 # 2026-10-28 驗證：`gn gen` 產生 64,423 個 targets，
-# `ninja -n chrome_public_apk` 產生 60,183 行命令；完整編譯仍由 CI 的
-# workflow_dispatch/full_build 執行。驗證口徑與命令見 docs/android-args-feasibility.md。
+# `ninja -n chrome_public_apk` 產生 60,183 行命令；完整編譯依用戶裁定只在本機執行。
+# 驗證口徑與命令見 docs/android-args-feasibility.md。
 # =============================================================================
 
 # ── 一、目標與架構 ────────────────────────────────────────────────────────

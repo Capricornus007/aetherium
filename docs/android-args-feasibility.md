@@ -37,21 +37,21 @@ ninja -C /home/avatar/chromium-out/AndroidCheck -n chrome_public_apk
 
 - `args-android.gn` 是唯一 Android 參數來源；刪除檔尾會把 enterprise 裁剪重新覆寫為
   `true` 的暫緩區，55 個 key 現在每個只宣告一次。
-- `.github/workflows/build-android.yml` 的 full-build 路線直接複製這份檔案，`gn gen` 後逐一
-  對照 `gn args --list --short`，不再維護另一串 inline args。
-- full-build checkout 在 `gclient sync` 前把 `target_os = ["android"]` 寫進 `.gclient`；這和
-  `args-android.gn` 裡的 `target_os="android"` 是兩層不同設定。前者決定要不要同步 Android
-  toolchain，缺少時 `checkout_android=false`，GN 會在 `build/config/android/config.gni` 直接拒絕。
-- 初始 `fetch chromium` 也可能在任一 DEPS 倉遇到 HTTP 429/500；workflow 現在保留已完成 checkout，
-  後續輪改用可重入的 `gclient sync` 續接，且真正保留失敗碼（不再把失敗誤記成 `rc=0`）。
+- 本機建置把這份檔案複製到 `out/Aetherium-Android/args.gn`，`gn gen` 後逐一對照
+  `gn args --list --short`，不維護第二串 inline 參數。
+- 首次 `gclient sync` 前，checkout 根目錄的 `.gclient` 必須有 `target_os = ["android"]`；
+  這和 `args-android.gn` 裡的 `target_os="android"` 是兩層不同設定。前者決定要不要同步
+  Android toolchain，缺少時 `checkout_android=false`，GN 會直接拒絕。
+- 初始同步若遇任一 DEPS 倉 HTTP 429/500，保留已完成 checkout，以可重入的
+  `gclient sync --no-history` 低併發續接；不得回 GitHub Actions 重跑碰運氣。
 - WebRTC 在 Chromium 的 `rtc_include_internal_audio_device=false` 路線會先加入 AAudio define，
   再用 `defines =` 寫 dummy define；GN 禁止非空 list 被另一個非空 list 覆蓋。固定補丁
   `deps/webrtc/0001-append-dummy-audio-define.patch` 改成 `+=`，兩個 build intent 都保留。
 - `branding_path_product="aetherium"` 會讓 vector icon 產生器讀
   `components/vector_icons/aetherium/{product,product_refresh}.icon`；品牌補丁原本只改引用、漏帶檔案，
   `branding/0005-product-vector-icons.patch` 現在明確加入兩份 Chromium 基準圖示，避免建置圖可生但 APK 排程缺檔。
-- workflow 會確認 `aetherium_strings_zh-TW.xtb` 與
-  `branded_strings_zh-TW.pak` target 都存在，再開始編譯 `chrome_public_apk`。
+- 本機在開始 `chrome_public_apk` 前，必須確認 `aetherium_strings_zh-TW.xtb` 與
+  `branded_strings_zh-TW.pak` target 都存在。
 - Linux 與 Android 共用 `patches/series` 的 21 支固定順序；補丁只能整支套用，任何衝突
   都會直接失敗，不會逐檔拼出部分狀態。
 
