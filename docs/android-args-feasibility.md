@@ -42,6 +42,8 @@ ninja -C /home/avatar/chromium-out/AndroidCheck -n chrome_public_apk
 - full-build checkout 在 `gclient sync` 前把 `target_os = ["android"]` 寫進 `.gclient`；這和
   `args-android.gn` 裡的 `target_os="android"` 是兩層不同設定。前者決定要不要同步 Android
   toolchain，缺少時 `checkout_android=false`，GN 會在 `build/config/android/config.gni` 直接拒絕。
+- 初始 `fetch chromium` 也可能在任一 DEPS 倉遇到 HTTP 429/500；workflow 現在保留已完成 checkout，
+  後續輪改用可重入的 `gclient sync` 續接，且真正保留失敗碼（不再把失敗誤記成 `rc=0`）。
 - WebRTC 在 Chromium 的 `rtc_include_internal_audio_device=false` 路線會先加入 AAudio define，
   再用 `defines =` 寫 dummy define；GN 禁止非空 list 被另一個非空 list 覆蓋。固定補丁
   `deps/webrtc/0001-append-dummy-audio-define.patch` 改成 `+=`，兩個 build intent 都保留。

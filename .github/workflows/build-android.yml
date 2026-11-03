@@ -64,10 +64,29 @@ jobs:
         run: |
           mkdir -p "$CHROMIUM_DIR"
           cd "$CHROMIUM_DIR"
-          fetch --nohooks --no-history chromium
-          # `target_os` 是 gclient 的依賴選擇，不是 args.gn：缺它時 checkout_android=false，
-          # GN 會在 build/config/android/config.gni 直接拒絕，SDK/NDK 也不會同步下來。
-          printf '\ntarget_os = ["android"]\n' >> .gclient
+          # `fetch chromium` 本身會跑一次 gclient sync；途中任一 DEPS 倉 HTTP 429/500 時，
+          # `.gclient` 與已完成 checkout 仍可重用。首輪失敗後直接續跑 gclient，不重抓整棵樹。
+          for attempt in 1 2 3 4 5; do
+            if [ -f .gclient ]; then
+              grep -q '^target_os *=.*android' .gclient || printf '\ntarget_os = ["android"]\n' >> .gclient
+              jobs=16; [ "$attempt" -gt 1 ] && jobs=6
+              echo ">> 續接初始 checkout（第 $attempt 次嘗試，gclient -j$jobs）"
+              if gclient sync --shallow --no-history --nohooks -j"$jobs"; then ok=1; else rc=$?; ok=0; fi
+            else
+              echo ">> 建立初始 checkout（第 $attempt 次嘗試）"
+              if fetch --nohooks --no-history chromium; then ok=1; else rc=$?; ok=0; fi
+            fi
+            [ "$ok" -eq 1 ] && break
+            if [ "$attempt" = 5 ]; then
+              echo "::error::初始 checkout 五輪都失敗（最後回傳 $rc）"
+              exit "$rc"
+            fi
+            wait_s=$((attempt * 60))
+            echo "::warning::初始 checkout 第 $attempt 次失敗（rc=$rc），退避 ${wait_s}s 後續接"
+            sleep "$wait_s"
+          done
+          # `target_os` 是 gclient 的依賴選擇，不是 args.gn：缺它時 checkout_android=false。
+          grep -q '^target_os *=.*android' .gclient || printf '\ntarget_os = ["android"]\n' >> .gclient
 
       - name: 釘到補丁的生成基準（patches/UPSTREAM_BASE）
         run: |
@@ -96,8 +115,9 @@ jobs:
             if gclient sync --shallow --no-history --nohooks -j"$jobs"; then
               echo ">> 同步完成"
               exit 0
+            else
+              rc=$?
             fi
-            rc=$?
             if [ "$attempt" = 5 ]; then
               echo "::error::gclient sync 五輪都失敗（最後回傳 $rc）"
               exit "$rc"
