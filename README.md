@@ -10,15 +10,18 @@
 
 ## 一、现况（2026-11-03）
 
-- `patches/series` 是 21 支补丁的唯一顺序来源；`scripts/apply-patches.sh` 会拒绝重复、漏列、
-  不存在或不能整支套用的补丁，不再按目录扫描，也不会把冲突补丁拆成逐档套用。
-- 分类：adblock 4、branding 4、performance 1、privacy 2、security 3、trim 7。
+- `patches/series` 是 23 支補丁的唯一順序來源；`scripts/apply-patches.sh` 會拒絕重複、漏列、
+  不存在或不能整支套用的補丁，不再按目錄掃描，也不會把衝突補丁拆成逐檔套用。
+- 分類：adblock 4、branding 5、performance 1、privacy 2、security 3、deps 1、trim 7。
 - branding 的产品层补丁以 rename 补丁为前置重新产生；繁体中文产品字串
   `chrome/app/resources/aetherium_strings_zh-TW.xtb` 会进入 Linux 与 Android 建置图。
 - trim 的 deep-trim 补丁以先前裁剪为前置重新产生；Compose 的依赖直接写入
   `public_deps`，旧的事后修补补丁已经删除。
 - Linux 使用 `config/args.gn`；Android 使用 `args-android.gn`。兩者都只在本機
   `/opt/chromium-src/src` 套用同一套補丁並完整編譯；GitHub Actions 建置已依用戶裁定移除。
+- `/tmp/aetherium-rebase2` 的四顆獨有 commit 與 staged tab-group 變更，已逐項對到正式 patch；
+  可重現 tree、patch checksum 與過時 Cast hunk 的判定見 `docs/wip-consolidation.md` 和
+  `patches/WIP_ARCHIVE`。
 
 ### 本機 clang-format 鏡像信任界線
 

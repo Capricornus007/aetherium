@@ -1,0 +1,67 @@
+# aetherium rebase/WIP archive manifest v1
+# Recorded 2026-11-03. Paths below are relative to patches/.
+# This file is the durable removal proof for the ephemeral /tmp/aetherium-rebase2 worktree.
+
+upstream_base 6ac1da15572a0e79814c92a86b8430805f9def04
+upstream_base_tree ba00aa05bae0730ab2191813283710c573bdd51e
+source_head e57559a36481f0cf7da54db4e638ace0092e585b
+source_index_parent e57559a36481f0cf7da54db4e638ace0092e585b
+source_index_tree 67f9225d72d98891dc3bfecc481fb8a8ec4cc5ae
+source_index_diff_sha256 44f16e6fcfdd8e43ecb87ab1123a0b006bcddce321b2c62b040d69222ec19d0d
+
+# KIND       SOURCE          TREE                                     PATCH_ID                                 CLASS
+commit        df42009a09386  7bfedbb4d78b0765444f905d9f89cd123510573f  92698def8e6de065fa751494bdd0e93427ec0397  represented
+commit        4cbe66f9a4849  48ac1f6d254e62ff8e4681589214b17e14f3aa60  74a4bdf49eb746da325ae6bc489a48b18d5df4c5  represented
+commit        192dbe30267dc  8ed5a25f733d7a5ccb976d406245f9f49b4e5575  2f7403954627651750e5b8fd5ea11aa4002ea2e0  represented-with-obsolete-cast-hunk
+commit        e57559a36481f  481c1544502c5e97c7e351c6cf61c881bf75a223  cc6f99a216fe11a9ada209853b1da3b4f4b4b16e  represented
+index         e57559a36481f  67f9225d72d98891dc3bfecc481fb8a8ec4cc5ae  d3c4d36ce00c3cbc99b4dc4383a3244dcdcc7915  represented
+
+# MAP SOURCE          FORMAL PATCH
+map df42009a09386 adblock/0001-mv2-restore-ungoogled-155.patch
+map df42009a09386 adblock/0002-remove-navigation-source-param-ungoogled-155.patch
+map df42009a09386 adblock/0003-disable-intranet-redirect-detector-ungoogled-155.patch
+map df42009a09386 adblock/0004-disable-dial-periodic-discovery-ungoogled-155.patch
+map df42009a09386 branding/0001-theme-aetherium-icons.patch
+map df42009a09386 branding/0002-branding-rename-aetherium.patch.gz
+map 4cbe66f9a4849 branding/0003-product-layer-aetherium.patch
+map 192dbe30267dc branding/0004-grit-resource-ids-aetherium.patch
+map 192dbe30267dc performance/0001-default-memory-saver-on.patch
+map 192dbe30267dc privacy/0001-local-privacy-and-ai-surface-trims.patch
+map 192dbe30267dc privacy/0002-remove-api-keys-infobar-deadcode.patch
+map 192dbe30267dc security/0001-disable-battery-status-service-inox-ungoogled-155.patch
+map 192dbe30267dc security/0002-disable-sb-incident-reporting-iridium-ungoogled-155.patch
+map 192dbe30267dc security/0003-disable-sb-client-side-phishing-report-iridium-ungoogled-155.patch
+map 192dbe30267dc trim/0001-disable-printing-pdf-screenai-cast.patch
+map 192dbe30267dc trim/0002-headless-ozone-autodetect.patch
+map 192dbe30267dc trim/0003-disable-on-device-translation.patch
+map e57559a36481f trim/0005-deep-trim-asserts-and-deps.patch
+map index trim/0007-remove-tab-groups-desktop.patch
+map index trim/0008-remove-tab-groups-sync.patch
+map index trim/0009-remove-tab-group-dynamic-menu.patch
+
+# SHA256 FORMAL PATCH (the 21 files mapped from the WIP chain/index)
+sha256 cc6d017d4e43b647926f49adaff5fac988ec36991942e2b661a6ddcd4120f7d3 adblock/0001-mv2-restore-ungoogled-155.patch
+sha256 b1e1e9f4d3d4588a4debe51c079662c0e60d327888599beb9f89baa37aa3c3ac adblock/0002-remove-navigation-source-param-ungoogled-155.patch
+sha256 b16c1463ec4c1c915e1c3d314b1ea96a8de21c5a834f0438d17144991c163859 adblock/0003-disable-intranet-redirect-detector-ungoogled-155.patch
+sha256 5bb780b562e33750cc0d9d2059f3fde55a4f6a879ea43fca5d4daf256f529ad0 adblock/0004-disable-dial-periodic-discovery-ungoogled-155.patch
+sha256 14e26568dcc55f8dcf3e73248cd6da86cdb250639d1fe043f3ec666dbbd4b2c0 branding/0001-theme-aetherium-icons.patch
+sha256 aee1839c353e436d04c0abf1467ffe1c997f8290ad18fb7c4e63c87f896f374d branding/0002-branding-rename-aetherium.patch.gz
+sha256 3a86e5b379fe642a6b15cbd60c7247c878c4502c3fe877ce533ecb7ed2e9b2c2 branding/0003-product-layer-aetherium.patch
+sha256 346264cbd08884dbfbe0ebbaf713c7b25f6b56e82fffd5a8151b1df5c2f47587 branding/0004-grit-resource-ids-aetherium.patch
+sha256 a3f64a40e55a5f0716ed9fdc4937d7705b019db13340e978068330c018befe38 performance/0001-default-memory-saver-on.patch
+sha256 7cdeb9e3485b3397055d70585bec94842c909eebcfca5b85008f1986fdf5c3cb privacy/0001-local-privacy-and-ai-surface-trims.patch
+sha256 6c0664bd4c8f0b5631d17d30912d6d044819465b8c2ca110245f0c7881f9a7dc privacy/0002-remove-api-keys-infobar-deadcode.patch
+sha256 c481666ec85755988cc19d83ac9b946deb2285b96b490fa0b866e847dd387e04 security/0001-disable-battery-status-service-inox-ungoogled-155.patch
+sha256 8acabb33285b1934126d4e7c88899b05e397f4bd709a15a27a9527718dacd7a5 security/0002-disable-sb-incident-reporting-iridium-ungoogled-155.patch
+sha256 504bc92c1083590e3265cdbcc91530c4e90278c21be45fc12ae223798ac614e0 security/0003-disable-sb-client-side-phishing-report-iridium-ungoogled-155.patch
+sha256 71b35aec7a607ef509bc05a86d317d2524cf707d63c64a855d56bebb04f86c1a trim/0001-disable-printing-pdf-screenai-cast.patch
+sha256 ddb088a6716726f378dfc9b4343778d97362991ea138866c360eb16a234135ad trim/0002-headless-ozone-autodetect.patch
+sha256 812417193b67f3acbc0eb906546578814ccd4d0a789fc2f7ebebca7aa88e6940 trim/0003-disable-on-device-translation.patch
+sha256 3ab8a45b1718ab8cc40d37a526a475d0768ea4111a6d91499cf18f8b9ec597b0 trim/0005-deep-trim-asserts-and-deps.patch
+sha256 1b8f4ed5365f02660b51fcc4cde6d8021651e05360cfc76b87301bbfa1820e6e trim/0007-remove-tab-groups-desktop.patch
+sha256 f89fc395b42a106ca4f20a7cfa7ba0ec82fcda68f73de5fd6ef3c19f70e564cb trim/0008-remove-tab-groups-sync.patch
+sha256 9223add1fa672c2ebfc3a41311f72f6f0b4b02a47c3923c8aa678c2e0f34c65b trim/0009-remove-tab-group-dynamic-menu.patch
+
+# Current series has two later repo-side patches not sourced by this WIP chain:
+repo_only branding/0005-product-vector-icons.patch
+repo_only deps/webrtc/0001-append-dummy-audio-define.patch
